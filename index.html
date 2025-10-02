@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>مدرب أحكام التجويد</title>
+  <link rel="stylesheet" href="styles.css" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://everyayah.com https://api.alquran.cloud; connect-src 'self' https://api.openai.com https://api.alquran.cloud; media-src 'self' https://everyayah.com blob:; img-src 'self' data: https://everyayah.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; worker-src 'self' blob:">
+  <script src="https://cdn.jsdelivr.net/npm/vosk-browser@0.0.8/dist/vosk.js"></script>
+</head>
+<body>
+  <header class="container">
+    <h1>مدرب أحكام التجويد</h1>
+    <p class="muted">اقرأ الآية بالرسم العثماني، سجّل، ثم فرّغ القراءة واحصل على تقرير الفروقات + اختبار قواعد.</p>
+  </header>
+
+  <main class="container grid">
+    <section class="card">
+      <h2>١) اختيار السورة والآية (الرسم العثماني)</h2>
+      <div class="row">
+        <label>السورة</label>
+        <select id="surahSelect"></select>
+      </div>
+      <div class="row">
+        <label>الآية</label>
+        <select id="ayahSelect"></select>
+      </div>
+      <div id="ayahText" class="ayah uthmani"></div>
+      <small class="muted">نص الآية يُجلب من واجهة <b>quran-uthmani</b> (مصحف المدينة).</small>
+    </section>
+
+    <section class="card">
+      <h2>٢) التسجيل والتفريغ</h2>
+      <div class="row">
+        <button id="micBtn">🎙️ ابدأ التسجيل</button>
+        <button id="stopBtn" disabled>⏹️ أوقف</button>
+        <label class="switch">
+          <input type="checkbox" id="sttMode" checked>
+          <span class="slider"></span>
+        </label>
+        <span>وضع <b>السحابة</b> (أدق). عند الإيقاف يعمل وضع <b>دون إنترنت</b> (تجريبي).</span>
+      </div>
+      <audio id="playback" controls class="w-100"></audio>
+      <div class="row"><button id="transcribeBtn" disabled>تفريغ القراءة</button></div>
+      <pre id="transcript" class="console"></pre>
+    </section>
+
+    <section class="card">
+      <h2>٣) التقييم والتغذية الراجعة</h2>
+      <div id="score" class="score"></div>
+      <ul id="errors" class="errors"></ul>
+      <div class="row"><button id="playCorrectBtn">▶️ استمع للتلاوة الصحيحة (للآية)</button></div>
+      <audio id="referenceAudio" controls class="w-100"></audio>
+    </section>
+
+    <section class="card">
+      <h2>٤) اختبار القواعد (اختيار من متعدد فقط)</h2>
+      <div class="row">
+        <label>اختر القسم</label>
+        <select id="quizSection">
+          <option value="noon_tanween">النون الساكنة والتنوين</option>
+          <option value="meem_sakinah">الميم الساكنة</option>
+          <option value="madd">أحكام المدود</option>
+        </select>
+        <button id="buildQuizBtn">ابدأ اختبار ٥ أسئلة عشوائيًا</button>
+        <button id="buildFullQuizBtn">اختبار شامل (١٥ سؤالًا: ٥ من كل قسم)</button>
+      </div>
+      <div id="quiz"></div>
+    </section>
+  
+    <section class="card">
+      <h2>٥) ملخص التقدم</h2>
+      <div class="row">
+        <button id="showSummaryBtn">عرض الملخص</button>
+        <button id="resetSummaryBtn">إعادة تعيين السجل</button>
+      </div>
+      <div id="summary"></div>
+    </section>
+
+</main>
+
+  <footer class="container muted">
+    <p>© مشروع تعليمي. يُنصح بالمراجعة مع معلّم/معلمة تجويد.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
