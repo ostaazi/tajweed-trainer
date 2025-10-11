@@ -1,8 +1,21 @@
-// ===== app.js (clean transcript + toggle details) =====
-const state = { recorder:null, chunks:[], mediaStream:null, current:{surah:1, ayah:1, text:""} };
+// ===== app.js (reciter select + fallback + clean transcript + toggle details) — FIXED =====
+const state = { recorder:null, chunks:[], mediaStream:null, current:{surah:1, ayah:1, text:"", reciter:null} };
 const $ = id => document.getElementById(id);
 
-// --- Quran helpers ---
+// --- قائمة القرّاء (EveryAyah) ---
+const RECITERS = [
+  { id: "AbdulSamad_64kbps_QuranExplorer.Com", name: "محمود خليل الحصري (عبد الصمد) 64kbps" },
+  { id: "Abdul_Basit_Murattal_64kbps",        name: "عبد الباسط (مرتّل) 64kbps" },
+  { id: "Abdul_Basit_Mujawwad_128kbps",       name: "عبد الباسط (مجوّد) 128kbps" },
+  { id: "Abdurrahmaan_As-Sudais_64kbps",      name: "عبد الرحمن السديس 64kbps" },
+  { id: "Abu_Bakr_Ash-Shaatree_64kbps",       name: "أبو بكر الشاطري 64kbps" },
+  { id: "Ahmed_ibn_Ali_al-Ajamy_64kbps_QuranExplorer.Com", name: "أحمد العجمي 64kbps" },
+  { id: "Alafasy_64kbps",                     name: "مشاري راشد العفاسي 64kbps" },
+  { id: "Ghamadi_40kbps",                     name: "أبو بكر الغامدي 40kbps" }
+];
+if (!state.current.reciter) state.current.reciter = RECITERS[0].id;
+
+// --- Quran API helpers (rasm Uthmani) ---
 async function fetchSurahList(){
   try{
     const res = await fetch('https://api.alquran.cloud/v1/surah');
@@ -11,7 +24,6 @@ async function fetchSurahList(){
       return js.data.map(s => ({ number:s.number, name:s.name, numberOfAyahs:s.numberOfAyahs }));
     }
   }catch(e){ console.warn(e); }
-  // fallback مختصر
   return [{number:1,name:"الفاتحة",numberOfAyahs:7},{number:2,name:"البقرة",numberOfAyahs:286},{number:3,name:"آل عمران",numberOfAyahs:200}];
 }
 async function fetchAyahUthmani(surah, ayah){
@@ -22,7 +34,7 @@ async function fetchAyahUthmani(surah, ayah){
 }
 async function setAyah(surah, ayah){
   const text = await fetchAyahUthmani(surah, ayah);
-  state.current = { surah, ayah, text };
+  state.current = { ...state.current, surah, ayah, text };
   const t = $("ayahText"); if (t) t.textContent = text || "تعذّر جلب النص.";
 }
 async function initQuran(){
@@ -42,10 +54,19 @@ async function initQuran(){
   aSel.onchange = async ()=>{ await setAyah(Number(sSel.value), Number(aSel.value)); };
 }
 
+// --- تهيئة قائمة القرّاء ---
+function initReciters(){
+  const rSel = $("reciterSelect");
+  if (!rSel) return;
+  rSel.innerHTML = RECITERS.map(r => `<option value="${r.id}">${r.name}</option>`).join("");
+  rSel.value = state.current.reciter || RECITERS[0].id;
+  rSel.onchange = () => { state.current.reciter = rSel.value; };
+}
+
 // --- Recording ---
 async function startRecording(){
-  try{ state.mediaStream = await navigator.mediaDevices.getUserMedia({audio:true}); }
-  catch(e){ alert("تعذّر الوصول للميكروفون."); throw e; }
+  try{ state.mediaStream = await navigator.mediaDevices.getUserMedia({ audio:true }); }
+  catch(e){ alert("تعذّر الوصول للميكروفون. امنح الإذن."); throw e; }
   state.recorder = new MediaRecorder(state.mediaStream, { mimeType:'audio/webm' });
   state.chunks = [];
   state.recorder.ondataavailable = e => { if (e.data.size) state.chunks.push(e.data); };
@@ -111,13 +132,11 @@ function renderTranscriptClean(result){
   toggleBtn.onclick = () => {
     const showingJSON = pre.getAttribute("data-json") === "1";
     if (showingJSON) {
-      // ارجع للنص العربي
       pre.dir = "rtl"; pre.style.textAlign = "right";
       pre.textContent = plain || "لم يتم التعرّف على نص.";
       pre.setAttribute("data-json", "0");
       toggleBtn.textContent = "عرض التفاصيل";
     } else {
-      // اعرض JSON مفصّل
       pre.dir = "ltr"; pre.style.textAlign = "left";
       pre.textContent = JSON.stringify(result, null, 2);
       pre.setAttribute("data-json", "1");
@@ -125,15 +144,50 @@ function renderTranscriptClean(result){
     }
   };
 
-  // نمرّر للنظام المقارن إن وُجد
   if (typeof renderFeedback === "function"){
     try{ renderFeedback(state.current.text || "", plain || ""); }catch(_){}
   }
 }
 
+// --- Helpers ---
+function pad3(n){ return String(n).padStart(3,'0'); }
+
+async function pickFirstAvailableUrl(surah, ayah, preferredId){
+  const order = [preferredId, ...RECITERS.map(r=>r.id).filter(id => id !== preferredId)];
+  for (const reciterId of order){
+    // (FIX) backtick closing correctly
+    const testUrl = `https://everyayah.com/data/${reciterId}/${pad3(surah)}${pad3(ayah)}.mp3`;
+    try {
+      const h = await fetch(testUrl, { method: 'HEAD' });
+      if (h.ok) return { url:testUrl, reciterId };
+    } catch(_) {}
+  }
+  return null;
+}
+
+async function playReference(){
+  const surah = state.current.surah;
+  const ayah  = state.current.ayah;
+  const preferred = state.current.reciter || RECITERS[0].id;
+  const found = await pickFirstAvailableUrl(surah, ayah, preferred);
+  const audio = $("referenceAudio");
+  if (found && audio){
+    if (preferred !== found.reciterId){
+      console.warn("لم تتوفر التلاوة عند القارئ المختار، تم استخدام بديل:", found.reciterId);
+    }
+    audio.src = found.url;
+    try { await audio.play(); } catch(_){}
+  } else {
+    alert("تعذّر إيجاد ملف لهذه الآية عند القرّاء المحدّدين.");
+  }
+}
+
 // --- UI wiring ---
 async function init(){
+  // تأكد أن عناصر DOM موجودة قبل التهيئة
   await initQuran();
+  initReciters();
+
   const micBtn = $("micBtn");
   const stopBtn = $("stopBtn");
   const transcribeBtn = $("transcribeBtn");
@@ -146,11 +200,10 @@ async function init(){
     const out = await transcribeCloud(blob);
     if (out) renderTranscriptClean(out);
   };
-  if (playCorrectBtn) playCorrectBtn.onclick = ()=>{
-    const pad3 = n => String(n).padStart(3,'0');
-    const url = `https://everyayah.com/data/AbdulSamad_64kbps_QuranExplorer.Com/${pad3(state.current.surah)}${pad3(state.current.ayah)}.mp3`;
-    const audio = $("referenceAudio");
-    if (audio){ audio.src = url; audio.play(); }
-  };
+  if (playCorrectBtn) playCorrectBtn.onclick = playReference;
 }
-window.addEventListener('DOMContentLoaded', init);
+if (document.readyState === "loading") {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
