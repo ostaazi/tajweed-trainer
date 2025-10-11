@@ -1,4 +1,4 @@
-// ===== app.js (reciter select + fallback + clean transcript + toggle details) =====
+// ===== app.js (reciter select + fallback + clean transcript + toggle details) — FIXED =====
 const state = { recorder:null, chunks:[], mediaStream:null, current:{surah:1, ayah:1, text:"", reciter:null} };
 const $ = id => document.getElementById(id);
 
@@ -11,7 +11,7 @@ const RECITERS = [
   { id: "Abu_Bakr_Ash-Shaatree_64kbps",       name: "أبو بكر الشاطري 64kbps" },
   { id: "Ahmed_ibn_Ali_al-Ajamy_64kbps_QuranExplorer.Com", name: "أحمد العجمي 64kbps" },
   { id: "Alafasy_64kbps",                     name: "مشاري راشد العفاسي 64kbps" },
-  { id: "Ghamadi_40kbps",                     name: "سعود الشريم/الغامدي 40kbps" }
+  { id: "Ghamadi_40kbps",                     name: "أبو بكر الغامدي 40kbps" }
 ];
 if (!state.current.reciter) state.current.reciter = RECITERS[0].id;
 
@@ -155,7 +155,8 @@ function pad3(n){ return String(n).padStart(3,'0'); }
 async function pickFirstAvailableUrl(surah, ayah, preferredId){
   const order = [preferredId, ...RECITERS.map(r=>r.id).filter(id => id !== preferredId)];
   for (const reciterId of order){
-    const testUrl = `https://everyayah.com/data/${reciterId}/${pad3(surah)}${pad3(ayah)}.mp3";
+    // (FIX) backtick closing correctly
+    const testUrl = `https://everyayah.com/data/${reciterId}/${pad3(surah)}${pad3(ayah)}.mp3`;
     try {
       const h = await fetch(testUrl, { method: 'HEAD' });
       if (h.ok) return { url:testUrl, reciterId };
@@ -183,6 +184,7 @@ async function playReference(){
 
 // --- UI wiring ---
 async function init(){
+  // تأكد أن عناصر DOM موجودة قبل التهيئة
   await initQuran();
   initReciters();
 
@@ -200,4 +202,8 @@ async function init(){
   };
   if (playCorrectBtn) playCorrectBtn.onclick = playReference;
 }
-window.addEventListener('DOMContentLoaded', init);
+if (document.readyState === "loading") {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
