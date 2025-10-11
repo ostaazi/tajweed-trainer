@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Tajweedy — الإحصاءات</title>
+<link rel="stylesheet" href="styles.css"/>
+<style>
+.container{max-width:980px;margin:24px auto;padding:0 16px}
+.card{background:var(--tj-surface,#fff);border:1px solid var(--tj-border,#e5e7eb);border-radius:14px;padding:16px;margin-top:14px}
+h1{display:flex;align-items:center;gap:10px}
+canvas{width:100%;height:320px;border:1px solid var(--tj-border,#e5e7eb);border-radius:12px}
+.badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--tj-border,#e5e7eb);border-radius:10px;padding:6px 10px}
+</style>
+</head>
+<body>
+<header class="container">
+  <h1>📊 إحصاءات الأداء <span class="badge" id="who"></span></h1>
+  <div class="muted">هذه الصفحة تُحسب محليًا من سجل محاولاتك المحفوظ في المتصفّح.</div>
+</header>
+
+<main class="container">
+  <section class="card">
+    <h2>نسبة الصواب عبر الزمن</h2>
+    <canvas id="line"></canvas>
+  </section>
+  <section class="card">
+    <h2>الأخطاء بحسب الحكم</h2>
+    <canvas id="bar"></canvas>
+  </section>
+
+  <section class="card">
+    <h2>سجل المحاولات</h2>
+    <div id="list"></div>
+  </section>
+
+  <div class="container" style="margin:24px 0">
+    <button onclick="history.back()">⬅️ العودة</button>
+    <button onclick="window.print()">🖨️ طباعة</button>
+  </div>
+</main>
+
+<script>
+(function(){
+  const who=document.getElementById('who');
+  who.textContent = 'المتدرّب: ' + (localStorage.getItem('trainee_name')||'—');
+
+  const arr = JSON.parse(localStorage.getItem('tajweed_progress_full')||'[]');
+  // Aggregate weakness by correct label leading token
+  const counts = {};
+  arr.forEach(r=>{
+    (r.rows||[]).forEach(row=>{
+      if (row.chosenIndex!==row.correctIndex){
+        const corr=(row.options&&row.options[row.correctIndex])||'';
+        const key=corr.split('،')[0].trim()||'أخرى';
+        counts[key]=(counts[key]||0)+1;
+      }
+    });
+  });
+
+  // Draw bars
+  const labels=Object.keys(counts);
+  const data=labels.map(k=>counts[k]);
+  const cvs=document.getElementById('bar'), ctx=cvs.getContext('2d');
+  const W=cvs.width= cvs.clientWidth*2, H=cvs.height= 320*2;
+  ctx.scale(2,2); // crisp
+  const max=Math.max(1, ...data);
+  const pad=40, bw= (cvs.clientWidth - pad*2) / Math.max(1,labels.length);
+  ctx.clearRect(0,0,cvs.clientWidth,320);
+  // axis
+  ctx.strokeStyle='#ddd'; ctx.beginPath(); ctx.moveTo(pad,10); ctx.lineTo(pad,300); ctx.lineTo(cvs.clientWidth-10,300); ctx.stroke();
+  // bars
+  labels.forEach((lab,i)=>{
+    const v=data[i];
+    const h= (v/max)*240;
+    const x=pad + i*bw + 8, y=300 - h;
+    ctx.fillStyle='#0b6'; ctx.fillRect(x,y,bw-16,h);
+    ctx.fillStyle='#333'; ctx.textAlign='center'; ctx.font='12px sans-serif';
+    ctx.fillText(String(v), x+(bw-16)/2, y-6);
+    ctx.save(); ctx.translate(x+(bw-16)/2, 312); ctx.rotate(-0.5); ctx.fillText(lab,0,0); ctx.restore();
+  });
+
+  // list
+  const list=document.getElementById('list');
+  if (!arr.length){ list.textContent='لا سجلات.'; return; }
+  arr.slice().reverse().forEach(r=>{
+    const div=document.createElement('div'); div.className='card';
+    const dt=new Date(r.ts||Date.now()).toLocaleString('ar-EG');
+    const nameMap={noon_tanween:'النون الساكنة والتنوين',meem_sakinah:'الميم الساكنة',madd:'أحكام المدود',full:'اختبار شامل',custom:'مخصص'};
+    div.textContent = `${dt} — ${nameMap[r.sectionKey]||r.title} — النتيجة: ${r.correct}/${r.total}`;
+    list.appendChild(div);
+  });
+})();
+
+  (function(){
+    const cvs=document.getElementById('line'); if(!cvs) return;
+    const arr = JSON.parse(localStorage.getItem('tajweed_progress_full')||'[]');
+    const pts = arr.map(r=>({t:r.ts||Date.now(), p: (r.total? (r.correct/r.total*100):0)})).sort((a,b)=>a.t-b.t);
+    const ctx=cvs.getContext('2d');
+    const W=cvs.width=cvs.clientWidth*2, H=cvs.height=320*2; ctx.scale(2,2);
+    ctx.clearRect(0,0,cvs.clientWidth,320);
+    if(!pts.length){ ctx.fillText('لا توجد بيانات', 20, 30); return; }
+    const minT=pts[0].t, maxT=pts[pts.length-1].t;
+    const pad=40; const ww=cvs.clientWidth- pad*2, hh=260; const base=300;
+    ctx.strokeStyle='#ddd'; ctx.beginPath(); ctx.moveTo(pad,base-hh); ctx.lineTo(pad,base); ctx.lineTo(cvs.clientWidth-10,base); ctx.stroke();
+    ctx.fillStyle='#333'; ctx.font='12px sans-serif';
+    for(let y=0;y<=5;y++){const val=y*20; const ypx=base - (val/100)*hh; ctx.fillText(val+'%', 8, ypx+4); ctx.strokeStyle='#f1f1f1'; ctx.beginPath(); ctx.moveTo(pad, ypx); ctx.lineTo(cvs.clientWidth-10, ypx); ctx.stroke();}
+    ctx.strokeStyle='#0b6'; ctx.lineWidth=2; ctx.beginPath();
+    pts.forEach((p,i)=>{ const x=pad + ((p.t-minT)/(Math.max(1,maxT-minT)))*ww; const y=base - (p.p/100)*hh; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); ctx.fillRect(x-2,y-2,4,4); });
+    ctx.stroke();
+  })();
+
+</script>
+</body>
+</html>
