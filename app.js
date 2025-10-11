@@ -354,3 +354,94 @@
     bar.appendChild(b1); bar.appendChild(b2);
     host.appendChild(bar);
   })();
+
+  // ===== Summary: Cloud sync buttons =====
+  (function addCloudSync(){
+    const host=document.getElementById('summary');
+    if(!host) return;
+    const row=document.createElement('div'); row.className='row'; row.style.gap='8px';
+    const btn1=document.createElement('button'); btn1.textContent='مزامنة للسحابة (آخر تقرير)';
+    const btn2=document.createElement('button'); btn2.textContent='مزامنة جميع السجل';
+    async function send(payload){
+      try{
+        const r=await fetch('/.netlify/functions/sync',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+        const j=await r.json().catch(()=>({}));
+        if(r.ok && j.ok) alert('تمت المزامنة بنجاح');
+        else alert('فشل في المزامنة');
+      }catch(e){ alert('لا يمكن الاتصال بالخادم'); }
+    }
+    btn1.onclick=()=>{
+      const last = localStorage.getItem('tajweedy_last_report');
+      if(!last){ alert('لا يوجد تقرير محفوظ'); return; }
+      send(JSON.parse(last));
+    };
+    btn2.onclick=async()=>{
+      const arr = JSON.parse(localStorage.getItem('tajweedy_progress_full')||'[]');
+      if(!arr.length){ alert('لا يوجد سجل'); return; }
+      let ok=0;
+      for (const r of arr){ try{ await send(r); ok++; }catch(e){} }
+    };
+    row.appendChild(btn1); row.appendChild(btn2); host.appendChild(row);
+  })();
+
+  (function addConsolidatedLink(){
+    const host=document.getElementById('summary'); if(!host) return;
+    const d=document.createElement('div'); d.className='row'; d.style.marginTop='10px';
+    const b=document.createElement('button'); b.textContent='تقرير مجمّع (PDF)';
+    b.onclick=()=>{ location.href='consolidated_report.html'; };
+    d.appendChild(b); host.appendChild(d);
+  })();
+
+// ===== Auto cloud sync after saving a report =====
+(function hookAutoSync(){
+  const key='tajweedy_auto_sync';
+  // inject toggle in summary header (if summary exists)
+  const sum=document.getElementById('summary');
+  if(sum){
+    const row=document.createElement('div'); row.className='row'; row.style.gap='8px';
+    const lbl=document.createElement('label'); lbl.style.display='flex'; lbl.style.alignItems='center'; lbl.style.gap='6px';
+    const chk=document.createElement('input'); chk.type='checkbox'; chk.id='autoSync'; chk.checked=localStorage.getItem(key)==='1';
+    lbl.appendChild(chk); lbl.appendChild(document.createTextNode('مزامنة تلقائية بعد إنهاء كل اختبار'));
+    row.appendChild(lbl);
+    sum.appendChild(row);
+    chk.onchange=()=> localStorage.setItem(key, chk.checked?'1':'0');
+  }
+  // expose function window.tj_onSaveReport(payload) to be called by quiz save code
+  window.tj_onSaveReport = async function(payload){
+    try{
+      localStorage.setItem('tajweedy_last_report', JSON.stringify(payload));
+      if(localStorage.getItem(key)!=='1') return;
+      await fetch('/.netlify/functions/sync',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+    }catch(e){/* silent */}
+  };
+})();
+
+// ===== Import/Export JSON of progress =====
+(function addJsonImportExport(){
+  const host=document.getElementById('summary'); if(!host) return;
+  const row=document.createElement('div'); row.className='row'; row.style.gap='8px';
+  const exp=document.createElement('button'); exp.textContent='تصدير JSON للسجل';
+  exp.onclick=()=>{
+    const data = localStorage.getItem('tajweedy_progress_full')||'[]';
+    const blob=new Blob([data],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='tajweedy_progress.json'; a.click();
+  };
+  const impLabel=document.createElement('label'); impLabel.className='button'; impLabel.textContent='استيراد JSON للسجل';
+  const file=document.createElement('input'); file.type='file'; file.accept='application/json'; file.style.display='none';
+  impLabel.appendChild(file);
+  file.onchange=()=>{
+    const f=file.files[0]; if(!f) return;
+    const reader=new FileReader();
+    reader.onload=()=>{ try{ localStorage.setItem('tajweedy_progress_full', reader.result); alert('تم الاستيراد'); }catch(e){ alert('فشل الاستيراد'); } };
+    reader.readAsText(f,'utf-8');
+  };
+  row.appendChild(exp); row.appendChild(impLabel); host.appendChild(row);
+})();
+
+  (function addDashboardLink(){
+    const host=document.getElementById('summary'); if(!host) return;
+    const d=document.createElement('div'); d.className='row'; d.style.marginTop='10px';
+    const b=document.createElement('button'); b.textContent='لوحة شاملة (PDF)';
+    b.onclick=()=>{ location.href='dashboard.html'; };
+    d.appendChild(b); host.appendChild(d);
+  })();
