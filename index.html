@@ -3,21 +3,29 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>مدرب أحكام التجويد — إصدار التشخيص المدمج</title>
+  <title>Tajweedy — Quran Tajweed Trainer (مدرب التجويد القرآني)</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="container">
-    <h1>مدرب أحكام التجويد</h1>
-    <p class="muted">اقرأ الآية بالرسم العثماني، سجّل، ثم فرّغ القراءة واحصل على تقرير الفروقات + اختبار قواعد.</p>
+  <header class="tj-header">
+    <div class="tj-header-inner container">
+      <img src="assets/tajweedy-logo.png" alt="Tajweedy logo" class="tj-logo" />
+      <div class="tj-brand">
+        <div class="tj-name-en">Tajweedy</div>
+        <div class="tj-name-ar">تجويدي</div>
+      </div>
+      <div class="tj-tagline">Quran Tajweed Trainer — مدرب التجويد القرآني</div>
+    </div>
   </header>
 
   <main class="container grid">
+    <h1 class="visually-hidden">Tajweedy — Quran Tajweed Trainer</h1>
+
     <section class="card">
       <h2>١) اختيار السورة والآية (الرسم العثماني)</h2>
       <div class="row">
-  <label for="reciterSelect">القارئ</label>
-  <select id="reciterSelect"></select>
+        <label for="reciterSelect">القارئ</label>
+        <select id="reciterSelect"></select>
       </div>
       <div class="row">
         <label>السورة</label>
@@ -39,12 +47,10 @@
       <audio id="playback" controls class="w-100"></audio>
       <div class="row">
         <button id="transcribeBtn" disabled>تفريغ القراءة</button>
-        <!-- أزرار التشخيص المضافة -->
         <button id="diagBtn" type="button">تشخيص الدالة</button>
         <button id="diagRecBtn" type="button">تشخيص بالتسجيل (٣ ثوانٍ)</button>
       </div>
       <pre id="transcript" class="console"></pre>
-      <!-- صندوق إخراج التشخيص + مشغّل الصوت للتشخيص -->
       <pre id="diagOut" dir="ltr" style="display:none;background:#111;color:#eee;padding:12px;border-radius:10px;margin-top:8px;overflow:auto"></pre>
       <audio id="diagPlayback" controls style="display:none;margin-top:6px"></audio>
     </section>
@@ -60,12 +66,18 @@
     <section class="card">
       <h2>٤) اختبار القواعد (اختيار من متعدد)</h2>
       <div class="row">
-        <label>اختر القسم</label>
+        <label for="quizSection">اختر القسم</label>
         <select id="quizSection">
           <option value="noon_tanween">النون الساكنة والتنوين</option>
           <option value="meem_sakinah">الميم الساكنة</option>
           <option value="madd">أحكام المدود</option>
         </select>
+      </div>
+      <div class="row" id="traineeRow">
+        <label for="traineeName">اسم المتدرّب</label>
+        <input id="traineeName" type="text" placeholder="اختياري" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;min-width:220px" />
+      </div>
+      <div class="row">
         <button id="buildQuizBtn">ابدأ اختبار ٥ أسئلة عشوائيًا</button>
         <button id="buildFullQuizBtn">اختبار شامل (١٥ سؤالًا: ٥ من كل قسم)</button>
       </div>
@@ -83,12 +95,11 @@
   </main>
 
   <footer class="container muted">
-    <p>© مشروع تعليمي. يُنصح بالمراجعة مع معلّم/معلمة تجويد.</p>
+    <p>© Tajweedy — مشروع تعليمي. يُنصح بالمراجعة مع معلّم/معلمة تجويد.</p>
   </footer>
 
-  <!-- سكربتات المشروع الأساسية -->
+  <script defer src="tajweed_bank.js"></script>
   <script defer src="app.js"></script>
-  <!-- سكربت التشخيص المدمج -->
   <script defer src="diag.js"></script>
 </body>
 </html>

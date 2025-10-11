@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tajweedy — تقرير نتيجة الاختبار</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .rep-wrap{max-width:1040px;margin:16px auto;padding:0 16px}
+    .rep-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    .rep-title{font-size:1.25rem;font-weight:800}
+    .rep-meta{color:#374151;margin-top:6px}
+    .rep-table{width:100%;border-collapse:collapse;margin-top:12px;background:#fff;border-radius:12px;overflow:hidden}
+    .rep-table th,.rep-table td{border:1px solid #e5e7eb;padding:10px 12px;vertical-align:top}
+    .tag{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #ddd;background:#f7f7f7;margin-inline-start:6px}
+    .ok{color:#2e7d32}.bad{color:#c62828}
+    .no-print{}
+    @media print{
+      .no-print{display:none}
+      body{background:#fff}
+      .rep-wrap{margin:0;max-width:100%;padding:0}
+      .tj-header{display:none}
+    }
+  </style>
+</head>
+<body>
+  <header class="tj-header no-print">
+    <div class="tj-header-inner container">
+      <img src="assets/tajweedy-logo.png" alt="Tajweedy logo" class="tj-logo" />
+      <div class="tj-brand">
+        <div class="tj-name-en">Tajweedy</div>
+        <div class="tj-name-ar">تجويدي</div>
+      </div>
+      <div class="tj-tagline">Quran Tajweed Trainer — مدرب التجويد القرآني</div>
+    </div>
+  </header>
+
+  <div class="rep-wrap">
+    <div class="card" style="padding:16px">
+      <div class="rep-head">
+        <div class="rep-title">تقرير نتيجة الاختبار</div>
+        <div class="no-print">
+          <button onclick="window.print()">🖨️ طباعة</button>
+          <button onclick="window.location.href='index.html'">العودة للواجهة</button>
+        </div>
+      </div>
+      <div id="meta" class="rep-meta"></div>
+    </div>
+
+    <div class="card" style="padding:0">
+      <table class="rep-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>السؤال</th>
+            <th>اختياراتك</th>
+            <th>الصحيح</th>
+            <th>لماذا؟</th>
+          </tr>
+        </thead>
+        <tbody id="repBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+(function(){
+  function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  let data=null;
+  try{ data = JSON.parse(localStorage.getItem('tajweed_last_report')||'null'); }catch(_){}
+  if(!data){
+    document.getElementById('meta').textContent='لا توجد بيانات تقرير. ارجع ونفّذ اختبارًا أولًا.';
+    return;
+  }
+  const dt=new Date(data.ts||Date.now());
+  const nameMap={ noon_tanween:'النون الساكنة والتنوين', meem_sakinah:'الميم الساكنة', madd:'أحكام المدود', full:'اختبار شامل', custom:'مخصص' };
+  const trainee = data.traineeName && data.traineeName.trim()? data.traineeName.trim() : 'متدرّب بدون اسم';
+  const head = `👤 المتدرّب: ${trainee} — ${nameMap[data.sectionKey]||data.title||'اختبار'} — النتيجة: ${data.correct}/${data.total} — التاريخ: ${dt.toLocaleString('ar-EG')}`;
+  document.getElementById('meta').textContent=head;
+
+  const tbody=document.getElementById('repBody');
+  (data.rows||[]).forEach(row=>{
+    const tr=document.createElement('tr');
+
+    const tdIdx=document.createElement('td'); tdIdx.textContent=row.index; tr.appendChild(tdIdx);
+
+    const tdQ=document.createElement('td'); tdQ.innerHTML=esc(row.text||''); tr.appendChild(tdQ);
+
+    const tdChosen=document.createElement('td');
+    let chosen='—';
+    if (row.chosenIndex>=0 && row.options && row.chosenIndex<row.options.length){
+      chosen=esc(row.options[row.chosenIndex]);
+    }
+    const ok=(row.chosenIndex===row.correctIndex);
+    tdChosen.innerHTML=chosen + (ok ? " <span class='tag ok'>صحيح</span>" : " <span class='tag bad'>خطأ</span>");
+    tr.appendChild(tdChosen);
+
+    const tdCorrect=document.createElement('td');
+    let corr='—';
+    if (row.correctIndex>=0 && row.options && row.correctIndex<row.options.length){
+      corr=esc(row.options[row.correctIndex]);
+    }
+    tdCorrect.innerHTML=corr; tr.appendChild(tdCorrect);
+
+    const tdWhy=document.createElement('td'); tdWhy.innerHTML=esc(row.why||''); tr.appendChild(tdWhy);
+
+    tbody.appendChild(tr);
+  });
+})();
+</script>
+</body>
+</html>
