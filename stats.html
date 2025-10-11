@@ -1,1 +1,111 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tajweedy — الإحصاءات</title><link rel="stylesheet" href="styles.css"></head><body class="container"><h1>الإحصاءات</h1><div class="card">سيتم رسم الرسوم البيانية هنا (Recharts/Chart.js في الإصدار المتقدم).</div><a class="btn-link" href="index.html">العودة</a></body></html>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tajweedy — الإحصاءات</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <img src="assets/logo-tajweedy.png" alt="Tajweedy logo" onerror="this.style.display='none'">
+      <div>
+        <h1>Tajweedy — الإحصاءات</h1>
+        <div class="muted">الأخطاء حسب الحكم — مع مواءمة كاملة لعناوين الأعمدة الطويلة</div>
+      </div>
+      <div style="margin-inline-start:auto">
+        <button class="btn" onclick="toggleTheme()">الوضع الليلي</button>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="row">
+        <h2>الأخطاء بحسب الحكم</h2>
+        <span class="badge" id="sampleInfo" hidden>بيانات تجريبية</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="errorsByRuleChart"></canvas>
+      </div>
+      <div class="legend">
+        <span><i class="dot" style="background:#22c55e"></i>عدد الأخطاء المسجّلة</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>سجل المحاولات</h2>
+      <div id="attemptsLog" class="muted">سيظهر هنا ملخص المحاولات عند وجود بيانات</div>
+    </section>
+  </div>
+
+<script>
+function toggleTheme(){ const d=document.documentElement; d.dataset.theme = d.dataset.theme==='dark' ? '' : 'dark'; }
+function readAttempts(){
+  try{
+    const raw = localStorage.getItem('tajweedy_progress_full')
+             || localStorage.getItem('tajweed_progress_full')
+             || localStorage.getItem('tajweedy_attempts');
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  }catch(e){ return []; }
+}
+function groupErrorsByRule(rows){
+  const map = new Map();
+  rows.forEach(r=>{
+    const rule = r.rule || r.subRule || r.label || 'غير مُسمّى';
+    const wrong = Number(r.wrong ?? r.errors ?? 0);
+    map.set(rule, (map.get(rule)||0) + wrong);
+  });
+  return map;
+}
+function dynamicBottomPadding(labels, base=42){
+  const maxLen = labels.reduce((m, s)=>Math.max(m, (s||'').length), 0);
+  const extraPerChar = 0.9;
+  return Math.min(base + Math.round(maxLen*extraPerChar), 110);
+}
+(function(){
+  const attempts = readAttempts();
+  if(!attempts.length) document.getElementById('sampleInfo').hidden = false;
+  const demo = [
+    {rule:'إظهار حلقي', wrong:1, at:new Date().toISOString()},
+    {rule:'إدغام بغنة', wrong:4, at:new Date().toISOString()},
+    {rule:'إقلاب', wrong:2, at:new Date().toISOString()},
+  ];
+  const source = attempts.length ? attempts : demo;
+  const grouped = groupErrorsByRule(source);
+  const labels = [...grouped.keys()];
+  const values = [...grouped.values()];
+  const ctx = document.getElementById('errorsByRuleChart');
+  const bottomPad = dynamicBottomPadding(labels, 44);
+  new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label:'الأخطاء', data: values, backgroundColor: '#22c55e', borderRadius: 8, borderSkipped: false }]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { bottom: bottomPad } },
+      plugins: { legend: { display: false }, tooltip: { enabled: true } },
+      scales: {
+        x: { ticks: { font: { size: 14, family:'Cairo, system-ui' }, padding: 10, maxRotation: 40, minRotation: 40 }, grid: { display:false } },
+        y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1 }, grid: { color:'rgba(0,0,0,.06)' } }
+      }
+    }
+  });
+  const logBox = document.getElementById('attemptsLog');
+  if (attempts.length){
+    logBox.innerHTML = attempts.slice(-5).map((r,i)=>`
+      <div style="padding:.4rem 0;border-bottom:1px dashed var(--ring)">
+        <div><strong>${r.rule || 'حكم غير مُسمّى'}</strong> — صواب: ${r.correct ?? 0} | أخطاء: ${r.wrong ?? 0}</div>
+        <div class="muted" style="font-size:.85rem">${new Date(r.at||Date.now()).toLocaleString('ar')}</div>
+      </div>`).join('');
+  } else {
+    logBox.innerHTML = '<em>لا توجد بيانات بعد — أجرِ اختبارًا ليظهر السجل هنا.</em>';
+  }
+})();
+</script>
+</body>
+</html>

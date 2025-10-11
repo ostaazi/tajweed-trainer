@@ -1,1 +1,197 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tajweedy — لوحة المعلومات</title><link rel="stylesheet" href="styles.css"></head><body class="container"><h1>لوحة المعلومات</h1><p class="muted">سيتم ملؤها من localStorage في الإصدارات الكاملة.</p><a class="btn-link" href="index.html">العودة</a></body></html>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tajweedy — لوحة المعلومات</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="container">
+  <header>
+    <img src="assets/logo-tajweedy.png" alt="Tajweedy" onerror="this.style.display='none'">
+    <div>
+      <h1>Tajweedy — لوحة المعلومات</h1>
+      <div class="muted">نظرة عامة على الأداء العام والاتجاهات</div>
+    </div>
+    <div style="margin-inline-start:auto;display:flex;gap:8px">
+      <button class="btn" onclick="toggleTheme()">الوضع الليلي</button>
+      <button class="btn" onclick="clearDemo()">مسح البيانات التجريبية</button>
+    </div>
+  </header>
+
+  <section class="grid">
+    <div class="card">
+      <div class="row">
+        <h2>الأخطاء بحسب الحكم</h2>
+        <span class="badge" id="demo1" hidden>بيانات تجريبية</span>
+      </div>
+      <div class="chart-wrap"><canvas id="byRule"></canvas></div>
+      <div class="legend">
+        <span><i class="dot bad" style="background:#ef4444"></i>عدد الأخطاء</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <h2>الاتجاه الزمني (صواب/خطأ)</h2>
+        <span class="badge" id="demo2" hidden>بيانات تجريبية</span>
+      </div>
+      <div class="chart-wrap"><canvas id="timeline"></canvas></div>
+      <div class="legend">
+        <span><i class="dot ok" style="background:#22c55e"></i>صواب</span>
+        <span><i class="dot bad" style="background:#ef4444"></i>خطأ</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <div class="row">
+        <h2>متوسط الدقة حسب القسم</h2>
+        <span class="badge" id="demo3" hidden>بيانات تجريبية</span>
+      </div>
+      <div class="chart-wrap"><canvas id="accuracyBySection"></canvas></div>
+      <div class="legend">
+        <span><i class="dot ok" style="background:#22c55e"></i>نسبة الصواب %</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>أحدث المحاولات</h2>
+      <div id="recent" class="list muted"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+function toggleTheme(){
+  const d=document.documentElement;
+  d.dataset.theme = d.dataset.theme==='dark' ? '' : 'dark';
+}
+function clearDemo(){ localStorage.removeItem('tajweedy_progress_full'); localStorage.removeItem('tajweed_progress_full'); localStorage.removeItem('tajweedy_attempts'); location.reload(); }
+
+function readAttempts(){
+  try{
+    // Flexible keys for backward compatibility
+    const raw = localStorage.getItem('tajweedy_progress_full')
+            || localStorage.getItem('tajweed_progress_full')
+            || localStorage.getItem('tajweedy_attempts');
+    if(!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr)?arr:[];
+  }catch(e){ return []; }
+}
+function demoData(){
+  const now=Date.now(); const t=d=>new Date(now-d*86400000).toISOString();
+  return [
+    {section:'noon_tanween', rule:'إظهار حلقي', correct:3, wrong:1, at:t(8)},
+    {section:'noon_tanween', rule:'إدغام بغنة', correct:2, wrong:4, at:t(6)},
+    {section:'noon_tanween', rule:'إقلاب', correct:4, wrong:2, at:t(5)},
+    {section:'meem_sakinah', rule:'إخفاء شفوي', correct:3, wrong:1, at:t(4)},
+    {section:'meem_sakinah', rule:'إدغام شفوي', correct:4, wrong:1, at:t(2)},
+    {section:'madd', rule:'مد متصل', correct:5, wrong:2, at:t(1)},
+    {section:'madd', rule:'مد منفصل', correct:4, wrong:3, at:t(0)},
+  ];
+}
+const SECTION_LABELS={ noon_tanween:'النون الساكنة والتنوين', meem_sakinah:'الميم الساكنة', madd:'أحكام المدود' };
+function groupErrorsByRule(rows){ const m=new Map(); rows.forEach(r=>{ const k=r.rule||'غير مُسمّى'; m.set(k,(m.get(k)||0)+Number(r.wrong||0)); }); return m; }
+function seriesTimeline(rows){
+  const byDay=new Map();
+  rows.forEach(r=>{
+    const d=new Date(r.at||Date.now());
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const a=byDay.get(key)||{ok:0,bad:0};
+    a.ok+=Number(r.correct||0); a.bad+=Number(r.wrong||0);
+    byDay.set(key,a);
+  });
+  const labels=[...byDay.keys()].sort();
+  return { labels, ok:labels.map(k=>byDay.get(k).ok), bad:labels.map(k=>byDay.get(k).bad) };
+}
+function accuracyBySection(rows){
+  const m=new Map();
+  rows.forEach(r=>{
+    const s=r.section||'other';
+    const a=m.get(s)||{ok:0,bad:0};
+    a.ok+=Number(r.correct||0); a.bad+=Number(r.wrong||0);
+    m.set(s,a);
+  });
+  const labels=[...m.keys()];
+  const acc=labels.map(k=>{
+    const a=m.get(k); const tot=a.ok+a.bad||1;
+    return Math.round((a.ok/tot)*100);
+  });
+  return { labels: labels.map(k=>SECTION_LABELS[k]||k), values:acc };
+}
+function dynamicBottomPadding(labels, base=44){
+  const maxLen=labels.reduce((m,s)=>Math.max(m,(s||'').length),0);
+  return Math.min(base+Math.round(maxLen*0.9),110);
+}
+
+(function(){
+  let rows=readAttempts();
+  const demo=!rows.length; if(demo) rows=demoData();
+  if(demo){ ['demo1','demo2','demo3'].forEach(id=>document.getElementById(id).hidden=false); }
+
+  // 1) by rule
+  {
+    const grouped=groupErrorsByRule(rows);
+    const labels=[...grouped.keys()], values=[...grouped.values()];
+    new Chart(document.getElementById('byRule'),{
+      type:'bar',
+      data:{ labels, datasets:[{ data:values, backgroundColor:'#ef4444', borderRadius:8, borderSkipped:false }]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        layout:{ padding:{ bottom: dynamicBottomPadding(labels, 44) } },
+        plugins:{ legend:{display:false}, tooltip:{enabled:true}},
+        scales:{ x:{ ticks:{font:{size:14}, padding:10, maxRotation:40, minRotation:40}, grid:{display:false}}, y:{ beginAtZero:true, ticks:{precision:0, stepSize:1}, grid:{color:'rgba(0,0,0,.06)'}} }
+      }
+    });
+  }
+  // 2) timeline
+  {
+    const s=seriesTimeline(rows);
+    new Chart(document.getElementById('timeline'),{
+      type:'line',
+      data:{ labels:s.labels, datasets:[
+        {label:'صواب', data:s.ok, borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.15)', tension:.3, fill:true},
+        {label:'خطأ', data:s.bad, borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,.10)', tension:.3, fill:true},
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:true, labels:{usePointStyle:true}}, tooltip:{enabled:true}},
+        scales:{ x:{ grid:{display:false}, ticks:{font:{size:13}}}, y:{ beginAtZero:true, ticks:{precision:0}, grid:{color:'rgba(0,0,0,.06)'}} }
+      }
+    });
+  }
+  // 3) accuracy by section
+  {
+    const s=accuracyBySection(rows);
+    new Chart(document.getElementById('accuracyBySection'),{
+      type:'bar',
+      data:{ labels:s.labels, datasets:[{ data:s.values, backgroundColor:'#22c55e', borderRadius:8, borderSkipped:false }]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        layout:{ padding:{ bottom: dynamicBottomPadding(s.labels, 44) } },
+        plugins:{ legend:{display:false}, tooltip:{enabled:true, callbacks:{ label:(c)=>'الدقة: '+c.parsed.y+'%'}}},
+        scales:{ x:{ ticks:{font:{size:14}, padding:10, maxRotation:40, minRotation:40}, grid:{display:false}}, y:{ beginAtZero:true, min:0, max:100, ticks:{callback:v=>v+'%'} , grid:{color:'rgba(0,0,0,.06)'}} }
+      }
+    });
+  }
+
+  // 4) recent
+  const recent=document.getElementById('recent');
+  const items=rows.slice(-6).reverse();
+  recent.innerHTML = items.map(r=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px dashed var(--ring);padding:6px 0;">
+      <div><strong>${r.rule||'حكم غير مُسمّى'}</strong> <span class="badge">${r.section||''}</span></div>
+      <div class="muted" style="display:flex;gap:10px"><span>✅ ${r.correct||0}</span><span>❌ ${r.wrong||0}</span><span>${new Date(r.at||Date.now()).toLocaleString('ar')}</span></div>
+    </div>`).join('');
+})();
+</script>
+</body>
+</html>

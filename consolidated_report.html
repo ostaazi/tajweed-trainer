@@ -1,1 +1,55 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tajweedy — التقرير المجمّع</title><link rel="stylesheet" href="styles.css"></head><body class="container"><h1>التقرير المجمّع</h1><p class="muted">تجميعة لتقارير متعددة.</p><a class="btn-link" href="index.html">العودة</a></body></html>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Tajweedy — تقرير مجمّع</title>
+<link rel="stylesheet" href="styles.css"/>
+<style>
+.container{max-width:980px;margin:24px auto;padding:0 16px}
+.card{background:var(--tj-surface,#fff);border:1px solid var(--tj-border,#e5e7eb);border-radius:14px;padding:16px;margin:12px 0}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{border:1px solid var(--tj-border,#e5e7eb);padding:8px;text-align:center;vertical-align:top}
+.badge{padding:2px 8px;border-radius:10px;border:1px solid var(--tj-border,#e5e7eb);display:inline-block}
+.ok{color:#0b6} .no{color:#b00}
+</style>
+</head>
+<body>
+<header class="container">
+  <h1>📄 تقرير مجمّع للمحاولات</h1>
+  <div class="muted">يمكن طباعة الصفحة/حفظها كـ PDF.</div>
+</header>
+<main class="container">
+  <div class="card">
+    <button onclick="history.back()">⬅️ العودة</button>
+    <button onclick="window.print()">🖨️ طباعة</button>
+  </div>
+
+  <section class="card">
+    <table class="table" id="tbl">
+      <thead>
+        <tr><th>#</th><th>التاريخ</th><th>المتدرّب</th><th>القسم</th><th>النتيجة</th><th>تحليل موجز</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+</main>
+
+<script>
+(function(){
+  const arr = JSON.parse(localStorage.getItem('tajweedy_progress_full')||'[]');
+  const map={noon_tanween:'النون الساكنة والتنوين',meem_sakinah:'الميم الساكنة',madd:'أحكام المدود',full:'اختبار شامل',custom:'مخصص'};
+  const tb=document.querySelector('#tbl tbody');
+  if(!arr.length){ tb.innerHTML='<tr><td colspan=6>لا توجد محاولات محفوظة.</td></tr>'; return; }
+  arr.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    const dt=new Date(r.ts||Date.now()).toLocaleString('ar-EG');
+    const txt = (r.analysis&&r.analysis.text)||'';
+    tr.innerHTML = `<td>${i+1}</td><td>${dt}</td><td>${r.traineeName||''}</td><td>${map[r.sectionKey]||r.sectionKey||''}</td>
+      <td><span class="badge">${r.correct}/${r.total}</span></td><td style="text-align:right">${txt}</td>`;
+    tb.appendChild(tr);
+  });
+})();
+</script>
+</body>
+</html>
