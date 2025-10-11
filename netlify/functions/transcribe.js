@@ -1,39 +1,38 @@
 
+// Netlify Function: /.netlify/functions/transcribe
+// Requires environment variable OPENAI_API_KEY
 export default async function handler(req, context) {
-  const key = process.env.OPENAI_API_KEY;
   if (req.method === 'GET') {
-    const mode = new URL(req.url).searchParams.get('mode');
-    const ok = !!key;
-    if (mode === 'diag') {
-      return new Response(JSON.stringify({ok, message: ok?'Key detected':'Missing key', hint:'Use POST to transcribe.'}, null, 2), {status: ok?200:500, headers:{'content-type':'application/json'}});
+    return new Response(JSON.stringify({ ok:false, code:'method_not_allowed', message:'Use POST to transcribe' }), { status:405 });
+  }
+  try {
+    const apiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY || process.env.OPENAI_APIKEY;
+    if(!apiKey){
+      return new Response(JSON.stringify({ ok:false, code:'missing_key', message:'OPENAI_API_KEY not configured' }), { status:500 });
     }
-    return new Response(JSON.stringify({ok:false, code:'method_not_allowed', message:'Use POST to transcribe.'}), {status:405, headers:{'content-type':'application/json'}});
-  }
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ok:false, code:'method_not_allowed', message:'Use POST'}), {status:405, headers:{'content-type':'application/json'}});
-  }
-  if (!key) {
-    return new Response(JSON.stringify({ok:false, code:'no_key', message:'OPENAI_API_KEY not set'}), {status:500, headers:{'content-type':'application/json'}});
-  }
-  try{
-    const form = await req.formData();
-    const file = form.get('file');
-    const language = form.get('language') || 'ar';
-    if(!file){ return new Response(JSON.stringify({ok:false, code:'no_file', message:'No audio file provided'}), {status:400, headers:{'content-type':'application/json'}}); }
-    const oform = new FormData();
-    oform.append('file', file, file.name || 'audio.webm');
-    oform.append('model','whisper-1');
-    oform.append('response_format','json');
-    oform.append('language', language);
-    const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method:'POST', headers:{ 'Authorization':'Bearer '+key }, body:oform
+    const formData = await req.formData();
+    const blob = formData.get('file');
+    const language = formData.get('language') || 'ar';
+
+    const upstream = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method:'POST',
+      headers:{ 'Authorization':`Bearer ${apiKey}` },
+      body: (()=>{
+        const fd = new FormData();
+        fd.append('file', blob, 'speech.webm');
+        fd.append('model','whisper-1'); // or gpt-4o-transcribe when available
+        fd.append('response_format','verbose_json');
+        fd.append('language', language);
+        return fd;
+      })()
     });
-    const text = await res.text();
-    if(!res.ok){
-      return new Response(JSON.stringify({ok:false, code:'openai_error', message:'OpenAI returned a non-200 response.', openai_text:text}), {status:res.status, headers:{'content-type':'application/json'}});
+    const text = await upstream.text();
+    if(!upstream.ok){
+      return new Response(JSON.stringify({ ok:false, code:'openai_error', message:'OpenAI returned a non-200 response.', openai_text:text, diagnostics:{ stage:'fetch_openai', env_present:true, openai_status: upstream.status } }), { status: upstream.status });
     }
-    return new Response(text, {status:200, headers:{'content-type':'application/json'}});
-  }catch(e){
-    return new Response(JSON.stringify({ok:false, code:'exception', message:e.message}), {status:500, headers:{'content-type':'application/json'}});
+    const j = JSON.parse(text);
+    return new Response(JSON.stringify({ ok:true, text:j.text || j.text?.trim?.() || '', raw:j }), { status:200 });
+  } catch (err) {
+    return new Response(JSON.stringify({ ok:false, code:'exception', message:String(err) }), { status:500 });
   }
 }
