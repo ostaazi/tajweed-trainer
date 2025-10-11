@@ -14,13 +14,7 @@
     .rep-table th,.rep-table td{border:1px solid #e5e7eb;padding:10px 12px;vertical-align:top}
     .tag{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #ddd;background:#f7f7f7;margin-inline-start:6px}
     .ok{color:#2e7d32}.bad{color:#c62828}
-    .no-print{}
-    @media print{
-      .no-print{display:none}
-      body{background:#fff}
-      .rep-wrap{margin:0;max-width:100%;padding:0}
-      .tj-header{display:none}
-    }
+    @media print{ .no-print{display:none} body{background:#fff} .rep-wrap{margin:0;max-width:100%;padding:0} .tj-header{display:none} }
   </style>
 </head>
 <body>
@@ -83,7 +77,6 @@
     const tr=document.createElement('tr');
 
     const tdIdx=document.createElement('td'); tdIdx.textContent=row.index; tr.appendChild(tdIdx);
-
     const tdQ=document.createElement('td'); tdQ.innerHTML=esc(row.text||''); tr.appendChild(tdQ);
 
     const tdChosen=document.createElement('td');

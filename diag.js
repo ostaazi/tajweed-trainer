@@ -1,82 +1,44 @@
-/* diag.js — in-page diagnostics for Netlify function + OpenAI key */
+
 (function(){
-  function $(id){ return document.getElementById(id); }
-  function printDiag(obj){
-    var el = $("diagOut"); if (!el) return;
-    el.style.display = "block";
-    el.textContent = (typeof obj === "string") ? obj : JSON.stringify(obj, null, 2);
+  'use strict';
+  const out = document.getElementById('diagOut');
+  const diagBtn = document.getElementById('diagBtn');
+  const diagRecBtn = document.getElementById('diagRecBtn');
+  const diagPlayback = document.getElementById('diagPlayback');
+
+  function show(obj){
+    if (!out) return;
+    out.style.display='block';
+    out.textContent = JSON.stringify(obj, null, 2);
   }
-  async function runDiagnostics(){
+
+  async function ping(){
     try{
-      const r1 = await fetch('/.netlify/functions/transcribe');
-      const t1 = await r1.text();
-
-      const r2 = await fetch('/.netlify/functions/transcribe', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ audio_b64: btoa('test-audio'), mime:'audio/webm', language:'ar' })
-      });
-      const t2 = await r2.text();
-
-      let hint = '';
-      if (r2.status === 401 || /api_key/i.test(t2))        hint = '❌ المفتاح غير صحيح/غير موجود في Netlify.';
-      else if (r2.status === 404)                          hint = '❌ الدالة غير منشورة. تأكد من Functions=functions ثم انشر بدون كاش.';
-      else if (r2.status === 422 || r2.status === 400)     hint = '✅ الاتصال صحيح والمفتاح صالح (المدخل ليس صوتًا حقيقيًا).';
-      else                                                 hint = 'ℹ️ الحالة: ' + r2.status;
-
-      printDiag({ get_status: r1.status, get_body: t1, post_status: r2.status, post_body: t2, hint });
-      alert(hint);
+      const r = await fetch('/api/transcribe');
+      const txt = await r.text();
+      show({ get_status: r.status, get_body: txt });
     }catch(e){
-      printDiag(String(e));
-      alert('فشل الاختبار: تحقق من الاتصال أو اسم المسار.');
+      show({ error: String(e) });
     }
   }
-  async function blobToB64(blob){
-    const buf = await blob.arrayBuffer();
-    return btoa(String.fromCharCode(...new Uint8Array(buf)));
+
+  async function quickRecord(ms=3000){
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    const rec = new MediaRecorder(stream, {mimeType:'audio/webm'});
+    const chunks=[];
+    rec.ondataavailable = e => { if (e.data.size>0) chunks.push(e.data); };
+    await new Promise(res=>{ rec.onstop = res; rec.start(); setTimeout(()=>rec.stop(), ms); });
+    const blob = new Blob(chunks, {type:'audio/webm'});
+    diagPlayback.src = URL.createObjectURL(blob);
+    diagPlayback.style.display='block';
+
+    const fd = new FormData();
+    fd.append('file', blob, 'diag.webm');
+    const r = await fetch('/api/transcribe', {method:'POST', body:fd});
+    const text = await r.text();
+    show({ post_status: r.status, post_body: text, hint: (r.status===400?'✅ الاتصال صحيح والمفتاح صالح (المدخل ليس صوتًا حقيقيًا).':'ℹ️ الحالة: '+r.status) });
   }
-  async function runDiagnosticsWithRecord(){
-    try{
-      const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-      const rec = new MediaRecorder(stream, { mimeType:'audio/webm' });
-      const chunks = [];
-      rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-      rec.onstop = async () => {
-        const blob = new Blob(chunks, { type:'audio/webm' });
-        const pb = $("diagPlayback"); if (pb) { pb.src = URL.createObjectURL(blob); pb.style.display = 'block'; }
-        const audio_b64 = await blobToB64(blob);
-        const r = await fetch('/.netlify/functions/transcribe', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ audio_b64, mime:'audio/webm', language:'ar' })
-        });
-        const text = await r.text();
-        let hint = '';
-        if (r.status === 200 && /"text":/.test(text))      hint = '✅ تم التفريغ بنجاح.';
-        else if (r.status === 401 || /api_key/i.test(text))hint = '❌ مشكلة مفتاح: OPENAI_API_KEY.';
-        else if (r.status === 404)                         hint = '❌ الدالة غير منشورة (Functions=functions + إعادة نشر).';
-        else if (r.status === 422)                         hint = 'ℹ️ 422 من OpenAI: تحقق من التنسيق/المدة.';
-        else                                               hint = 'ℹ️ الحالة: ' + r.status;
-        printDiag({ post_status: r.status, post_body: text, hint });
-        alert(hint);
-        stream.getTracks().forEach(t=>t.stop());
-      };
-      rec.start();
-      setTimeout(()=> rec.stop(), 3000);
-    }catch(e){
-      printDiag(String(e));
-      alert('تعذّر الوصول إلى الميكروفون. امنح الإذن من المتصفح.');
-    }
-  }
-  function bind(){
-    const d1 = $("diagBtn"), d2 = $("diagRecBtn");
-    if (d1) d1.onclick = runDiagnostics;
-    if (d2) d2.onclick = runDiagnosticsWithRecord;
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bind);
-  } else {
-    bind();
-  }
-  window.__tajweedDiag = { runDiagnostics, runDiagnosticsWithRecord, printDiag };
+
+  if (diagBtn) diagBtn.addEventListener('click', ping);
+  if (diagRecBtn) diagRecBtn.addEventListener('click', ()=>quickRecord(3000));
 })();

@@ -1,299 +1,318 @@
-// ===== app.js — Unified + Expanded Reciters + UI notice for fallback =====
+
 (function(){
-  // ---------- State & helpers ----------
-  const state = { recorder:null, chunks:[], mediaStream:null, current:{surah:1, ayah:1, text:"", reciter:null} };
-  const $ = id => document.getElementById(id);
-  const pad3 = n => String(n).padStart(3,'0');
+  'use strict';
 
-  // Small notice below the "play" button
-  function showReciterNotice(usedId){
-    let el = $("reciterNotice");
-    if (!el){
-      el = document.createElement('div');
-      el.id = 'reciterNotice';
-      el.style.marginTop = '8px';
-      el.style.fontSize = '0.92rem';
-      el.style.color = '#555';
-      const after = $("playCorrectBtn");
-      if (after) after.insertAdjacentElement('afterend', el);
-      else document.body.appendChild(el);
-    }
-    const found = RECITERS.find(r => r.id === usedId);
-    const usedName = found ? found.name : usedId;
-    const prefName = (RECITERS.find(r=>r.id===state.current.reciter)||{}).name || state.current.reciter;
-    if (state.current.reciter === usedId){
-      el.textContent = `تم التشغيل بصوت: ${usedName}`;
-    }else{
-      el.textContent = `لم تتوفر الآية عند القارئ المختار (${prefName})؛ تم التشغيل بصوت: ${usedName}`;
-    }
+  // ======== Helpers ========
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => document.querySelectorAll(sel);
+  const byId = id => document.getElementById(id);
+
+  function getTraineeName(){
+    var el = byId('traineeName');
+    var v = el && el.value ? String(el.value).trim() : '';
+    if (v){ try{ localStorage.setItem('trainee_name', v); }catch(_){} }
+    return v || (localStorage.getItem && localStorage.getItem('trainee_name')) || '';
   }
 
-  // ---------- Reciters (EveryAyah) — expanded ----------
+  // ======== Elements ========
+  const reciterSelect = byId('reciterSelect');
+  const surahSelect = byId('surahSelect');
+  const ayahSelect = byId('ayahSelect');
+  const ayahTextEl = byId('ayahText');
+  const playCorrectBtn = byId('playCorrectBtn');
+  const referenceAudio = byId('referenceAudio');
+
+  const micBtn = byId('micBtn');
+  const stopBtn = byId('stopBtn');
+  const transcribeBtn = byId('transcribeBtn');
+  const playback = byId('playback');
+  const transcriptPre = byId('transcript');
+
+  const quizSectionSel = byId('quizSection');
+  const buildQuizBtn = byId('buildQuizBtn');
+  const buildFullQuizBtn = byId('buildFullQuizBtn');
+  const quizDiv = byId('quiz');
+
+  const showSummaryBtn = byId('showSummaryBtn');
+  const resetSummaryBtn = byId('resetSummaryBtn');
+  const summaryDiv = byId('summary');
+
+  // ======== Reciters (alquran.cloud handles audio per ayah) ========
   const RECITERS = [
-    { id:"Husary_64kbps",                           name:"الحصري 64kbps" },
-    { id:"Husary_Mujawwad_64kbps",                  name:"الحصري (مجوّد) 64kbps" },
-    { id:"AbdulSamad_64kbps_QuranExplorer.Com",     name:"محمود خليل الحصري (عبد الصمد) 64kbps" },
-    { id:"Abdul_Basit_Murattal_64kbps",             name:"عبد الباسط (مرتّل) 64kbps" },
-    { id:"Abdul_Basit_Mujawwad_128kbps",            name:"عبد الباسط (مجوّد) 128kbps" },
-    { id:"Abdurrahmaan_As-Sudais_64kbps",           name:"عبد الرحمن السديس 64kbps" },
-    { id:"Abu_Bakr_Ash-Shaatree_64kbps",            name:"أبو بكر الشاطري 64kbps" },
-    { id:"Ahmed_ibn_Ali_al-Ajamy_64kbps_QuranExplorer.Com", name:"أحمد العجمي 64kbps" },
-    { id:"Alafasy_64kbps",                          name:"مشاري راشد العفاسي 64kbps" },
-    { id:"Ghamadi_40kbps",                          name:"أبو بكر الغامدي 40kbps" },
-    { id:"Maher_AlMuaiqly_64kbps",                  name:"ماهر المعيقلي 64kbps" },
-    { id:"Hudhaify_64kbps",                         name:"علي الحذيفي 64kbps" },
-    { id:"Minshawi_64kbps",                         name:"محمد صديق المنشاوي 64kbps" },
-    { id:"Minshawy_Mujawwad_192kbps",               name:"المنشاوي (مجوّد) 192kbps" },
-    { id:"Saood_ash-Shuraym_64kbps",                name:"سعود الشريم 64kbps" }
+    { id: 'ar.alafasy', name: 'مشاري العفاسي' },
+    { id: 'ar.husary', name: 'الحُصري' },
+    { id: 'ar.minshawi', name: 'المِنشاوي' },
+    { id: 'ar.abdulbasit', name: 'عبد الباسط' }
   ];
-  if (!state.current.reciter) state.current.reciter = RECITERS[0].id;
 
+  // ======== State ========
+  let mediaRecorder = null;
+  let recordedChunks = [];
+
+  // ======== Init Reciters ========
   function initReciters(){
-    const rSel = $("reciterSelect");
-    if (!rSel) return;
-    rSel.innerHTML = RECITERS.map(r => `<option value="${r.id}">${r.name}</option>`).join("");
-    rSel.value = state.current.reciter || RECITERS[0].id;
-    rSel.onchange = () => { state.current.reciter = rSel.value; };
+    reciterSelect.innerHTML = RECITERS.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
   }
 
-  async function pickFirstAvailableUrl(surah, ayah, preferredId){
-    const order = [preferredId, ...RECITERS.map(r=>r.id).filter(id => id !== preferredId)];
-    for (const reciterId of order){
-      const testUrl = `https://everyayah.com/data/${reciterId}/${pad3(surah)}${pad3(ayah)}.mp3`;
-      try {
-        const h = await fetch(testUrl, { method: 'HEAD' });
-        if (h.ok) return { url:testUrl, reciterId };
-      } catch(_) {}
-    }
-    return null;
+  // ======== Fetch Surahs/Ayahs from Quran.com API ========
+  async function loadSurahs(){
+    const res = await fetch('https://api.quran.com/api/v4/chapters?language=ar');
+    const data = await res.json();
+    const chapters = data.chapters || [];
+    surahSelect.innerHTML = chapters.map(c => `<option value="${c.id}">${c.id} — ${c.name_arabic}</option>`).join('');
+    await loadAyahs();
   }
 
-  async function playReference(){
-    const surah = state.current.surah;
-    const ayah  = state.current.ayah;
-    const preferred = state.current.reciter || RECITERS[0].id;
-    const found = await pickFirstAvailableUrl(surah, ayah, preferred);
-    const audio = $("referenceAudio");
-    if (found && audio){
-      audio.src = found.url;
-      showReciterNotice(found.reciterId); // UI hint (also signals fallback)
-      try { await audio.play(); } catch(_){}
-    } else {
-      alert("تعذّر إيجاد ملف لهذه الآية عند القرّاء المحدّدين.");
-    }
+  async function loadAyahs(){
+    const sid = Number(surahSelect.value || 1);
+    ayahSelect.innerHTML = '';
+    ayahTextEl.textContent = '';
+    // Get verses Uthmani for that chapter
+    const res = await fetch(`https://api.quran.com/api/v4/quran/verses/uthmani?chapter_number=${sid}`);
+    const data = await res.json();
+    const verses = data.verses || [];
+    ayahSelect.innerHTML = verses.map(v => `<option value="${v.verse_number}">${sid}:${v.verse_number}</option>`).join('');
+    updateAyahText();
   }
 
-  // ---------- Quran API (Uthmani) ----------
-  async function fetchSurahList(){
+  async function updateAyahText(){
+    const sid = Number(surahSelect.value || 1);
+    const aid = Number(ayahSelect.value || 1);
+    const res = await fetch(`https://api.quran.com/api/v4/quran/verses/uthmani?chapter_number=${sid}`);
+    const data = await res.json();
+    const verse = (data.verses || []).find(v => Number(v.verse_number)===aid);
+    ayahTextEl.textContent = verse ? (verse.text_uthmani || '') : '';
+  }
+
+  // ======== Play Correct Recitation (alquran.cloud) ========
+  async function playCorrect(){
+    const sid = Number(surahSelect.value || 1);
+    const aid = Number(ayahSelect.value || 1);
+    const rec = reciterSelect.value || 'ar.alafasy';
+    // e.g., https://api.alquran.cloud/v1/ayah/2:1/ar.alafasy
     try{
-      const res = await fetch('https://api.alquran.cloud/v1/surah');
-      const js = await res.json();
-      if (js.status === "OK"){
-        return js.data.map(s => ({ number:s.number, name:s.name, numberOfAyahs:s.numberOfAyahs }));
-      }
-    }catch(e){ console.warn(e); }
-    return [{number:1,name:"الفاتحة",numberOfAyahs:7},{number:2,name:"البقرة",numberOfAyahs:286},{number:3,name:"آل عمران",numberOfAyahs:200}];
-  }
-  async function fetchAyahUthmani(surah, ayah){
-    const r = await fetch(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/quran-uthmani`);
-    const j = await r.json();
-    if (j.status === "OK") return j.data.text;
-    return "";
-  }
-  async function setAyah(surah, ayah){
-    const text = await fetchAyahUthmani(surah, ayah);
-    state.current = { ...state.current, surah, ayah, text };
-    const t = $("ayahText"); if (t) t.textContent = text || "تعذّر جلب النص.";
-  }
-  async function initQuran(){
-    const sSel = $("surahSelect"), aSel = $("ayahSelect");
-    if (!sSel || !aSel) return;
-    const list = await fetchSurahList();
-    sSel.innerHTML = list.map(s => `<option value="${s.number}">${s.number}. ${s.name}</option>`).join('');
-    sSel.value = "1";
-    aSel.innerHTML = Array.from({length:list[0].numberOfAyahs}, (_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
-    aSel.value = "1"; await setAyah(1,1);
-    sSel.onchange = async ()=>{
-      const sn = Number(sSel.value);
-      const s = list.find(x=>x.number===sn);
-      aSel.innerHTML = Array.from({length:s.numberOfAyahs}, (_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
-      aSel.value = "1"; await setAyah(sn,1);
-    };
-    aSel.onchange = async ()=>{ await setAyah(Number(sSel.value), Number(aSel.value)); };
+      const res = await fetch(`https://api.alquran.cloud/v1/ayah/${sid}:${aid}/${rec}`);
+      const data = await res.json();
+      const url = data && data.data && data.data.audio;
+      if (!url) throw new Error('Audio not available.');
+      referenceAudio.src = url;
+      referenceAudio.play().catch(()=>{});
+    }catch(err){
+      alert('تعذّر جلب الصوت من الخادم. جرّب قارئًا آخر.');
+    }
   }
 
-  // ---------- Recording + Cloud STT ----------
+  // ======== Recording / Transcription ========
   async function startRecording(){
-    try{ state.mediaStream = await navigator.mediaDevices.getUserMedia({ audio:true }); }
-    catch(e){ alert("تعذّر الوصول للميكروفون. امنح الإذن."); throw e; }
-    state.recorder = new MediaRecorder(state.mediaStream, { mimeType:'audio/webm' });
-    state.chunks = [];
-    state.recorder.ondataavailable = e => { if (e.data.size) state.chunks.push(e.data); };
-    state.recorder.onstop = () => {
-      const blob = new Blob(state.chunks, { type:'audio/webm' });
-      const pl = $("playback"); if (pl) pl.src = URL.createObjectURL(blob);
-      const tb = $("transcribeBtn"); if (tb) tb.disabled = false;
+    recordedChunks = [];
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    mediaRecorder.ondataavailable = e => { if (e.data.size>0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+      playback.src = URL.createObjectURL(blob);
+      transcribeBtn.disabled = false;
     };
-    state.recorder.start();
+    mediaRecorder.start();
+    micBtn.disabled = true; stopBtn.disabled = false;
   }
   function stopRecording(){
-    if (state.recorder && state.recorder.state!=="inactive") state.recorder.stop();
-    if (state.mediaStream) state.mediaStream.getTracks().forEach(t=>t.stop());
+    if (mediaRecorder && mediaRecorder.state !== 'inactive'){
+      mediaRecorder.stop();
+      stopBtn.disabled = true; micBtn.disabled = false;
+    }
+  }
+  async function sendToTranscribe(){
+    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+    const fd = new FormData();
+    fd.append('file', blob, 'read.webm');
+    // Frontend expects your serverless endpoint at /api/transcribe (Netlify function or similar)
+    // It should forward the audio to OpenAI Whisper or Realtime as configured on your backend.
+    const res = await fetch('/api/transcribe', { method:'POST', body:fd });
+    const text = await res.text().catch(()=>'');
+    transcriptPre.textContent = text || '—';
   }
 
-  async function transcribeCloud(blob){
-    try{
-      const buf = await blob.arrayBuffer();
-      const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
-      const res = await fetch('/.netlify/functions/transcribe', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ audio_b64:b64, mime:'audio/webm', language:'ar' })
+  // ======== QUIZ ========
+  const BANK = (window.TAJWEED_BANK || {});
+  function pickRandom(arr, n){
+    const a = arr.slice(); const out=[];
+    while (a.length && out.length<n){
+      const i = Math.floor(Math.random()*a.length);
+      out.push(a.splice(i,1)[0]);
+    }
+    return out;
+  }
+
+  function buildQuiz(sectionKey){
+    let questions = [];
+    if (sectionKey==='noon_tanween' || sectionKey==='meem_sakinah' || sectionKey==='madd'){
+      const src = BANK[sectionKey] || [];
+      questions = pickRandom(src, 5);
+    }else if (sectionKey==='full'){
+      questions = [
+        ...pickRandom(BANK.noon_tanween||[], 5),
+        ...pickRandom(BANK.meem_sakinah||[], 5),
+        ...pickRandom(BANK.madd||[], 5),
+      ];
+    }else{
+      questions = pickRandom(BANK.noon_tanween||[], 5);
+    }
+    renderQuiz(questions, sectionKey);
+  }
+
+  function renderQuiz(questions, sectionKey){
+    quizDiv.innerHTML = '';
+    const form = document.createElement('form');
+    questions.forEach((q,qi)=>{
+      const wrap = document.createElement('div');
+      wrap.className='quiz-q card';
+      wrap.style.marginTop='10px';
+
+      const qtext = document.createElement('div');
+      qtext.innerHTML = `<strong>س${qi+1}.</strong> ${q.text||''}`;
+      wrap.appendChild(qtext);
+
+      (q.options||[]).forEach((opt,oi)=>{
+        const line = document.createElement('label');
+        line.className='quiz-choice';
+        line.style.display='block';
+        line.style.padding='6px 8px';
+        line.style.border='1px solid var(--tj-border)';
+        line.style.borderRadius='8px';
+        line.style.marginTop='6px';
+
+        const inp = document.createElement('input');
+        inp.type='radio';
+        inp.name=`q${qi}`;
+        inp.value=oi;
+        inp.style.marginLeft='6px';
+        line.appendChild(inp);
+
+        const span = document.createElement('span');
+        span.textContent = opt;
+        line.appendChild(span);
+
+        wrap.appendChild(line);
       });
-      const text = await res.text();
-      if (!res.ok) throw new Error(text);
-      return JSON.parse(text);
-    }catch(err){
-      console.error(err);
-      alert("فشل التفريغ السحابي. تحقق من الاتصال/المفتاح.");
-      return null;
-    }
-  }
 
-  // ---------- Clean transcript + toggle details ----------
-  function renderTranscriptClean(result){
-    const pre = $("transcript"); if (!pre) return;
+      const fb = document.createElement('div');
+      fb.className = 'quiz-feedback';
+      wrap.appendChild(fb);
 
-    const plain = (result && typeof result.text === "string" && result.text.trim())
-      || (Array.isArray(result.segments) ? result.segments.map(s => s.text).join(" ").trim() : "");
+      form.appendChild(wrap);
+    });
 
-    pre.dir = "rtl"; pre.style.textAlign = "right";
-    pre.textContent = plain || "لم يتم التعرّف على نص.";
-    pre.setAttribute("data-json", "0");
+    const submit = document.createElement('button');
+    submit.type='button';
+    submit.textContent='تصحيح الإجابات';
+    submit.style.marginTop='12px';
+    form.appendChild(submit);
 
-    let toggleBtn = $("toggleDetails");
-    if (!toggleBtn) {
-      toggleBtn = document.createElement("button");
-      toggleBtn.id = "toggleDetails";
-      toggleBtn.textContent = "عرض التفاصيل";
-      toggleBtn.style.marginTop = "10px";
-      toggleBtn.style.padding = "8px 12px";
-      toggleBtn.style.borderRadius = "8px";
-      toggleBtn.style.border = "1px solid #ddd";
-      toggleBtn.style.background = "#fafafa";
-      toggleBtn.style.cursor = "pointer";
-      pre.insertAdjacentElement("afterend", toggleBtn);
-    }
+    quizDiv.appendChild(form);
 
-    toggleBtn.onclick = () => {
-      const showingJSON = pre.getAttribute("data-json") === "1";
-      if (showingJSON) {
-        pre.dir = "rtl"; pre.style.textAlign = "right";
-        pre.textContent = plain || "لم يتم التعرّف على نص.";
-        pre.setAttribute("data-json", "0");
-        toggleBtn.textContent = "عرض التفاصيل";
-      } else {
-        pre.dir = "ltr"; pre.style.textAlign = "left";
-        pre.textContent = JSON.stringify(result, null, 2);
-        pre.setAttribute("data-json", "1");
-        toggleBtn.textContent = "إخفاء التفاصيل";
-      }
+    submit.onclick = () => {
+      let correct = 0, total = questions.length;
+      const rows = [];
+
+      questions.forEach((q, idx)=>{
+        const wrap = form.children[idx];
+        const choiceEls = wrap.querySelectorAll('.quiz-choice');
+        const ans = (typeof q.answer === 'number') ? q.answer : -1;
+        const chosen = form.querySelector(`input[name="q${idx}"]:checked`);
+        const chosenIdx = chosen ? Number(chosen.value) : -1;
+
+        choiceEls.forEach((el,i)=>{
+          el.classList.remove('is-correct','is-wrong');
+          el.style.pointerEvents='none';
+          if (i===ans) el.classList.add('is-correct');
+          if (i===chosenIdx && i!==ans) el.classList.add('is-wrong');
+        });
+
+        const fb = wrap.querySelector('.quiz-feedback');
+        if (chosenIdx===ans){ correct++; fb.textContent = (q.why? `✓ إجابة صحيحة — ${q.why}` : '✓ إجابة صحيحة'); }
+        else {
+          const corr = q.options && q.options[ans] ? q.options[ans] : '—';
+          fb.textContent = (q.why? `✗ الإجابة الصحيحة: ${corr} — ${q.why}` : `✗ الإجابة الصحيحة: ${corr}`);
+        }
+
+        rows.push({
+          index: idx+1,
+          text: q.text||'',
+          options: q.options||[],
+          correctIndex: ans,
+          chosenIndex: chosenIdx,
+          why: q.why||''
+        });
+      });
+
+      recordQuizResult(sectionKey, correct, total);
+      // Build detailed report for any section
+      const payload = {
+        traineeName: (getTraineeName && getTraineeName()) || '',
+        title: (sectionKey==='full' ? 'اختبار شامل (١٥ سؤالًا)' : 'اختبار'),
+        sectionKey: sectionKey || 'custom',
+        total: total,
+        correct: correct,
+        ts: Date.now(),
+        rows: rows
+      };
+      try{ localStorage.setItem('tajweed_last_report', JSON.stringify(payload)); }catch(_){}
+      alert(`النتيجة: ${correct} / ${total}`);
+      window.location.href = 'report.html';
     };
+  }
 
-    if (typeof window.renderFeedback === "function"){
-      try{ window.renderFeedback(state.current.text || "", plain || ""); }catch(_){}
+  function recordQuizResult(sectionKey, correct, total){
+    try{
+      const key='tajweed_progress';
+      const now = new Date().toISOString();
+      const name = getTraineeName();
+      const rec = { when: now, who: name||'', section: sectionKey, correct, total };
+      const arr = JSON.parse(localStorage.getItem(key) || '[]');
+      arr.push(rec);
+      localStorage.setItem(key, JSON.stringify(arr));
+    }catch(_){}
+  }
+
+  function showSummary(){
+    try{
+      const arr = JSON.parse(localStorage.getItem('tajweed_progress') || '[]');
+      if (!arr.length){ summaryDiv.textContent = 'لا توجد سجلات بعد.'; return; }
+      const lines = arr.map(r => {
+        return `التاريخ: ${new Date(r.when).toLocaleString('ar-EG')} — القسم: ${r.section} — النتيجة: ${r.correct}/${r.total} — ${r.who||''}`;
+      });
+      summaryDiv.textContent = lines.join('\n');
+    }catch(_){
+      summaryDiv.textContent = '—';
     }
   }
-
-  // ---------- Quiz progress helpers ----------
-  const PROGRESS_KEY = 'tajweed_progress';
-  function loadProgress(){ try { const s = localStorage.getItem(PROGRESS_KEY); return s ? JSON.parse(s) : []; } catch(_){ return []; } }
-  function saveProgress(arr){ try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(arr)); } catch(_){ } }
-  function resetProgress(){ try { localStorage.removeItem(PROGRESS_KEY); } catch(_){} if (typeof window.onProgressReset === 'function') { try { window.onProgressReset(); } catch(_){ } } }
-  function recordQuizResult(payload){
-    const now = Date.now();
-    const rec = { section:(payload&&payload.section)||'unknown', total:(payload&&payload.total)||0, correct:(payload&&payload.correct)||0, ts:(payload&&payload.ts)||now };
-    const arr = loadProgress(); arr.push(rec); saveProgress(arr); return rec;
-  }
-  function buildSummary(){
-    const arr = loadProgress();
-    const sections = ['noon_tanween','meem_sakinah','madd'];
-    const names = { noon_tanween:'النون الساكنة والتنوين', meem_sakinah:'الميم الساكنة', madd:'أحكام المدود' };
-    const sum = {}; sections.forEach(s => sum[s] = { name:names[s], attempts:0, total:0, correct:0 });
-    for (const r of arr){
-      if (!sum[r.section]) sum[r.section] = { name:r.section, attempts:0, total:0, correct:0 };
-      sum[r.section].attempts++; sum[r.section].total += (r.total||0); sum[r.section].correct += (r.correct||0);
-    }
-    return sum;
-  }
-  function showProgressSummary(){
-    const sum = buildSummary();
-    const lines = [];
-    Object.keys(sum).forEach(k => {
-      const s = sum[k];
-      const acc = s.total ? Math.round((s.correct/s.total)*100) : 0;
-      lines.push(`• ${s.name}: محاولات ${s.attempts} — صحيحة ${s.correct}/${s.total} (الدقة ${acc}٪)`);
-    });
-    const box = $("progressSummary");
-    const text = lines.join('\\n') || 'لا توجد بيانات بعد.';
-    if (box) { box.textContent = text; } else { alert(text); }
-  }
-  window.quizProgress = { loadProgress, saveProgress, resetProgress, recordQuizResult, showProgressSummary };
-
-  // ---------- Quiz UI wiring (4 buttons) ----------
-  function initQuizUI(){
-    const sectionSel = $("quizSectionSelect");
-    const btnRandom   = $("startRandomQuizBtn");
-    const btnFull     = $("startFullQuizBtn");
-    const btnSummary  = $("showSummaryBtn");
-    const btnReset    = $("resetProgressBtn");
-
-    if (!sectionSel || !btnRandom || !btnFull || !btnSummary || !btnReset) {
-      console.warn('Quiz UI elements not found. Check IDs.');
-      return;
-    }
-    [btnRandom, btnFull, btnSummary, btnReset].forEach(b => b.disabled = false);
-
-    btnRandom.addEventListener('click', () => {
-      const section = sectionSel.value;
-      if (typeof window.startRandomQuiz === 'function') window.startRandomQuiz(section);
-      else if (typeof window.startQuiz === 'function') window.startQuiz({ mode:'random5', section });
-      else alert('زر "اختبار ٥ أسئلة" جاهز — اربطه بدالة startRandomQuiz(section).');
-    });
-    btnFull.addEventListener('click', () => {
-      if (typeof window.startFullQuiz === 'function') window.startFullQuiz();
-      else if (typeof window.startQuiz === 'function') window.startQuiz({ mode:'full15' });
-      else alert('زر "اختبار شامل" جاهز — اربطه بدالة startFullQuiz().');
-    });
-    btnSummary.addEventListener('click', showProgressSummary);
-    btnReset.addEventListener('click', () => { resetProgress(); alert('تمت إعادة تعيين السجل.'); const box = $("progressSummary"); if (box) box.textContent=''; });
+  function resetSummary(){
+    try{ localStorage.removeItem('tajweed_progress'); }catch(_){}
+    summaryDiv.textContent = 'تمت إعادة الضبط.';
   }
 
-  // ---------- Global init ----------
-  async function init(){
-    initReciters();
-    await initQuran();
+  // ======== Events ========
+  reciterSelect.addEventListener('change', ()=>{});
+  surahSelect.addEventListener('change', loadAyahs);
+  ayahSelect.addEventListener('change', updateAyahText);
+  playCorrectBtn.addEventListener('click', playCorrect);
+  micBtn.addEventListener('click', startRecording);
+  stopBtn.addEventListener('click', stopRecording);
+  transcribeBtn.addEventListener('click', sendToTranscribe);
+  buildQuizBtn.addEventListener('click', ()=>{
+    getTraineeName();
+    const section = quizSectionSel.value==='full' ? 'noon_tanween' : quizSectionSel.value;
+    buildQuiz(section);
+  });
+  buildFullQuizBtn.addEventListener('click', ()=>{
+    getTraineeName();
+    buildQuiz('full');
+  });
+  showSummaryBtn.addEventListener('click', showSummary);
+  resetSummaryBtn.addEventListener('click', resetSummary);
 
-    const micBtn = $("micBtn");
-    const stopBtn = $("stopBtn");
-    const transcribeBtn = $("transcribeBtn");
-    const playCorrectBtn = $("playCorrectBtn");
-
-    if (micBtn) micBtn.onclick = async ()=>{ micBtn.disabled = true; if (stopBtn) stopBtn.disabled = false; await startRecording(); };
-    if (stopBtn) stopBtn.onclick = ()=>{ if (micBtn) micBtn.disabled = false; stopBtn.disabled = true; stopRecording(); };
-    if (transcribeBtn) transcribeBtn.onclick = async ()=>{
-      const blob = new Blob(state.chunks, { type:'audio/webm' });
-      const out = await transcribeCloud(blob);
-      if (out) renderTranscriptClean(out);
-    };
-    if (playCorrectBtn) playCorrectBtn.onclick = playReference;
-
-    initQuizUI();
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  // ======== Bootstrap ========
+  initReciters();
+  loadSurahs().catch(()=>{});
 })();
