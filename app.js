@@ -1,217 +1,194 @@
 
-// ====== Helpers ======
-const $ = (s, p=document) => p.querySelector(s);
-const $$= (s, p=document) => [...p.querySelectorAll(s)];
-const pad3 = n => String(n).padStart(3,'0');
-
-// Theme
-const themeBtn = $("#toggleTheme");
-themeBtn?.addEventListener("click", () => {
-  document.documentElement.classList.toggle("dark");
-  localStorage.setItem("tajweedy_theme", document.documentElement.classList.contains("dark")?"dark":"light");
-});
-if(localStorage.getItem("tajweedy_theme")==="dark"){document.documentElement.classList.add("dark");}
-
-// ====== Reciters (EveryAyah stable folders) ======
+const $ = (sel)=>document.querySelector(sel);
+function toggleTheme(){
+  const d=document.documentElement;
+  d.dataset.theme = d.dataset.theme==='dark' ? '' : 'dark';
+}
 const RECITERS = [
-  {id:"alafasy", name:"مشاري العفاسي", folder:"Alafasy_128kbps"},
-  {id:"husary", name:"محمود خليل الحصري", folder:"Husary_128kbps"},
-  {id:"minshawi", name:"محمد صديق المنشاوي", folder:"Minshawy_Mujawwad_128kbps"},
-  {id:"abdulbasit_m", name:"عبدالباسط (مجود)", folder:"Abdul_Basit_Mujawwad_128kbps"}
+  { id:'mishari',  label:'مشاري العفاسي' },
+  { id:'husary',   label:'محمود خليل الحصري' },
+  { id:'minshawi', label:'محمد صديق المنشاوي' },
+  { id:'abdlbasit_muj', label:'عبدالباسط (مجود)' }
 ];
-const reciterSelect = $("#reciterSelect");
-RECITERS.forEach(r=>{
-  const o = document.createElement("option");
-  o.value = r.id; o.textContent = r.name;
-  reciterSelect.appendChild(o);
-});
-reciterSelect.value = localStorage.getItem("tajweedy_reciter") || RECITERS[0].id;
-reciterSelect.addEventListener("change",()=>{
-  localStorage.setItem("tajweedy_reciter", reciterSelect.value);
-  loadReference(); // reload with new reciter
-});
-
-// ====== Load Surahs & Ayahs (alquran.cloud) ======
-const surahSelect = $("#surahSelect");
-const ayahSelect  = $("#ayahSelect");
-const ayahTextEl  = $("#ayahText");
-
-async function loadSurahs(){
-  surahSelect.innerHTML = "";
-  const res = await fetch("https://api.alquran.cloud/v1/surah");
-  const data = await res.json();
-  data.data.forEach(s=>{
-    const opt = document.createElement("option");
-    opt.value = s.number; opt.textContent = `${s.number} — ${s.englishName}`.replace(" — "," — ");
-    surahSelect.appendChild(opt);
+let quranMeta = null;
+async function loadQuranMeta(){
+  if(quranMeta) return quranMeta;
+  quranMeta = await fetch('https://cdn.jsdelivr.net/gh/quran/quran-json@master/dist/chapters.json').then(r=>r.json()).catch(()=>[]);
+  return quranMeta;
+}
+async function fillSurahs(){
+  const surahSel = $('#surahSelect');
+  surahSel.innerHTML = '<option disabled selected>— اختر —</option>';
+  const chapters = await loadQuranMeta();
+  chapters.forEach(ch=>{
+    const opt=document.createElement('option');
+    opt.value = ch.id;
+    opt.textContent = `${ch.id} — ${ch.name_arabic}`;
+    surahSel.appendChild(opt);
   });
-  surahSelect.value = "1";
-  await loadAyahs(1);
 }
-async function loadAyahs(surahNum){
-  ayahSelect.innerHTML = "";
-  ayahTextEl.textContent = "";
-  const res = await fetch(`https://api.alquran.cloud/v1/surah/${surahNum}?edition=quran-uthmani`);
-  const data = await res.json();
-  data.data.ayahs.forEach((a,idx)=>{
-    const o=document.createElement("option");
-    o.value = a.numberInSurah;
-    o.textContent = `${a.numberInSurah}`;
-    ayahSelect.appendChild(o);
+function fillReciters(){
+  const rSel = $('#reciterSelect'); rSel.innerHTML='';
+  RECITERS.forEach(r=>{
+    const opt=document.createElement('option'); opt.value=r.id; opt.textContent=r.label; rSel.appendChild(opt);
   });
-  ayahSelect.value = "1";
-  const firstAyah = data.data.ayahs[0]?.text || "";
-  ayahTextEl.textContent = firstAyah;
-  ayahSelect.onchange = ()=>{
-    const n = parseInt(ayahSelect.value,10)-1;
-    ayahTextEl.textContent = data.data.ayahs[n]?.text || "";
-    loadReference();
-  };
-  surahSelect.onchange = async ()=>{
-    await loadAyahs(parseInt(surahSelect.value,10));
-    loadReference();
-  };
 }
-loadSurahs();
-
-// ====== Reference audio via EveryAyah ======
-const refAudio = $("#referenceAudio");
-function currentFolder(){
-  const r = RECITERS.find(x=>x.id===reciterSelect.value);
-  return r?.folder || RECITERS[0].folder;
+async function fillAyahs(surahId){
+  const aSel = $('#ayahSelect'); aSel.innerHTML='';
+  let count = 7;
+  try{
+    const meta = await fetch(`https://cdn.jsdelivr.net/gh/rn0x/quran-json@main/meta/ayah-count.json`).then(r=>r.json());
+    count = meta[String(surahId)] || count;
+  }catch(e){}
+  for(let i=1;i<=count;i++){
+    const opt=document.createElement('option'); opt.value=i; opt.textContent=`${i}`; aSel.appendChild(opt);
+  }
+  aSel.dispatchEvent(new Event('change'));
 }
-function buildEveryAyahUrl(surah,ayah){
-  return `https://everyayah.com/data/${currentFolder()}/${pad3(surah)}${pad3(ayah)}.mp3`;
+async function loadAyahText(surah, ayah){
+  try{
+    const url = `https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/quran-uthmani`;
+    const r = await fetch(url).then(r=>r.json());
+    if(r && r.data && r.data.text){ $('#ayahText').textContent = r.data.text; return; }
+  }catch(e){}
+  $('#ayahText').textContent = '';
 }
-function loadReference(){
-  const s = parseInt(surahSelect.value||"1",10);
-  const a = parseInt(ayahSelect.value||"1",10);
-  const url = buildEveryAyahUrl(s,a);
-  refAudio.src = url;
+async function playReference(){
+  const s = $('#surahSelect').value;
+  const a = $('#ayahSelect').value;
+  const audio = $('#referenceAudio');
+  try{
+    const url = `https://api.alquran.cloud/v1/ayah/${s}:${a}/ar.alafasy`;
+    const r = await fetch(url).then(r=>r.json());
+    if(r && r.data && r.data.audio){ audio.src = r.data.audio; await audio.play(); return; }
+  }catch(e){}
+  alert('تعذّر جلب الصوت من الخادم. جرّب قارئًا آخر.');
 }
-$("#playCorrectBtn").addEventListener("click",()=>{
-  loadReference();
-  refAudio.play().catch(()=>alert("تعذّر جلب الصوت من الخادم. جرّب قارئًا آخر."));
-});
-
-// ====== Recording ======
-const micBtn = $("#micBtn");
-const stopBtn= $("#stopBtn");
-const playback = $("#playback");
 let media, chunks=[];
-
-micBtn.addEventListener("click", async ()=>{
-  media = await navigator.mediaDevices.getUserMedia({audio:true});
-  const rec = new MediaRecorder(media);
-  chunks=[];
-  rec.ondataavailable = e => chunks.push(e.data);
-  rec.onstop = ()=>{
-    const blob = new Blob(chunks,{type:"audio/webm"});
-    playback.src = URL.createObjectURL(blob);
-    $("#transcribeBtn").disabled = false;
-    $("#toggleModeBtn").disabled = false;
-    $("#copyTextBtn").disabled = false;
-    $("#downloadTextBtn").disabled = false;
-  };
-  micBtn.disabled = true; stopBtn.disabled = false;
-  stopBtn.onclick = ()=>{rec.stop(); media.getTracks().forEach(t=>t.stop()); stopBtn.disabled=true; micBtn.disabled=false;};
-  rec.start();
-});
-
-// ====== Transcribe via Netlify function (POST) ======
-let showJson = false;
-$("#toggleModeBtn").onclick = ()=>{
-  showJson = !showJson;
-  renderTranscript();
-};
-let lastTranscript = { text:"", raw:null };
-
+const playback = $('#playback');
+async function startRec(){
+  try{
+    media = await navigator.mediaDevices.getUserMedia({audio:true});
+    const rec = new MediaRecorder(media);
+    chunks = [];
+    rec.ondataavailable = (e)=>{ if(e.data.size>0) chunks.push(e.data); };
+    rec.onstop = ()=> {
+      const blob = new Blob(chunks, {type:'audio/webm'});
+      playback.src = URL.createObjectURL(blob);
+      $('#transcribeBtn').disabled = false;
+    };
+    rec.start(); $('#micBtn').disabled = true; $('#stopBtn').disabled = false; window._rec = rec;
+  }catch(e){ alert('تعذّر الوصول للميكروفون: '+e.message); }
+}
+function stopRec(){
+  try{ window._rec?.stop(); media?.getTracks()?.forEach(t=>t.stop()); }
+  finally{ $('#micBtn').disabled = false; $('#stopBtn').disabled = true; }
+}
 async function transcribe(){
-  if(!playback.src){ alert("سجّل صوتًا أولاً."); return; }
-  const resp = await fetch(playback.src);
-  const blob = await resp.blob();
-  const fd = new FormData();
-  fd.append("audio", blob, "recording.webm");
-  fd.append("language","ar");
-  const r = await fetch("/.netlify/functions/transcribe", { method:"POST", body: fd });
-  const j = await r.json();
-  if(!j.ok){ $("#transcript").textContent = JSON.stringify(j,null,2); return; }
-  lastTranscript.text = j.text || j.data?.text || "";
-  lastTranscript.raw = j;
-  renderTranscript();
+  const out = $('#transcript'); out.textContent = '... جاري التفريغ';
+  const blob = await (await fetch(playback.src)).blob();
+  const fd = new FormData(); fd.append('file', blob, 'rec.webm'); fd.append('language','ar');
+  try{
+    const res = await fetch('/.netlify/functions/transcribe', {method:'POST', body:fd});
+    const txt = await res.text();
+    try{ const j=JSON.parse(txt); out.dataset.json = JSON.stringify(j,null,2); out.textContent = j.text || '(لا يوجد نص)'; }
+    catch(e){ out.textContent = txt; }
+  }catch(e){ out.textContent = 'فشل التفريغ: '+e.message; }
 }
-$("#transcribeBtn").addEventListener("click", transcribe);
-
-function renderTranscript(){
-  const pre = $("#transcript");
-  pre.textContent = showJson ? JSON.stringify(lastTranscript.raw||{},null,2) : (lastTranscript.text||"");
+function saveAttempt(section, rule, correct, wrong){
+  const k='tajweedy_attempts'; let arr=[]; try{ arr=JSON.parse(localStorage.getItem(k))||[] }catch(e){}; 
+  arr.push({section, rule, correct, wrong, at:new Date().toISOString()}); localStorage.setItem(k, JSON.stringify(arr));
 }
-$("#copyTextBtn").onclick = ()=>{
-  navigator.clipboard.writeText(lastTranscript.text||"");
-};
-$("#downloadTextBtn").onclick = ()=>{
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([lastTranscript.text||""],{type:"text/plain"}));
-  a.download = "transcript.txt"; a.click();
-};
-
-// ====== Diagnostics ======
-$("#diagBtn").onclick = async ()=>{
-  const ping = await fetch("/.netlify/functions/transcribe", { method:"GET" });
-  const jr = await ping.json();
-  alert(`حالة المفتاح/الدالة: ${jr.hint || jr.message || ping.status}`);
-};
-
-// ====== Quiz (minimal demo with 5 items) ======
-const BANK = {
+const DUMMY_BANK = {
   noon_tanween:[
-    {q:"ما حكم التنوين؟ (المستهدف: عليهمۡ) — أَسْمِعْ عليهمْ", a:["إظهار","إدغام","إخفاء"], correct:0, why:"إظهار حلقي."},
-    {q:"ما حكم النون الساكنة؟ (المستهدف: منۢ بعد) — منْ بعد", a:["إخفاء","إدغام بغير غنة","إظهار"], correct:0, why:"إخفاء عند الباء."},
-    {q:"ما حكم التنوين؟ (المستهدف: غفورٌ رحيمٌ) — غفورٌ رحيمٌ", a:["إدغام بغنة","إظهار","إخفاء"], correct:0, why:"إدغام بغنة مع الراء؟ خطأ؛ الصحيح بغير غنة مع الراء. هنا المثال للتفريق."},
+    {q:'حكم (مِنْ و)؟', opts:['إظهار','إدغام بغنة','إقلاب','إخفاء'], a:1, r:'إدغام بغنة إذا جاء بعد النون/التنوين أحد حروف ينمو.'},
+    {q:'حكم (غفورٌ رحيمٌ)؟', opts:['إظهار','إدغام بغير غنة','إقلاب','إخفاء'], a:1, r:'الراء واللام إدغام بغير غنة.'},
+    {q:'حكم (مِنْ بَعْد)؟', opts:['إظهار','إقلاب','إخفاء','إدغام'], a:2, r:'الإخفاء مع 15 حرفًا، منها الباء.'}
   ],
   meem_sakinah:[
-    {q:"حكم (عليهمۡ بِ) ؟", a:["إظهار شفوي","إخفاء شفوي","إدغام شفوي"], correct:2, why:"ميم ساكنة بعدها باء = إخفاء شفوي."},
-    {q:"حكم (لكمۡ مَّا) ؟", a:["إظهار شفوي","إدغام شفوي","إخفاء شفوي"], correct:1, why:"ميم ساكنة بعدها ميم = إدغام متماثلين صغير (شفوي)."},
+    {q:'حكم (عليهم م)؟', opts:['إدغام شفوي','إخفاء شفوي','إظهار شفوي'], a:0, r:'يدغم الميمان عند التلاقي.'},
+    {q:'حكم (عليهمْ ب)؟', opts:['إظهار شفوي','إخفاء شفوي','إدغام شفوي'], a:1, r:'إخفاء عند الباء.'}
   ],
   madd:[
-    {q:"نوع المد في (جاء) ؟", a:["طبيعي","متصل","منفصل"], correct:1, why:"مد متصل: همز بعد المد في كلمة."},
-    {q:"نوع المد في (بما أنزل) ؟", a:["منفصل","لازم","طبيعي"], correct:0, why:"مد منفصل: حرف مد آخر الكلمة وهمز أول التالية."},
+    {q:'مد (جاء)؟', opts:['طبيعي','منفصل','متصل','لازم'], a:2, r:'الهمزة بعد المد في نفس الكلمة ⇒ متصل.'},
+    {q:'مد (بما أنزل)؟', opts:['منفصل','طبيعي','متصل','لازم'], a:0, r:'المد في آخر كلمة والهمزة في أول التي تليها.'}
   ]
 };
-
-const quizDiv = $("#quiz");
 function buildQuiz(){
-  const sec = $("#quizSection").value;
-  const traineeName = $("#traineeName").value.trim() || "متدرب";
-  const items = [...BANK[sec]];
-  while(items.length>5) items.splice(Math.floor(Math.random()*items.length),1);
-  quizDiv.innerHTML = "";
-  items.forEach((it,idx)=>{
-    const wrap = document.createElement("div"); wrap.className="q";
-    wrap.innerHTML = `<p>${idx+1}. ${it.q}</p>`+
-      it.a.map((opt,i)=>`<label class="opt"><input type="radio" name="q${idx}" value="${i}"> ${opt}</label>`).join("");
-    quizDiv.appendChild(wrap);
-  });
-  const submit = document.createElement("button"); submit.textContent="إنهاء الاختبار";
-  submit.onclick = ()=>{
-    let score=0; let rows=[];
-    items.forEach((it,idx)=>{
-      const val = parseInt(($(`input[name="q${idx}"]:checked`, quizDiv)||{}).value || "-1",10);
-      const ok = (val===it.correct); if(ok) score++;
-      rows.push({q:it.q, your: it.a[val]||"—", correct: it.a[it.correct], why: it.why});
-    });
-    alert(`النتيجة: ${score} / ${items.length}`);
-    const report = { traineeName, section: sec, date: new Date().toISOString(), rows, score, total: items.length };
-    localStorage.setItem("tajweedy_last_report", JSON.stringify(report));
-  };
-  quizDiv.appendChild(submit);
-}
-$("#buildQuizBtn").addEventListener("click", buildQuiz);
-$("#showLastReportBtn").addEventListener("click", ()=>{ location.href="report.html"; });
+  const section = $('#quizSection').value;
+  const bank = DUMMY_BANK[section]||[];
+  const picked = bank.slice(0,5);
+  const wrap = $('#quiz');
+  if(!picked.length){ wrap.innerHTML='<div class="muted">لا أسئلة تجريبية.</div>'; return; }
+  const trainee = $('#traineeName').value||'';
+  let correct=0;
+  wrap.innerHTML = picked.map((x,i)=>`
+    <div style="border:1px solid var(--ring);border-radius:12px;padding:10px;margin-bottom:8px">
+      <div><strong>س${i+1}.</strong> ${x.q}</div>
+      ${x.opts.map((o,idx)=>`
+        <div><label><input type="radio" name="q${i}" value="${idx}"> ${o}</label></div>
+      `).join('')}
+      <div class="muted" style="margin-top:6px">${x.r}</div>
+    </div>
+  `).join('') + `<button class="btn" id="submitQuiz">إنهاء الاختبار</button>`;
 
-// Summary
-$("#showSummaryBtn").onclick = ()=>{
-  const r = JSON.parse(localStorage.getItem("tajweedy_last_report")||"null");
-  $("#summary").textContent = r? `آخر نتيجة: ${r.traineeName} — ${r.score}/${r.total}` : "لا يوجد بيانات.";
-};
-$("#resetSummaryBtn").onclick = ()=>{ localStorage.removeItem("tajweedy_last_report"); $("#summary").textContent="تمت إعادة التعيين."; };
+  $('#submitQuiz').onclick = ()=>{
+    const items=[]; correct=0;
+    picked.forEach((x,i)=>{
+      const sel = document.querySelector(`input[name="q${i}"]:checked`);
+      const chosen = sel?Number(sel.value):-1;
+      const ok = chosen===x.a;
+      if(ok) correct++;
+      items.push({
+        no:i+1, question:x.q, options:x.opts, chosen: x.opts[chosen] ?? '—',
+        answer:x.opts[x.a], isCorrect:ok, rationale:x.r
+      });
+    });
+    saveAttempt(section,'اختبار قصير',correct,(picked.length-correct));
+    const report = {
+      traineeName: trainee,
+      sectionLabel: $('#quizSection').selectedOptions[0].textContent,
+      score: {correct, total:picked.length},
+      takenAt: new Date().toISOString(),
+      items
+    };
+    localStorage.setItem('tajweedy_last_report', JSON.stringify(report));
+    alert(`النتيجة: ${correct} / ${picked.length}`);
+    location.href='report.html';
+  };
+}
+let showJSON=false;
+function toggleMode(){
+  showJSON = !showJSON;
+  const out = $('#transcript');
+  if(showJSON && out.dataset.json){ out.textContent = out.dataset.json; }
+  else if(out.dataset.json){
+    try{ out.textContent = JSON.parse(out.dataset.json).text || '(لا يوجد نص)'; }catch(e){}
+  }
+}
+function copyTranscript(){
+  const out = $('#transcript'); const txt = out.textContent || '';
+  navigator.clipboard?.writeText(txt).then(()=>alert('تم النسخ')).catch(()=>alert('تعذّر النسخ'));
+}
+function downloadTranscript(){
+  const out = $('#transcript');
+  const blob = new Blob([out.textContent||''], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'transcript.txt'; a.click(); URL.revokeObjectURL(a.href);
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  fillReciters(); fillSurahs();
+  $('#surahSelect').addEventListener('change', (e)=> fillAyahs(e.target.value));
+  $('#ayahSelect').addEventListener('change', ()=> {
+    const s=$('#surahSelect').value, a=$('#ayahSelect').value;
+    if(s && a) loadAyahText(s,a);
+  });
+  $('#playCorrectBtn').addEventListener('click', playReference);
+  $('#micBtn').addEventListener('click', startRec);
+  $('#stopBtn').addEventListener('click', stopRec);
+  $('#transcribeBtn').addEventListener('click', transcribe);
+  $('#buildQuizBtn').addEventListener('click', buildQuiz);
+  $('#toggleModeBtn').addEventListener('click', toggleMode);
+  $('#copyTxtBtn').addEventListener('click', copyTranscript);
+  $('#dlTxtBtn').addEventListener('click', downloadTranscript);
+  $('#playback').addEventListener('loadeddata', ()=> $('#transcribeBtn').disabled=false );
+});
