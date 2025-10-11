@@ -3,10 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>مدرب أحكام التجويد</title>
+  <title>مدرب أحكام التجويد — إصدار التشخيص المدمج</title>
   <link rel="stylesheet" href="styles.css" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://everyayah.com https://api.alquran.cloud; connect-src 'self' https://api.openai.com https://api.alquran.cloud; media-src 'self' https://everyayah.com blob:; img-src 'self' data: https://everyayah.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; worker-src 'self' blob:">
-  <script src="https://cdn.jsdelivr.net/npm/vosk-browser@0.0.8/dist/vosk.js"></script>
 </head>
 <body>
   <header class="container">
@@ -26,7 +24,6 @@
         <select id="ayahSelect"></select>
       </div>
       <div id="ayahText" class="ayah uthmani"></div>
-      <small class="muted">نص الآية يُجلب من واجهة <b>quran-uthmani</b> (مصحف المدينة).</small>
     </section>
 
     <section class="card">
@@ -34,15 +31,18 @@
       <div class="row">
         <button id="micBtn">🎙️ ابدأ التسجيل</button>
         <button id="stopBtn" disabled>⏹️ أوقف</button>
-        <label class="switch">
-          <input type="checkbox" id="sttMode" checked>
-          <span class="slider"></span>
-        </label>
-        <span>وضع <b>السحابة</b> (أدق). عند الإيقاف يعمل وضع <b>دون إنترنت</b> (تجريبي).</span>
       </div>
       <audio id="playback" controls class="w-100"></audio>
-      <div class="row"><button id="transcribeBtn" disabled>تفريغ القراءة</button></div>
+      <div class="row">
+        <button id="transcribeBtn" disabled>تفريغ القراءة</button>
+        <!-- أزرار التشخيص المضافة -->
+        <button id="diagBtn" type="button">تشخيص الدالة</button>
+        <button id="diagRecBtn" type="button">تشخيص بالتسجيل (٣ ثوانٍ)</button>
+      </div>
       <pre id="transcript" class="console"></pre>
+      <!-- صندوق إخراج التشخيص + مشغّل الصوت للتشخيص -->
+      <pre id="diagOut" dir="ltr" style="display:none;background:#111;color:#eee;padding:12px;border-radius:10px;margin-top:8px;overflow:auto"></pre>
+      <audio id="diagPlayback" controls style="display:none;margin-top:6px"></audio>
     </section>
 
     <section class="card">
@@ -54,7 +54,7 @@
     </section>
 
     <section class="card">
-      <h2>٤) اختبار القواعد (اختيار من متعدد فقط)</h2>
+      <h2>٤) اختبار القواعد (اختيار من متعدد)</h2>
       <div class="row">
         <label>اختر القسم</label>
         <select id="quizSection">
@@ -67,7 +67,7 @@
       </div>
       <div id="quiz"></div>
     </section>
-  
+
     <section class="card">
       <h2>٥) ملخص التقدم</h2>
       <div class="row">
@@ -76,13 +76,15 @@
       </div>
       <div id="summary"></div>
     </section>
-
-</main>
+  </main>
 
   <footer class="container muted">
     <p>© مشروع تعليمي. يُنصح بالمراجعة مع معلّم/معلمة تجويد.</p>
   </footer>
 
-  <script src="app.js"></script>
+  <!-- سكربتات المشروع الأساسية -->
+  <script defer src="app.js"></script>
+  <!-- سكربت التشخيص المدمج -->
+  <script defer src="diag.js"></script>
 </body>
 </html>
