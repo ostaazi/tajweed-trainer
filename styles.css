@@ -1,60 +1,40 @@
-/* Tajweedy base + brand */
 :root{
-  --tj-bg:#fafaf8;
-  --tj-card:#ffffff;
-  --tj-ink:#1f2a37;
-  --tj-ink-muted:#6b7280;
-  --tj-accent:#14b8a6;
-  --tj-gold:#c8a24d;
-  --tj-border:#e5e7eb;
-  --radius-xl:16px;
-  --radius-lg:12px;
-  --radius-md:10px;
+  --bg:#f6f7fb; --ink:#0f172a; --muted:#64748b; --ring:#e2e8f0; --card:#fff;
+  --accent:#0ea5e9; --ok:#22c55e; --bad:#ef4444; --warn:#f59e0b;
 }
-html,body{margin:0;padding:0}
+[data-theme="dark"]{
+  --bg:#0a0f1a; --ink:#e5e7eb; --muted:#9aa4b2; --ring:#1f2937; --card:#0b1220;
+}
+*{box-sizing:border-box}
 body{
-  background:
-    radial-gradient(circle at 10% 10%, rgba(200,162,77,0.09) 0 12%, transparent 13% 100%),
-    radial-gradient(circle at 90% 8%, rgba(20,184,166,0.08) 0 10%, transparent 11% 100%),
-    radial-gradient(circle at 15% 85%, rgba(20,184,166,0.06) 0 12%, transparent 13% 100%),
-    linear-gradient(0deg, var(--tj-bg), var(--tj-bg));
-  color: var(--tj-ink);
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Kufi Arabic", "Dubai", Tahoma, Arial, sans-serif;
+  margin:0; padding:24px; background:var(--bg); color:var(--ink);
+  font-family:"Cairo",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
 }
-.container{max-width:1040px; margin-inline:auto; padding:16px}
-.grid{display:grid; gap:16px}
-.card{background:var(--tj-card); border:1px solid var(--tj-border); border-radius:var(--radius-xl); box-shadow:0 2px 14px rgba(0,0,0,.03); padding:16px}
-.card h2{margin-top:0}
-.row{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
-label{font-weight:700; color:#111827; min-width:84px}
-select, input[type="text"], button{border-radius:var(--radius-md); border:1px solid var(--tj-border)}
-select, input[type="text"]{padding:10px 12px}
-button{padding:10px 14px; background:#fff; color:#111827; cursor:pointer; transition:.2s ease}
-button:hover{transform:translateY(-1px); box-shadow:0 4px 10px rgba(0,0,0,.06)}
-button:disabled{opacity:.55; cursor:not-allowed; transform:none}
+.container{max-width:1100px;margin-inline:auto}
+header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+header img{width:44px;height:44px;border-radius:10px}
+h1{margin:0;font-weight:800}
+.muted{color:var(--muted)}
+.btn{
+  appearance:none;border:1px solid var(--ring);background:var(--card);color:var(--ink);
+  padding:8px 10px;border-radius:10px;font-weight:700;cursor:pointer
+}
+.card{
+  background:var(--card);border:1px solid var(--ring);border-radius:16px;
+  padding:18px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:16px
+}
+.card h2{margin:.2rem 0 1rem;font-size:1.2rem}
+.grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:960px){.grid{grid-template-columns:1fr 1fr}}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+label{min-width:72px}
+select, input[type="text"]{
+  padding:8px 10px;border-radius:10px;border:1px solid var(--ring);background:var(--card);color:var(--ink);
+}
 .w-100{width:100%}
-.muted{color:var(--tj-ink-muted)}
-.visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
-
-.tj-header{position:relative; background:
-  radial-gradient(60% 120% at 50% -20%, rgba(200,162,77,0.12) 0%, transparent 60%),
-  linear-gradient(0deg, #fff, #fff);
-  border-bottom:1px solid var(--tj-border)}
-.tj-header-inner{display:flex; align-items:center; gap:18px; min-height:88px}
-.tj-logo{width:64px; height:64px; object-fit:contain; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.06); background:#fff}
-.tj-brand{display:flex; flex-direction:column; line-height:1.05}
-.tj-name-en{font-size:1.5rem; font-weight:800; letter-spacing:.3px; color:#0f172a}
-.tj-name-ar{font-size:1.05rem; font-weight:700; color:var(--tj-accent)}
-.tj-tagline{margin-inline-start:auto; color:var(--tj-ink-muted); font-weight:600}
-
-.ayah.uthmani{border:1px dashed var(--tj-border); background:#fff; border-radius:var(--radius-lg); min-height:52px; padding:16px; font-size:1.35rem; text-align:center}
-.console{background:#0b1220; color:#e5f0ff; border-radius:var(--radius-lg); border:1px solid #0b1220}
-.quiz-choice.is-correct{background:#e8f8f5; border-color:#b8efe6}
-.quiz-choice.is-wrong{background:#fdeaea; border-color:#f5c2c2}
-.quiz-feedback{margin-top:6px; color:#374151}
-
-@media (max-width:640px){
-  .tj-tagline{display:none}
-  .tj-name-en{font-size:1.25rem}
-  .tj-logo{width:56px;height:56px}
-}
+.console{background:#0b1020;color:#e5e7eb;padding:12px;border-radius:12px;overflow:auto;max-height:280px}
+.uthmani{font-size:1.4rem;line-height:2.2rem;padding:12px;border:1px dashed var(--ring);border-radius:12px;min-height:54px}
+.score{font-weight:800}
+.errors{margin:0;padding-inline-start:20px}
+.toolbar{margin-inline-start:auto;display:flex;gap:8px}
+.badge{background:#ecfeff;color:#0ea5e9;border:1px solid #baecf7;padding:3px 8px;border-radius:999px;font-size:.8rem}

@@ -1,105 +1,93 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tajweedy — Quran Tajweed Trainer (مدرب التجويد القرآني)</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Tajweedy — منصة التدريب</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-  <header class="tj-header">
-    <div class="tj-header-inner container">
-      <img src="assets/tajweedy-logo.png" alt="Tajweedy logo" class="tj-logo" />
-      <div class="tj-brand">
-        <div class="tj-name-en">Tajweedy</div>
-        <div class="tj-name-ar">تجويدي</div>
+  <div class="container">
+    <header>
+      <img src="assets/logo-tajweedy.png" alt="Tajweedy" onerror="this.style.display='none'"/>
+      <div>
+        <h1>Tajweedy — منصة التدريب</h1>
+        <div class="muted">اقرأ، سجّل، فرّغ القراءة واحصل على تغذية راجعة، ثم اختبر القواعد وتابع تقدّمك.</div>
       </div>
-      <div class="tj-tagline">Quran Tajweed Trainer — مدرب التجويد القرآني</div>
-    </div>
-  </header>
+      <div class="toolbar">
+        <button class="btn" onclick="toggleTheme()">الوضع الليلي</button>
+        <a class="btn" href="dashboard.html">لوحة المعلومات</a>
+        <a class="btn" href="stats.html">الإحصاءات</a>
+      </div>
+    </header>
 
-  <main class="container grid">
-    <h1 class="visually-hidden">Tajweedy — Quran Tajweed Trainer</h1>
+    <main class="grid">
+      <section class="card">
+        <h2>١) اختيار القارئ والسورة والآية</h2>
+        <div class="row">
+          <label for="reciterSelect">القارئ</label>
+          <select id="reciterSelect"></select>
+        </div>
+        <div class="row">
+          <label>السورة</label>
+          <select id="surahSelect"></select>
+        </div>
+        <div class="row">
+          <label>الآية</label>
+          <select id="ayahSelect"></select>
+        </div>
+        <div id="ayahText" class="ayah uthmani"></div>
+      </section>
 
-    <section class="card">
-      <h2>١) اختيار السورة والآية (الرسم العثماني)</h2>
-      <div class="row">
-        <label for="reciterSelect">القارئ</label>
-        <select id="reciterSelect"></select>
-      </div>
-      <div class="row">
-        <label>السورة</label>
-        <select id="surahSelect"></select>
-      </div>
-      <div class="row">
-        <label>الآية</label>
-        <select id="ayahSelect"></select>
-      </div>
-      <div id="ayahText" class="ayah uthmani"></div>
-    </section>
+      <section class="card">
+        <h2>٢) التسجيل والتفريغ</h2>
+        <div class="row">
+          <button id="micBtn" class="btn">🎙️ ابدأ التسجيل</button>
+          <button id="stopBtn" class="btn" disabled>⏹️ أوقف</button>
+        </div>
+        <audio id="playback" controls class="w-100"></audio>
+        <div class="row">
+          <button id="transcribeBtn" class="btn" disabled>تفريغ القراءة</button>
+          <button id="toggleModeBtn" class="btn" title="عرض JSON/نص">🔁 نمط العرض</button>
+          <button id="copyTxtBtn" class="btn">📋 نسخ النص</button>
+          <button id="dlTxtBtn" class="btn">⬇️ تنزيل النص</button>
+          <button id="diagBtn" class="btn">تشخيص الدالة</button>
+        </div>
+        <pre id="transcript" class="console" aria-live="polite"></pre>
+      </section>
 
-    <section class="card">
-      <h2>٢) التسجيل والتفريغ</h2>
-      <div class="row">
-        <button id="micBtn">🎙️ ابدأ التسجيل</button>
-        <button id="stopBtn" disabled>⏹️ أوقف</button>
-      </div>
-      <audio id="playback" controls class="w-100"></audio>
-      <div class="row">
-        <button id="transcribeBtn" disabled>تفريغ القراءة</button>
-        <button id="diagBtn" type="button">تشخيص الدالة</button>
-        <button id="diagRecBtn" type="button">تشخيص بالتسجيل (٣ ثوانٍ)</button>
-      </div>
-      <pre id="transcript" class="console"></pre>
-      <pre id="diagOut" dir="ltr" style="display:none;background:#111;color:#eee;padding:12px;border-radius:10px;margin-top:8px;overflow:auto"></pre>
-      <audio id="diagPlayback" controls style="display:none;margin-top:6px"></audio>
-    </section>
+      <section class="card">
+        <h2>٣) التقييم والتغذية الراجعة</h2>
+        <div id="score" class="score"></div>
+        <ul id="errors" class="errors"></ul>
+        <div class="row"><button id="playCorrectBtn" class="btn">▶️ استمع للتلاوة الصحيحة (للآية)</button></div>
+        <audio id="referenceAudio" controls class="w-100"></audio>
+      </section>
 
-    <section class="card">
-      <h2>٣) التقييم والتغذية الراجعة</h2>
-      <div id="score" class="score"></div>
-      <ul id="errors" class="errors"></ul>
-      <div class="row"><button id="playCorrectBtn">▶️ استمع للتلاوة الصحيحة (للآية)</button></div>
-      <audio id="referenceAudio" controls class="w-100"></audio>
-    </section>
+      <section class="card">
+        <h2>٤) اختبار القواعد (اختيار من متعدد)</h2>
+        <div class="row">
+          <label>اختر القسم</label>
+          <select id="quizSection">
+            <option value="noon_tanween">النون الساكنة والتنوين</option>
+            <option value="meem_sakinah">الميم الساكنة</option>
+            <option value="madd">أحكام المدود</option>
+          </select>
+          <input id="traineeName" type="text" placeholder="اسم المتدرّب (اختياري)"/>
+          <button id="buildQuizBtn" class="btn">ابدأ اختبار ٥ أسئلة عشوائيًا</button>
+          <a href="exercises.html" class="btn">التدريبات العلاجية</a>
+          <a href="report.html" class="btn">عرض آخر تقرير</a>
+        </div>
+        <div id="quiz"></div>
+      </section>
+    </main>
 
-    <section class="card">
-      <h2>٤) اختبار القواعد (اختيار من متعدد)</h2>
-      <div class="row">
-        <label for="quizSection">اختر القسم</label>
-        <select id="quizSection">
-          <option value="noon_tanween">النون الساكنة والتنوين</option>
-          <option value="meem_sakinah">الميم الساكنة</option>
-          <option value="madd">أحكام المدود</option>
-          <option value="full">اختبار شامل (١٥ سؤالًا)</option>
-        </select>
-      </div>
-      <div class="row" id="traineeRow">
-        <label for="traineeName">اسم المتدرّب</label>
-        <input id="traineeName" type="text" placeholder="اختياري" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;min-width:220px" />
-      </div>
-      <div class="row">
-        <button id="buildQuizBtn">ابدأ اختبار ٥ أسئلة عشوائيًا</button>
-        <button id="buildFullQuizBtn">اختبار شامل (١٥ سؤالًا: ٥ من كل قسم)</button>
-      </div>
-      <div id="quiz"></div>
-    </section>
+    <footer class="muted" style="margin-top:10px">Tajweedy © — مشروع تعليمي. يُنصح بالمراجعة مع معلّم/معلمة تجويد.</footer>
+  </div>
 
-    <section class="card">
-      <h2>٥) ملخص التقدم</h2>
-      <div class="row">
-        <button id="showSummaryBtn">عرض الملخص</button>
-        <button id="resetSummaryBtn">إعادة تعيين السجل</button>
-      </div>
-      <div id="summary"></div>
-    </section>
-  </main>
-
-  <footer class="container muted">
-    <p>© Tajweedy — مشروع تعليمي. يُنصح بالمراجعة مع معلّم/معلمة تجويد.</p>
-  </footer>
-
-  <script defer src="tajweed_bank.js"></script>
   <script defer src="app.js"></script>
   <script defer src="diag.js"></script>
 </body>
