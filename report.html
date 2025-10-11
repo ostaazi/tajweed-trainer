@@ -1,11 +1,1 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>Tajweedy — تقرير</title><link rel="stylesheet" href="styles.css"><style>
-    table{width:100%;border-collapse:collapse} th,td{border:1px solid #e5e7eb;padding:8px} .muted{color:#6b7280}
-    </style>  <link rel="icon" type="image/png" href="assets/tajweedy-logo.png" /></head><body><header class="container"><h1>Tajweedy</h1></header><div class="container" style="margin:16px 0 0">
-    <button onclick="location.href='index.html'">⬅️ العودة للواجهة</button>
-    <button onclick="window.print()">🖨️ طباعة</button>
-  </div>
-  <main class="container">
-    <div id="meta" class="card"></div><table id="tbl"><thead><tr><th>#</th><th>السؤال</th><th>اختياراتك</th><th>الصحيح</th><th>لماذا؟</th></tr></thead><tbody></tbody></table>
-    <script>(function(){const r=JSON.parse(localStorage.getItem('tajweed_last_report')||'{}');const m=document.getElementById('meta');const n=r.traineeName||'متدرّب';m.textContent=n+' — '+(new Date(r.ts||Date.now()).toLocaleString('ar-EG'))+' — '+r.correct+'/'+r.total;
-    const tb=document.querySelector('#tbl tbody');(r.rows||[]).forEach((row,i)=>{const tr=document.createElement('tr');tr.innerHTML='<td>'+(i+1)+'</td><td>'+row.text+'</td><td>'+((row.options||[])[row.chosenIndex]||'—')+'</td><td>'+((row.options||[])[row.correctIndex]||'—')+'</td><td>'+(row.why||'')+'</td>';tb.appendChild(tr);});})();</script>
-    </main></body></html>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tajweedy — تقرير الاختبار</title><link rel="stylesheet" href="styles.css"></head><body class="container"><h1>تقرير الاختبار</h1><table class="table"><thead><tr><th>#</th><th>السؤال</th><th>اختياراتك</th><th>الصحيح</th><th>لماذا؟</th><th>✓/✗</th></tr></thead><tbody id="rows"></tbody></table><script>const r=document.getElementById('rows');r.innerHTML='';</script><a class="btn-link" href="index.html">العودة</a></body></html>

@@ -1,32 +1,1 @@
-<!doctype html>
-<html lang="ar" dir="rtl"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Tajweedy — تدريبات علاجية</title>
-<link rel="stylesheet" href="styles.css"/>
-<style>.container{max-width:980px;margin:24px auto;padding:0 16px}.card{background:var(--tj-surface,#fff);border:1px solid var(--tj-border,#e5e7eb);border-radius:14px;padding:16px;margin-top:14px}.kit li{margin:6px 0}.note{background:#fffce8;border:1px solid #f0e6a6;padding:10px;border-radius:10px}</style>
-</head><body>
-<header class="container"><h1>📘 تدريبات علاجية</h1><div class="muted">اختر مجال الضعف لعرض أمثلة وتمارين.</div></header>
-<main class="container">
-<section class="card"><label>اختر المجال</label>
-<select id="area"><option>إظهار حلقي</option><option>إدغام بغنة</option><option>إدغام بغير غنة</option><option>إخفاء</option><option>غنة مشددة</option><option>إظهار شفوي</option><option>إدغام شفوي</option><option>إخفاء شفوي</option><option>قلب</option><option>مد طبيعي</option><option>مد متصل</option><option>مد منفصل</option><option>مد لازم</option></select>
-<button id="apply">عرض التمرين</button></section>
-<section class="card" id="content"><div class="note">اختر مجالًا أعلاه ثم اضغط "عرض التمرين".</div></section>
-<div class="container" style="margin:24px 0"><button onclick="history.back()">⬅️ العودة</button></div>
-</main>
-<script>
-const KITS={"إظهار حلقي":{rule:"إظهار النون الساكنة/التنوين إذا تلاها حرف حلقي.",drills:["أَنۡعَمۡتَ","سَمِيعٌ عَلِيمٌ","مِنۡهُمۡ"],tip:"نظّف النون دون غنة زائدة."},
-"إدغام بغنة":{rule:"إدغام مع (ي ن م و) مع الغنة.",drills:["هُدٗى لِّلۡمُتَّقِينَ","مِّنۡ نِّعۡمَةٖ","غَفُورٞ رَّحِيمٞ"],tip:"حركتان للغنة."},
-"إدغام بغير غنة":{rule:"إدغام في (ل، ر) دون غنة.",drills:["قُل رَّبِّ","مِّن لَّدُنۡكَ"],tip:"بدون غنة."},
-"إخفاء":{rule:"إخفاء قبل أحرف الإخفاء مع الغنة.",drills:["عَلِيمٞ خَبِيرٞ","مِنۢ بَعۡدِ","أَنزَلۡنَاهُ"],tip:"غنة حركتان."},
-"غنة مشددة":{rule:"الغنة واجبة في النون/الميم المشددة.",drills:["إِنَّ","ثُمَّ"],tip:"ثبّت زمن الغنة."},
-"إظهار شفوي":{rule:"إظهار الميم الساكنة أمام غير الميم والباء.",drills:["عَلَيۡهِمۡ قَوۡلٞ","كُمۡ دِينَكُمۡ"],tip:"دون غنة."},
-"إدغام شفوي":{rule:"إدغام الميم الساكنة في الميم المتحركة مع غنة.",drills:["لَكُم مَّا","هُم مُّؤۡمِنُونَ"],tip:"غنة حركتان."},
-"إخفاء شفوي":{rule:"إخفاء الميم الساكنة أمام الباء.",drills:["تَرۡمِيهِمۢ بِحِجَارَةٖ","هُمۢ بِهٖ"],tip:"غنة قبل الباء."},
-"قلب":{rule:"قلب النون/التنوين ميمًا مخفاة قبل الباء.",drills:["سَمِيعٌۢ بَصِيرٞ","أَنۢبِئۡهُم"],tip:"غنة مع ميم خفيفة."},
-"مد طبيعي":{rule:"مد حركتين بلا همز ولا سكون.",drills:["قَالُوا","يَقُولُونَ"],tip:"لا تزد على حركتين."},
-"مد متصل":{rule:"همز بعد حرف المد في كلمة واحدة (4–5 حركات).",drills:["جَآءَ","سِيٓـَٔةٌ"],tip:"زمن ثابت."},
-"مد منفصل":{rule:"حرف المد في كلمة والهمز في التالية (غالبًا 4).",drills:["فِيٓ أَنفُسِكُم","إِنَّآ أَعۡطَيۡنَٰكَ"],tip:"انتقال سلس."},
-"مد لازم":{rule:"سكون أصلي بعد حرف المد (6 حركات).",drills:["ٱلضَّآلِّينَ","حَآقَّةُ"],tip:"ثبّت 6 حركات."}};
-document.getElementById('apply').onclick=()=>{const k=document.getElementById('area').value; const d=KITS[k]; const box=document.getElementById('content'); if(!d){box.textContent='—';return;} box.innerHTML=`<h2>${k}</h2><p><strong>القاعدة:</strong> ${d.rule}</p><div class="note">نصيحة: ${d.tip}</div><h3>أمثلة</h3><ul class="kit">${d.drills.map(x=>'<li class="uthmani">'+x+'</li>').join('')}</ul><div class="row"><button onclick="location.href='index.html'">إعادة الاختبار</button></div>`;};
-</script>
-</body></html>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tajweedy — التدريبات العلاجية</title><link rel="stylesheet" href="styles.css"></head><body class="container"><h1>التدريبات العلاجية</h1><p class="muted">نسخة مبسطة للتجهيز (سيتم تحميل البنك العلاجي لاحقًا).</p><a class="btn-link" href="index.html">العودة</a></body></html>

@@ -1,40 +1,28 @@
+
 :root{
-  --bg:#f6f7fb; --ink:#0f172a; --muted:#64748b; --ring:#e2e8f0; --card:#fff;
-  --accent:#0ea5e9; --ok:#22c55e; --bad:#ef4444; --warn:#f59e0b;
-}
-[data-theme="dark"]{
-  --bg:#0a0f1a; --ink:#e5e7eb; --muted:#9aa4b2; --ring:#1f2937; --card:#0b1220;
+  --bg:#f7f8fb;--card:#fff;--fg:#15202b;--muted:#6b7280;--accent:#0ea5a8;
+  --ring:#d1fae5;--danger:#ef4444;--success:#10b981;
 }
 *{box-sizing:border-box}
-body{
-  margin:0; padding:24px; background:var(--bg); color:var(--ink);
-  font-family:"Cairo",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
-}
-.container{max-width:1100px;margin-inline:auto}
-header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
-header img{width:44px;height:44px;border-radius:10px}
-h1{margin:0;font-weight:800}
-.muted{color:var(--muted)}
-.btn{
-  appearance:none;border:1px solid var(--ring);background:var(--card);color:var(--ink);
-  padding:8px 10px;border-radius:10px;font-weight:700;cursor:pointer
-}
-.card{
-  background:var(--card);border:1px solid var(--ring);border-radius:16px;
-  padding:18px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:16px
-}
-.card h2{margin:.2rem 0 1rem;font-size:1.2rem}
-.grid{display:grid;grid-template-columns:1fr;gap:16px}
-@media(min-width:960px){.grid{grid-template-columns:1fr 1fr}}
-.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-label{min-width:72px}
-select, input[type="text"]{
-  padding:8px 10px;border-radius:10px;border:1px solid var(--ring);background:var(--card);color:var(--ink);
-}
+html,body{margin:0;padding:0}
+body{font-family:system-ui,Tajawal,Arial,sans-serif;background:var(--bg);color:var(--fg)}
+.container{max-width:1080px;margin:auto;padding:16px}
+h1{margin:0}
+.grid{display:grid;gap:16px}
+.card{background:var(--card);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.06);padding:16px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+label{min-width:86px;color:#374151}
+select,button,input[type=text]{border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;background:#fff}
+button{cursor:pointer}
+.btn-link{padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;text-decoration:none;color:inherit;background:#fff}
+#ayahText{margin-top:10px;padding:12px;border:1px dashed #e5e7eb;border-radius:12px;background:#fafafa;min-height:48px}
+.uthmani{font-family:'KFGQPC Uthmanic Script HAF','Amiri',serif;font-size:26px;line-height:2}
 .w-100{width:100%}
-.console{background:#0b1020;color:#e5e7eb;padding:12px;border-radius:12px;overflow:auto;max-height:280px}
-.uthmani{font-size:1.4rem;line-height:2.2rem;padding:12px;border:1px dashed var(--ring);border-radius:12px;min-height:54px}
-.score{font-weight:800}
-.errors{margin:0;padding-inline-start:20px}
-.toolbar{margin-inline-start:auto;display:flex;gap:8px}
-.badge{background:#ecfeff;color:#0ea5e9;border:1px solid #baecf7;padding:3px 8px;border-radius:999px;font-size:.8rem}
+.console{background:#0f172a;color:#e2e8f0;padding:12px;border-radius:12px;overflow:auto;max-height:260px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid #e5e7eb}
+.badge.success{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
+.badge.danger{background:#fef2f2;color:#991b1b;border-color:#fecaca}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:right}
+footer{padding:24px 0;color:var(--muted)}
+.dark body{background:#0b1220;color:#e5e7eb}
