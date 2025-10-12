@@ -6,15 +6,22 @@
   <title>Tajweedy — التقرير الموحد</title>
   <link rel="stylesheet" href="theme-v2.css" />
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
-
   <div class="tools"><button id="modeBtn" class="mode-fab" title="الوضع"><i data-lucide="moon-star"></i></button></div>
   <header class="container header"><div class="brand"><img src="assets/logo.png"><h1>التقرير الموحد</h1></div></header>
   <main class="container">
     <section class="card print-section" id="fullCard">
+      <h2>فلاتر التقرير</h2>
+      <div class="row">
+        <label>من تاريخ</label><input type="date" id="fromDate">
+        <label>إلى تاريخ</label><input type="date" id="toDate">
+        <label>اسم المتدرّب</label><input type="text" id="byName" placeholder="جزء من الاسم">
+        <button id="apply" class="primary">تطبيق الفلاتر</button>
+        <button id="reset" class="secondary">إعادة الضبط</button>
+      </div>
+      <hr/>
       <div class="row">
         <button id="pdf" class="primary">تصدير PDF</button>
         <button id="printAll" class="secondary">طباعة الكل</button>
@@ -26,14 +33,21 @@
   </main>
   <script src="app.js"></script>
   <script>
-    taj.initModeToggleFAB(); 
-    taj.renderAllReports('allReports');
+    taj.initModeToggleFAB();
+    const refs = {from: document.getElementById('fromDate'), to: document.getElementById('toDate'), name: document.getElementById('byName')};
+    const apply=()=>{
+      const f = refs.from.value ? new Date(refs.from.value).getTime() : null;
+      const t = refs.to.value ? (new Date(refs.to.value).getTime() + 24*60*60*1000 - 1) : null; // inclusive
+      const nm = refs.name.value.trim();
+      taj.renderAllReports('allReports', {fromTS:f, toTS:t, name:nm});
+    };
+    document.getElementById('apply').onclick=apply;
+    document.getElementById('reset').onclick=()=>{refs.from.value=''; refs.to.value=''; refs.name.value=''; apply();};
+    apply();
     document.getElementById('pdf').onclick=()=>taj.exportPDF('#fullCard');
     document.getElementById('exp').onclick=()=>taj.exportAttemptsJSON();
     document.getElementById('imp').onchange=(e)=>taj.importAttemptsJSON(e);
     document.getElementById('printAll').onclick=()=>window.print();
   </script>
-
-<script> if(window.lucide) lucide.createIcons(); </script>
 </body>
 </html>
