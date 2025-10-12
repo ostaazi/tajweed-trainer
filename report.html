@@ -5,29 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tajweedy — التقرير الفردي</title>
   <link rel="stylesheet" href="theme-v2.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
-  <div class="tools">
-    <button id="modeBtn"><i data-lucide="moon-star"></i> الوضع الليلي</button>
-  </div>
-  <header class="container header">
-    <div class="brand"><img src="assets/logo.png"><h1><i data-lucide="file-text"></i> التقرير الفردي</h1></div>
-  </header>
+  <div class="tools"><button id="modeBtn" class="mode-fab" title="الوضع"><i data-lucide="moon-star"></i></button></div>
+  <header class="container header"><div class="brand"><img src="assets/logo.png"><h1>التقرير الفردي</h1></div></header>
   <main class="container">
-    <section class="card">
+    <section class="card" id="reportCard">
       <div id="meta" class="muted"></div>
       <div class="row">
-        <button id="printBtn"><i data-lucide="printer"></i> طباعة</button>
-        <a href="index.html"><button class="secondary"><i data-lucide="arrow-right"></i> العودة</button></a>
+        <button id="pdf" class="primary">تصدير PDF</button>
+        <button id="exp" class="secondary">تصدير JSON</button>
+        <input type="file" id="imp" accept="application/json">
+        <a href="index.html"><button class="secondary">العودة</button></a>
       </div>
       <div id="oneReport"></div>
     </section>
   </main>
   <script src="app.js"></script>
-  <script>taj.initModeToggle(); taj.renderLastReport('oneReport','meta'); document.getElementById('printBtn').onclick=()=>window.print();</script>
+  <script>taj.initModeToggleFAB(); taj.renderLastReport('oneReport','meta'); document.getElementById('pdf').onclick=()=>taj.exportPDF('#reportCard'); document.getElementById('exp').onclick=()=>taj.exportAttemptsJSON(); document.getElementById('imp').onchange=(e)=>taj.importAttemptsJSON(e);</script>
 
-<script src="https://unpkg.com/lucide@latest"></script>
 <script> if(window.lucide) lucide.createIcons(); </script>
 </body>
 </html>

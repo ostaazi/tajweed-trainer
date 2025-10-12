@@ -5,40 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tajweedy — التدريبات والاختبارات</title>
   <link rel="stylesheet" href="theme-v2.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
-  <div class="tools">
-    <button id="modeBtn"><i data-lucide="moon-star"></i> الوضع الليلي</button>
-  </div>
+  <div class="tools"><button id="modeBtn" class="mode-fab" title="الوضع"><i data-lucide="moon-star"></i></button></div>
   <header class="container header">
-    <div class="brand">
-      <img src="assets/logo.png" alt="Tajweedy" />
-      <div>
-        <h1><i data-lucide="graduation-cap"></i> التدريبات والاختبارات</h1>
-        <div class="muted">أسئلة من بنك رسمي + تمارين علاجية متدرجة</div>
-      </div>
-    </div>
+    <div class="brand"><img src="assets/logo.png" alt="Tajweedy" /><div><h1>التدريبات والاختبارات</h1><div class="muted">اسم المتدرّب: <span id="who">—</span></div></div></div>
   </header>
-
   <main class="container">
     <section class="card">
-      <h2><i data-lucide="book-open-check"></i> اختبار القواعد</h2>
+      <h2>اختبار القواعد</h2>
+      <div class="progress"><div id="quizProg" class="bar"></div></div>
       <div class="row">
-        <label>اختر القسم</label>
+        <label>القسم</label>
         <select id="quizSection">
           <option value="noon_tanween">النون الساكنة والتنوين</option>
           <option value="meem_sakinah">الميم الساكنة</option>
           <option value="madd">أحكام المدود</option>
         </select>
-        <button id="buildQuizBtn"><i data-lucide="sparkles"></i> ابدأ اختبار (٥ أسئلة)</button>
-        <button id="buildFullQuizBtn" class="secondary"><i data-lucide="list-checks"></i> شامل (١٥ سؤالًا)</button>
+        <button id="buildQuizBtn" class="primary">ابدأ اختبار (٥ أسئلة)</button>
+        <button id="buildFullQuizBtn" class="secondary">شامل (١٥ سؤالًا)</button>
       </div>
       <div id="quizArea"></div>
+      <div id="quizResult" class="card" style="display:none"></div>
     </section>
-
     <section class="card">
-      <h2><i data-lucide="stethoscope"></i> تمارين علاجية</h2>
+      <h2>تمارين علاجية</h2>
+      <div class="progress"><div id="therProg" class="bar"></div></div>
       <div class="row">
         <label>القسم</label>
         <select id="therapySection">
@@ -48,22 +44,15 @@
         </select>
         <label>الحكم الفرعي</label>
         <select id="therapySub"></select>
-        <button id="startTherapyBtn"><i data-lucide="play-circle"></i> بدء تدريب (٣٠ سؤالًا)</button>
+        <button id="startTherapyBtn" class="primary">بدء تدريب (٥ أسئلة عشوائيًا)</button>
       </div>
       <div id="therapyArea"></div>
+      <div id="therapyResult" class="card" style="display:none"></div>
     </section>
   </main>
+  <footer class="footer"><a href="index.html"><button class="secondary">العودة</button></a></footer>
+  <script src="app.js"></script><script>taj.initModeToggleFAB(); taj.initWorkbench();</script>
 
-  <footer class="footer"><a href="index.html"><button class="secondary"><i data-lucide="arrow-right"></i> العودة للرئيسية</button></a></footer>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="app.js"></script>
-  <script>
-    taj.initModeToggle();
-    taj.initQuiz();
-    taj.initTherapy();
-  </script>
-
-<script src="https://unpkg.com/lucide@latest"></script>
 <script> if(window.lucide) lucide.createIcons(); </script>
 </body>
 </html>
