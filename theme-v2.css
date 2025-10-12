@@ -1,0 +1,59 @@
+
+/* Tajweedy Theme v2 — enhanced spacing, contrast, and typography */
+:root{
+  --bg: #f6f7fb;
+  --card:#ffffff;
+  --ink:#0b1324;
+  --muted:#5b6b82;
+  --accent:#22d3ee; /* teal-300 */
+  --accent-ink:#08323a;
+  --ring:#d9e2ef;
+  --ring-strong:#c4d0e2;
+  --success:#10b981;
+  --danger:#ef4444;
+  --warn:#f59e0b;
+}
+:root.dark{
+  --bg:#0b1220;
+  --card:#0f172a;
+  --ink:#e6edf6;
+  --muted:#9fb2cc;
+  --accent:#2dd4bf; /* teal-400 for dark */
+  --accent-ink:#052b28;
+  --ring:#19324d;
+  --ring-strong:#204163;
+  --success:#22c55e;
+  --danger:#f87171;
+  --warn:#fbbf24;
+}
+html{font-family:"Noto Naskh Arabic","Amiri",system-ui,-apple-system,Segoe UI,Roboto,Arial; font-size:16px; line-height:1.65;}
+body{margin:0;background:var(--bg);color:var(--ink);}
+.container{max-width:1000px;margin:auto;padding:20px}
+.header{display:flex;align-items:center;gap:14px;justify-content:space-between;margin-bottom:8px}
+.brand{display:flex;align-items:center;gap:14px}
+.brand img{width:60px;height:60px;border-radius:14px;box-shadow:0 1px 8px rgba(0,0,0,.05)}
+h1{font-size:2.1rem;margin:10px 0}
+h2{font-size:1.3rem;margin:18px 0 10px}
+.card{background:var(--card);border:1px solid var(--ring);padding:18px;border-radius:18px;box-shadow:0 2px 12px rgba(0,0,0,.05);margin:14px 0}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+select,button,input[type=text],input[type=number]{padding:12px 14px;border-radius:12px;border:1px solid var(--ring);background:var(--card);color:var(--ink)}
+button{background:var(--accent);border:none;color:#062225;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-weight:600}
+button:disabled{opacity:.55;cursor:not-allowed}
+button.secondary{background:transparent;border:1px solid var(--ring-strong);color:var(--ink)}
+.muted{color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:#ecfeff;border:1px solid var(--ring)}
+.badge .dot{width:8px;height:8px;border-radius:999px;background:var(--accent)}
+hr{border:none;height:1px;background:var(--ring);margin:18px 0}
+.list{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.q{border:1px dashed var(--ring);border-radius:14px;padding:14px;background:linear-gradient(0deg, rgba(34,211,238,0.05), rgba(34,211,238,0.05))}
+.q h3{margin:0 0 8px}
+.opt{display:flex;align-items:center;gap:8px;margin:6px 0}
+pre.console{background:#0b1020;color:#a7f3d0;padding:12px;border-radius:12px;overflow:auto;max-height:300px}
+.footer{padding:28px 16px;text-align:center;color:var(--muted)}
+.tools{position:fixed;inset-inline-start:14px;top:14px;display:flex;flex-direction:column;gap:8px;z-index:10}
+.tools button{background:var(--card);color:var(--ink)}
+/* Chart improvements */
+canvas{background:transparent}
+/* status colors */
+.tag-success{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.5);color:#065f46;border-radius:10px;padding:2px 8px}
+.tag-danger{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.5);color:#7f1d1d;border-radius:10px;padding:2px 8px}
