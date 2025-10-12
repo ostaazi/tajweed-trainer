@@ -1,0 +1,15 @@
+<!doctype html><html lang="ar" dir="rtl"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Tajweedy — الاختبار (البنك الرئيسي)</title><link rel="stylesheet" href="theme-v2.css"/></head><body>
+<header class="container header"><div class="brand"><img src="assets/logo.png"/><div><h1>الاختبار — بنك الأسئلة الرئيسي</h1>
+<nav class="nav"><a href="index.html">🏠 الواجهة</a><a href="exercises.html">🧠 التدريبات</a><a href="validator.html">🧪 المدقق</a></nav></div></div></header>
+<main class="container"><section class="card"><h2>إعداد الاختبار</h2>
+<div class="row"><label>القسم</label><select id="section"><option value="noon_tanween">النون الساكنة والتنوين</option><option value="meem_sakinah">الميم الساكنة</option><option value="madd">أحكام المدود</option></select>
+<button id="start" class="primary">بدء اختبار ٥ أسئلة لكل حكم فرعي</button><button id="startFull" class="secondary">اختبار شامل (١٥ سؤالًا)</button></div>
+<p class="muted">يُقرأ من <code>questions_bank.json</code> (اتركه ملفًا مستقلاً).</p></section>
+<section id="paper" class="card" style="display:none"><div class="row"><strong>اسم المتدرّب:</strong><input id="studentName" placeholder="اختياري" style="max-width:280px"></div>
+<div id="list"></div><div class="progress"><span id="bar"></span></div>
+<div class="row" style="margin-top:12px"><button id="submit" class="primary">إنهاء الاختبار</button><button id="reset" class="secondary">إعادة البدء</button></div>
+<div id="summary" class="console" style="display:none"></div></section></main>
+<footer class="container footer muted"><p>© Tajweedy</p></footer><button id="modeBtn" class="mode-fab">🌓</button><script type="module" src="quiz.js"></script><script type="module">import {App} from './app.js';document.addEventListener('DOMContentLoaded',()=>App.initTheme('modeBtn'));<\/script>
+</body></html>
