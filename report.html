@@ -2,106 +2,75 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Tajweedy — تقرير نتيجة الاختبار</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tajweedy — التقرير الفردي</title>
+  <style>
+:root{
+  --bg: #f7f8fa;
+  --card:#fff;
+  --ink:#0f172a;
+  --muted:#64748b;
+  --accent:#0ea5a7;
+  --ring:#dfe3ea;
+}
+:root.dark{
+  --bg: #0b1220;
+  --card:#0f182a;
+  --ink:#e6edf6;
+  --muted:#93a4bd;
+  --accent:#22d3ee;
+  --ring:#203045;
+}
+*{box-sizing:border-box}
+html{font-family: "Noto Naskh Arabic", "Amiri", system-ui, -apple-system, Segoe UI, Roboto, Arial; font-size:16px;}
+body{margin:0;background:var(--bg);color:var(--ink);}
+.container{max-width:960px;margin:auto;padding:16px}
+.header{display:flex;align-items:center;gap:12px;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px}
+.brand img{width:52px;height:52px;border-radius:12px}
+h1{font-size:2.2rem;margin:12px 0}
+h2{font-size:1.4rem;margin:18px 0 8px}
+.card{background:var(--card);border:1px solid var(--ring);padding:16px;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.04);margin:12px 0}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+select,button,input[type=text]{padding:10px 12px;border-radius:10px;border:1px solid var(--ring);background:var(--bg);color:var(--ink)}
+button{background:var(--accent);border:none;color:#08272b;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+.muted{color:var(--muted)}
+.list{display:grid;gap:12px}
+.q{border:1px dashed var(--ring);border-radius:12px;padding:12px}
+.q h3{margin:0 0 8px}
+.opt{display:flex;align-items:center;gap:8px;margin:6px 0}
+hr{border:none;height:1px;background:var(--ring);margin:16px 0}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{border:1px solid var(--ring);padding:8px;text-align:right;vertical-align:top}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef; border:1px solid var(--ring)}
+.footer{padding:24px 16px;text-align:center;color:var(--muted)}
+.tools{position:fixed;inset-inline-start:12px;top:12px;display:flex;flex-direction:column;gap:8px;z-index:10}
+.tools button{background:var(--card);color:var(--ink)}
+.copy-box{display:flex;gap:8px;align-items:center}
+pre.console{background:#0b1020;color:#a7f3d0;padding:12px;border-radius:10px;overflow:auto;max-height:280px}
+.kbd{border:1px solid var(--ring);padding:1px 6px;border-radius:6px;background:var(--card)}
+.hidden{display:none}
+</style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <img src="assets/logo-tajweedy.png" alt="Tajweedy" onerror="this.style.display='none'">
-      <div>
-        <h1>Tajweedy — تقرير نتيجة الاختبار</h1>
-        <div class="muted">ملخّص دقيق لإجاباتك مع الحكم على كل سؤال</div>
-      </div>
-      <div class="toolbar" style="margin-inline-start:auto;display:flex;gap:8px">
-        <button class="btn" onclick="toggleTheme()">الوضع الليلي</button>
-        <button class="btn" onclick="copyReport()">نسخ النتائج</button>
-        <button class="btn" onclick="window.print()">تنزيل/طباعة</button>
-      </div>
-    </header>
-
-    <section class="card" id="metaCard"></section>
-
-    <section class="card">
-      <table class="table" id="tbl">
-        <thead>
-          <tr>
-            <th class="center" style="width:54px">#</th>
-            <th>السؤال</th>
-            <th style="width:140px">اختياراتك</th>
-            <th style="width:120px">الصحيح</th>
-            <th class="center" style="width:70px">الحُكم</th>
-            <th>لماذا؟</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"><tr><td colspan="6" class="center muted">لا توجد بيانات.</td></tr></tbody>
-      </table>
-      <div class="row" style="justify-content:flex-end;margin-top:10px">
-        <button class="btn" onclick="copyReport()">نسخ النتائج</button>
-        <button class="btn" onclick="window.print()">تنزيل/طباعة</button>
-      </div>
-      <div class="muted" style="margin-top:10px">* تعرض خلية <strong>الحُكم</strong> رمز ✅ عند الإجابة الصحيحة و ❌ عند الخطأ.</div>
-    </section>
+  <div class="tools">
+    <button id="modeBtn">الوضع الليلي</button>
   </div>
-
-<script>
-function toggleTheme(){ const d=document.documentElement; d.dataset.theme = d.dataset.theme==='dark' ? '' : 'dark'; }
-function getReport(){
-  if (window.reportData && window.reportData.items) return window.reportData;
-  try{
-    const raw = localStorage.getItem('tajweedy_last_report')
-             || localStorage.getItem('tajweed_last_report');
-    if (!raw) return null;
-    const obj = JSON.parse(raw);
-    if (obj && Array.isArray(obj.items)) return obj;
-  }catch(e){}
-  const now=new Date().toISOString();
-  return { traineeName:"متدرّب", sectionLabel:"النون الساكنة والتنوين", score:{correct:1,total:5}, takenAt:now, items:[
-    { no:1, question:"ما حكم التنوين؟ (المثال: مِنْ آمن)", options:["إظهار","إدغام بغنة","إقلاب","إخفاء"], chosen:"إظهار", answer:"إدغام بغنة", isCorrect:false, rationale:"إدغام بغنة إذا تبعت النون/التنوين أحد حروف ينمو."}
-  ]};
-}
-function fillMeta(r){
-  const el=document.getElementById('metaCard'); const date=new Date(r.takenAt||Date.now());
-  el.innerHTML = `<div class="row" style="justify-content:space-between">
-    <div class="row"><span class="badge">القسم: ${r.sectionLabel||'غير محدد'}</span><span class="badge">النتيجة: ${r.score?.correct||0} / ${r.score?.total||0}</span></div>
-    <div class="row">${r.traineeName?`<span class="badge">👤 ${r.traineeName}</span>`:''}<span class="badge">🗓️ ${date.toLocaleString('ar')}</span></div>
-  </div>`;
-}
-function fillTable(r){
-  const body=document.getElementById('tbody');
-  if(!r.items || !r.items.length){ body.innerHTML = `<tr><td colspan="6" class="center muted">لا توجد بيانات.</td></tr>`; return; }
-  body.innerHTML = r.items.map(it=>{
-    const icon = it.isCorrect ? '✅' : '❌';
-    const cls  = it.isCorrect ? 'ok' : 'bad';
-    const chosen = (it.chosen ?? '').toString();
-    const answer = (it.answer ?? '').toString();
-    const highlight = (txt, needle, ok)=>{
-      if(!txt || !needle) return txt;
-      try{ const esc=needle.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-        return txt.replace(new RegExp(`(${esc})`,'g'), `<mark style="background:${ok?'#dcfce7':'#fee2e2'};padding:0 4px;border-radius:4px">${needle}</mark>`);
-      }catch(e){return txt;}
-    };
-    return `<tr>
-      <td class="center">${it.no ?? ''}</td>
-      <td>${it.question || ''}</td>
-      <td>${highlight(chosen, chosen, it.isCorrect)}</td>
-      <td>${highlight(answer, answer, true)}</td>
-      <td class="center ${cls}">${icon}</td>
-      <td><span class="muted">${it.rationale || ''}</span></td>
-    </tr>`;
-  }).join('');
-}
-function copyReport(){
-  const sel = window.getSelection(); const range = document.createRange();
-  range.selectNode(document.getElementById('tbl')); sel.removeAllRanges(); sel.addRange(range);
-  try{ document.execCommand('copy'); sel.removeAllRanges(); alert('✅ تم نسخ الجدول إلى الحافظة.'); }
-  catch(e){ sel.removeAllRanges(); navigator.clipboard?.writeText(document.getElementById('tbl').innerText).then(()=>alert('✅ تم نسخ النص.')).catch(()=>alert('⚠️ تعذّر النسخ تلقائيًا.')); }
-}
-(function(){ const r=getReport(); fillMeta(r); fillTable(r); })();
-</script>
+  <header class="container header">
+    <div class="brand"><img src="assets/logo.png"><h1>تقرير نتيجة الاختبار</h1></div>
+  </header>
+  <main class="container">
+    <section class="card">
+      <div id="meta" class="muted"></div>
+      <div class="row">
+        <button id="printBtn">🖨️ طباعة</button>
+        <a href="index.html"><button>↩️ العودة</button></a>
+      </div>
+      <div id="oneReport"></div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+  <script>taj.initModeToggle(); taj.renderLastReport('oneReport','meta'); document.getElementById('printBtn').onclick=()=>window.print();</script>
 </body>
 </html>
