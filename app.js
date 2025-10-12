@@ -54,9 +54,7 @@ window.taj=(function(){
       opts.forEach((o,oi)=>{
         const id=`q${idx}_o${oi}`;
         const r=el('input',{type:'radio',name:`q${idx}`,id}); r.dataset.correct=o.correct?'1':'0';
-        r.onchange=()=>{ // update progress on first selection for this question
-          if(!qBox._selected){ qBox._selected=true; answered++; setProg('quizProg', answered, chosen.length); }
-        };
+        r.onchange=()=>{ if(!qBox._selected){ qBox._selected=true; answered++; setProg('quizProg', answered, chosen.length); } };
         const lbl=el('label',{for:id,class:'opt'},o.t);
         const row=el('div',{class:'opt'}); row.append(r,lbl); qBox.append(row);
       });
@@ -75,12 +73,12 @@ window.taj=(function(){
       const rep={when:nowStr(),section,mode,total,right,score,name:state.name||'—',rows};
       state.attempts.push(rep); save();
       box.style.display='block'; box.innerHTML=`<div><b>الاسم:</b> ${rep.name} — <b>القسم:</b> ${section} — <b>النتيجة:</b> ${right}/${total} (${score}%)</div>
-      <div class="row"><a href="report.html"><button class="secondary">فتح التقرير الفردي</button></a><a href="stats.html"><button class="secondary">فتح الإحصاءات</button></a></div>`;
+      <div class="row"><a href="report.html"><button class="secondary">فتح التقرير الفردي</button></a><a href="stats.html"><button class="secondary">فتح الإحصاءات</button></a><button class="secondary" onclick="window.print()">طباعة</button></div>`;
     };
     mount.append(list, el('hr'), submit);
   }
 
-  // ---- THERAPY (random 5) with progress, sounds & retry
+  // ---- THERAPY (random 5) with progress, sounds & retry + visual flash
   function initTherapy(){ const sec=$('#therapySection'), sub=$('#therapySub'), area=$('#therapyArea'), box=$('#therapyResult'); const fill=()=>{ sub.innerHTML=''; const obj=state.therapy[sec.value]; Object.keys(obj).forEach(k=>sub.append(el('option',{value:k},k))) }; fill(); sec.onchange=fill;
     $('#startTherapyBtn').onclick=()=>{
       const pack=state.therapy[sec.value][sub.value]; let t=(pack&&pack.templates)?pack.templates.slice():[];
@@ -97,6 +95,10 @@ window.taj=(function(){
       const opts=q.options.map((t,i)=>({t,correct:i===q.answer})); shuffle(opts);
       opts.forEach((o,oi)=>{
         const id=`t${idx}_o${oi}`; const r=el('input',{type:'radio',name:`t${idx}`,id}); r.dataset.correct=o.correct?'1':'0';
+        r.onchange=()=>{ // flash feedback
+          if(r.dataset.correct==='1'){ qBox.classList.add('flash-ok'); playTone(true); setTimeout(()=>qBox.classList.remove('flash-ok'),300); }
+          else{ qBox.classList.add('flash-bad'); playTone(false); setTimeout(()=>qBox.classList.remove('flash-bad'),300); }
+        };
         const lbl=el('label',{for:id,class:'opt'},o.t); const row=el('div',{class:'opt'}); row.append(r,lbl); qBox.append(row);
       });
     };
@@ -107,7 +109,7 @@ window.taj=(function(){
     next.onclick=()=>{
       const sel=mount.querySelector(`input[name="t${idx}"]:checked`);
       if(!sel){alert('اختر إجابة'); return}
-      const ok = sel.dataset.correct==='1'; if(ok) right++; playTone(ok);
+      const ok = sel.dataset.correct==='1'; if(ok) right++;
       idx++; setProg('therProg', idx, questions.length);
       if(idx<questions.length){ render(); if(idx===questions.length-1) next.textContent='إنهاء'; }
       else{ next.disabled=true; end.disabled=false; }
@@ -116,13 +118,13 @@ window.taj=(function(){
       const total=questions.length, score=Math.round((right/total)*100);
       const rep={when:nowStr(),section,subRule,mode:'therapy',total,right,score,name:state.name||'—'}; state.attempts.push(rep); save();
       box.style.display='block'; box.innerHTML=`<div><b>الاسم:</b> ${rep.name} — <b>القسم:</b> ${section} — <b>الحكم:</b> ${subRule} — <b>النتيجة:</b> ${right}/${total} (${score}%)</div>
-      <div class="row"><a href="consolidated_report.html"><button class="secondary">التقرير الموحد</button></a><a href="stats.html"><button class="secondary">الإحصاءات</button></a></div>`;
+      <div class="row"><a href="consolidated_report.html"><button class="secondary">التقرير الموحد</button></a><a href="stats.html"><button class="secondary">الإحصاءات</button></a><button class="secondary" onclick="window.print()">طباعة</button></div>`;
       retry.style.display='inline-flex'; retry.onclick=()=>{ renderTherapy(questions,section,subRule,mount,box); };
     };
     mount.append(qBox, el('div',{class:'row'},''), next, end, retry);
   }
 
-  // Reports & Stats & Export — same as previous patch
+  // Reports & Stats & Export
   function renderLastReport(mountId,metaId){ const mount=$('#'+mountId), meta=$('#'+metaId); const last=state.attempts.slice().reverse().find(x=>x.rows); if(!last){mount.textContent='لا يوجد تقرير'; return}
     meta.textContent=`المتدرّب: ${last.name||'—'} — القسم: ${last.section} — التاريخ: ${last.when} — النتيجة: ${last.right}/${last.total} (${last.score}%)`;
     const table=el('table',{class:'table'}); table.innerHTML=`<thead><tr><th>#</th><th>السؤال</th><th>اختيارك</th><th>الصحيح</th><th>الحكم</th><th>لماذا؟</th><th>✓/✗</th></tr></thead>`;
@@ -140,6 +142,7 @@ window.taj=(function(){
       rows.forEach(a=>tb.append(el('tr',{},`<td>${a.when}</td><td>${a.name||'—'}</td><td>${a.mode||'quiz'}</td><td>${a.section||'—'}</td><td>${(a.right!=null)?`${a.right}/${a.total} (${a.score}%)`:'—'}</td>`))); tbl.append(tb); list.append(tbl) };
     doIt(); $(applyBtn).onclick=doIt }
 
+  // Export/Import
   function exportPDF(sel){ const node=document.querySelector(sel); const opt={margin:0.4,filename:'tajweedy-report.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'in',format:'a4',orientation:'portrait'}}; html2pdf().set(opt).from(node).save() }
   function exportAttemptsJSON(){ const blob=new Blob([JSON.stringify(state.attempts,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='tajweedy-attempts.json'; a.click() }
   function importAttemptsJSON(e){ const f=e.target.files[0]; if(!f) return; const fr=new FileReader(); fr.onload=()=>{ try{ const data=JSON.parse(fr.result); if(Array.isArray(data)){ state.attempts=data; save(); alert('تم الاستيراد بنجاح.')} else alert('صيغة غير صحيحة.') }catch(err){ alert('خطأ في القراءة')}}; fr.readAsText(f) }

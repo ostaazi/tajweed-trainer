@@ -30,7 +30,7 @@ button.secondary{border:1px solid var(--ring-strong)}
 button:disabled{opacity:.55;cursor:not-allowed}
 .muted{color:var(--muted)}
 .list{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.q{border:1px dashed var(--ring);border-radius:14px;padding:14px}
+.q{border:1px dashed var(--ring);border-radius:14px;padding:14px;position:relative;overflow:hidden}
 .q h3{margin:0 0 8px}
 .opt{display:flex;align-items:center;gap:8px;margin:6px 0}
 pre.console{background:#0b1020;color:#a7f3d0;padding:12px;border-radius:12px;overflow:auto;max-height:300px}
@@ -45,9 +45,22 @@ pre.console{background:#0b1020;color:#a7f3d0;padding:12px;border-radius:12px;ove
 .progress{width:100%;height:10px;background:var(--ring);border-radius:999px;overflow:hidden;margin:8px 0 12px}
 .progress .bar{height:100%;background:var(--accent);width:0%}
 
-/* Responsive tweaks */
-@media (max-width: 640px){
-  .container{padding:14px}
-  .row{gap:8px}
-  select,button,input[type=text],input[type=number]{padding:10px 12px}
+/* Flash feedback for therapy */
+@keyframes flash-ok { from { box-shadow: 0 0 0 0 rgba(16,185,129,.5);} to { box-shadow: 0 0 0 16px rgba(16,185,129,0);}}
+@keyframes flash-bad{ from { box-shadow: 0 0 0 0 rgba(239,68,68,.5);} to { box-shadow: 0 0 0 16px rgba(239,68,68,0);}}
+.flash-ok{ animation: flash-ok .45s ease-out }
+.flash-bad{ animation: flash-bad .45s ease-out }
+
+/* Print styles */
+@media print{
+  @page{ size:A4; margin:12mm }
+  body{ background:#fff }
+  .tools, .mode-fab, .secondary[href], .secondary, .primary { /* hide UI buttons when printing */
+    display:none !important;
+  }
+  .card{ box-shadow:none; border:1px solid #ccc; break-inside:avoid; page-break-inside:avoid }
+  table{ width:100%; border-collapse:collapse; }
+  thead{ display:table-header-group } /* repeat header each page */
+  tr, td, th{ border:1px solid #999; padding:6px; vertical-align:top }
+  .print-section{ break-inside:avoid; page-break-inside:avoid }
 }

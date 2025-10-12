@@ -24,13 +24,15 @@
           <option value="therapy">تمارين علاجية فقط</option>
         </select>
         <button id="apply" class="primary">تطبيق</button>
+        <button id="printStats" class="secondary">طباعة الإحصاءات</button>
       </div>
     </section>
-    <section class="card"><h2>الأخطاء بحسب الحكم</h2><canvas id="bar" height="330"></canvas></section>
-    <section class="card"><h2>سجل المحاولات</h2><div id="attempts"></div></section>
+    <section class="card print-section"><h2>الأخطاء بحسب الحكم</h2><canvas id="bar" height="330"></canvas></section>
+    <section class="card print-section"><h2>سجل المحاولات</h2><div id="attempts"></div></section>
   </main>
   <footer class="footer"><a href="index.html"><button class="secondary">العودة</button></a></footer>
-  <script src="app.js"></script><script>taj.initModeToggleFAB(); taj.renderStatsFiltered('bar','attempts','#kind','#apply');</script>
+  <script src="app.js"></script>
+  <script>taj.initModeToggleFAB(); taj.renderStatsFiltered('bar','attempts','#kind','#apply'); document.getElementById('printStats').onclick=()=>window.print();</script>
 
 <script> if(window.lucide) lucide.createIcons(); </script>
 </body>
