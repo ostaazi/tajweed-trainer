@@ -39,21 +39,5 @@
   <script>taj.initModeToggleFAB(); taj.initTraineeName('#traineeName','#saveNameBtn');</script>
 
 <script> if(window.lucide) lucide.createIcons(); </script>
-
-<section class="card" id="taj-train">
-  <h2>القارئ • السورة • الآية</h2>
-  <div class="row"><label>القارئ</label><select id="reciterSelect"></select></div>
-  <div class="row"><label>السورة</label><select id="surahSelect"></select></div>
-  <div class="row"><label>الآية</label><select id="ayahSelect"></select></div>
-  <div id="ayahText" class="ayah uthmani" style="margin:8px 0;min-height:48px"></div>
-  <div class="row"><button id="playCorrectBtn" class="secondary">▶️ استمع للتلاوة الصحيحة</button></div>
-  <audio id="referenceAudio" controls class="w-100"></audio>
-</section>
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-  try { Taj.initTrainUI && Taj.initTrainUI({}); } catch(e){ console.warn('initTrainUI error', e); }
-});
-</script>
-
 </body>
 </html>
