@@ -1,33 +1,39 @@
-<!doctype html><html lang="ar" dir="rtl"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Tajweedy — الإحصاءات</title><link rel="stylesheet" href="theme-v2.css"/></head><body>
-<header class="container header"><div class="brand"><img src="assets/logo.png"/><div><h1>الإحصاءات التجميعية</h1>
-<nav class="nav"><a href="index.html">🏠 الواجهة</a><a href="quiz.html">📘 الاختبار</a><a href="exercises.html">🧠 التدريبات</a><a href="report.html">📑 التقارير</a></nav>
-<p class="muted">تجميع تلقائي من محاولات LocalStorage في هذا المتصفح.</p></div></div></header>
-<main class="container">
-<section class="card">
-  <div class="row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-    <label>نوع:</label>
-    <select id="mode"><option value="">الكل</option><option value="quiz">اختبار</option><option value="exercise">تدريب</option></select>
-    <button id="refresh" class="secondary">تحديث</button>
-    <button id="exportCSV" class="secondary">تصدير CSV</button>
-    <button id="printBtn" class="secondary">طباعة</button>
-  </div>
-</section>
-<section class="card">
-  <h2>مؤشرات عامة</h2>
-  <div id="kpis"></div>
-</section>
-<section class="card">
-  <h2>حسب القسم</h2>
-  <div id="bySection"></div>
-</section>
-<section class="card">
-  <h2>حسب الحكم الفرعي</h2>
-  <div id="bySubrule"></div>
-</section>
-</main>
-<footer class="container footer muted"><p>© Tajweedy</p></footer>
-<button id="modeBtn" class="mode-fab">🌓</button>
-<script type="module" src="stats.js"></script><script type="module">import {App} from './app.js';document.addEventListener('DOMContentLoaded',()=>App.initTheme('modeBtn'));<\/script>
-</body></html>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tajweedy — الإحصاءات</title>
+  <link rel="stylesheet" href="theme-v2.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+  <div class="tools"><button id="modeBtn" class="mode-fab" title="الوضع"><i data-lucide="moon-star"></i></button></div>
+  <header class="container header"><div class="brand"><img src="assets/logo.png"><h1>الإحصاءات</h1></div></header>
+  <main class="container">
+    <section class="card">
+      <h2>تصفية</h2>
+      <div class="row">
+        <label>نوع الجلسة</label>
+        <select id="kind">
+          <option value="all">جميع الجلسات</option>
+          <option value="quiz">اختبارات فقط</option>
+          <option value="therapy">تمارين علاجية فقط</option>
+        </select>
+        <button id="apply" class="primary">تطبيق</button>
+        <button id="printStats" class="secondary">طباعة الإحصاءات</button>
+      </div>
+    </section>
+    <section class="card print-section"><h2>الأخطاء بحسب الحكم</h2><canvas id="bar" height="330"></canvas></section>
+    <section class="card print-section"><h2>سجل المحاولات</h2><div id="attempts"></div></section>
+  </main>
+  <footer class="footer"><a href="index.html"><button class="secondary">العودة</button></a></footer>
+  <script src="app.js"></script>
+  <script>taj.initModeToggleFAB(); taj.renderStatsFiltered('bar','attempts','#kind','#apply'); document.getElementById('printStats').onclick=()=>window.print();</script>
+
+<script> if(window.lucide) lucide.createIcons(); </script>
+</body>
+</html>
