@@ -1,19 +1,68 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Tajweedy — الاختبار (البنك الرئيسي)</title>
-<link rel="stylesheet" href="theme-v2.css"/>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>إعداد الاختبار</title>
+  <style>
+    :root{
+      --bg:#fff;
+      --text:#111827;
+      --muted:#6b7280;
+      --ring:#d1d5db;
+      --subtle:#f3f4f6;
+    }
+    html,body{background:var(--bg);color:var(--text);font-family:system-ui, -apple-system, Segoe UI, Roboto, "Noto Kufi Arabic", Arial, "Apple Color Emoji","Segoe UI Emoji", "Segoe UI Symbol";margin:0;padding:0}
+    .container{max-width:900px;margin:24px auto;padding:16px}
+    h1{margin:0 0 12px 0;font-size:22px}
+    .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
+    label{color:var(--text);font-weight:600}
+    select,input[type="number"],button{padding:8px 10px;border:1px solid var(--ring);border-radius:10px;background:#fff}
+    button{cursor:pointer}
+    button.primary{background:#111827;color:#fff;border-color:#111827}
+    button.secondary{background:#fff;color:#111827}
+    .badge{border:1px solid var(--ring);padding:2px 8px;border-radius:999px;font-size:12px;color:#374151}
+    .muted{color:var(--muted)}
+    /* ===== Slider Colors & Styles ===== */
+    .seg-noon { background: linear-gradient(to bottom, #d8ecff, #b5dcff); border-right: 1px solid rgba(0,0,0,0.08); }
+    .seg-meem { background: linear-gradient(to bottom, #f1d8ff, #e3b5ff); border-left: 1px solid rgba(255,255,255,0.25); border-right: 1px solid rgba(0,0,0,0.08); }
+    .seg-madd { background: linear-gradient(to bottom, #fff2dc, #ffe2b5); border-left: 1px solid rgba(255,255,255,0.25); }
+
+    #triTrack { position: relative; height: 18px; border-radius: 999px; overflow: hidden; background: var(--subtle); box-shadow: inset 0 0 6px rgba(0,0,0,0.12); }
+    .seg{ position:absolute; top:0; height:100%; display:flex; align-items:center; justify-content:center; transition: width 0.4s ease, left 0.4s ease; }
+    .seg-label{ font-weight:700; font-size:12px; line-height:1; color:#1f2937; user-select:none; pointer-events:none; }
+    .handle{ position:absolute; top:50%; transform:translate(-50%,-50%); width:18px; height:18px; border-radius:50%; border:2px solid var(--ring); background:var(--bg); cursor:ew-resize; transition:left 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease; }
+    .handle:hover{ background:#fff; border-color:#8b5cf6; box-shadow:0 0 8px rgba(139,92,246,0.35) }
+    .handle:focus{ outline:none; border-color:#8b5cf6; box-shadow:0 0 10px rgba(139,92,246,0.45) }
+
+    /* Flash on auto-distribute */
+    @keyframes segFlashBlue { 0%{filter:brightness(1)} 25%{filter:brightness(1.2)} 50%{filter:brightness(1)} 75%{filter:brightness(1.12)} 100%{filter:brightness(1)} }
+    @keyframes segFlashPurple { 0%{filter:brightness(1)} 25%{filter:brightness(1.18)} 50%{filter:brightness(1)} 75%{filter:brightness(1.1)} 100%{filter:brightness(1)} }
+    @keyframes segFlashOrange { 0%{filter:brightness(1)} 25%{filter:brightness(1.18)} 50%{filter:brightness(1)} 75%{filter:brightness(1.1)} 100%{filter:brightness(1)} }
+    .seg-noon.flash{ animation: segFlashBlue 0.8s ease }
+    .seg-meem.flash{ animation: segFlashPurple 0.8s ease }
+    .seg-madd.flash{ animation: segFlashOrange 0.8s ease }
+    @media (prefers-reduced-motion: reduce) {
+      .seg{ transition:none }
+      .handle{ transition:none }
+      .seg-noon.flash,.seg-meem.flash,.seg-madd.flash{ animation:none }
+    }
+
+    /* hint */
+    #triHint{ margin-top:8px; text-align:center; font-size:13px; color:#6b7280; transition: color .25s ease, transform .25s ease }
+    #triHint:hover{ color:#8b5cf6; transform:scale(1.02) }
+
+    /* Progress bar */
+    #progress{height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+    #bar{height:100%;width:0;background:#16a34a}
+
+    .q label{display:inline-block;padding:6px 8px;border-radius:8px}
+  </style>
 </head>
 <body>
-<header class="container header">
-<div class="brand"><img src="assets/logo.png"/><div><h1>الاختبار — بنك الأسئلة الرئيسي</h1>
-<nav class="nav"><a href="index.html">🏠 الواجهة</a><a href="exercises.html">🧠 التدريبات</a><a href="validator.html">🧪 المدقق</a></nav></div></div>
-</header>
-<main class="container">
-  <section class="card">
-    <h2>إعداد الاختبار</h2>
+  <div class="container">
+    <h1>إعداد الاختبار</h1>
+
     <div class="row">
       <label>القسم</label>
       <select id="section">
@@ -21,35 +70,94 @@
         <option value="meem_sakinah">الميم الساكنة</option>
         <option value="madd">أحكام المدود</option>
       </select>
-      <button id="start" class="primary">بدء اختبار 5 أسئلة</button>
-      <button id="startFull" class="secondary">اختبار شامل (20 سؤالًا)</button>
+      <button id="start" class="primary">بدء اختبار (٥ أسئلة — القسم المحدد)</button>
+      <button id="startFull" class="secondary">بدء اختبار شامل</button>
     </div>
-    <p class="muted">يُقرأ من <code>questions_bank.json</code> (اتركه ملفًا مستقلاً).</p>
-  </section>
-  <section id="paper" class="card" style="display:none">
-    <div class="row">
-      <strong>اسم المتدرّب:</strong>
-      <input id="studentName" placeholder="اختياري" style="max-width:280px">
+
+    <!-- إجمالي الأسئلة (منزلق مستقل بالأعلى) -->
+    <div id="totalBlock" style="margin-top:14px;border:1px solid var(--ring);border-radius:12px;padding:12px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <strong>الإجمالي الكلي لأسئلة الاختبار الشامل</strong>
+        <span class="muted">اختر عدد الأسئلة (5–100)</span>
+      </div>
+      <div style="display:grid;grid-template-columns: 1fr auto;gap:10px;margin-top:10px;align-items:center">
+        <input id="totalRange" type="range" min="5" max="100" value="20" step="1">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="totalQ" type="number" min="5" max="100" value="20" style="width:90px">
+          <span class="muted">إجمالي: <strong id="sumTarget">20</strong></span>
+        </div>
+      </div>
     </div>
-    <div id="list"></div>
-    <div class="progress">
-      <span id="bar"></span>
+
+    <!-- توزيع الأسئلة على الأقسام (منزلق ثلاثي بفاصلين) -->
+    <div id="dist" style="margin-top:14px;border:1px solid var(--ring);border-radius:12px;padding:12px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <strong>توزيع الإجمالي على الأقسام</strong>
+        <span class="muted">حرّك الفواصل لتعديل النسب أو استخدم الزر للتوزيع حسب الأجزاء الفرعية</span>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+        <button id="btnInitBySubparts" type="button" class="secondary">توزيع تلقائي حسب الأجزاء الفرعية</button>
+        <div class="muted">المجموع الحالي: <strong id="sumNow">20</strong>/<span id="sumTarget2">20</span></div>
+      </div>
+
+      <div id="triWrap" style="margin-top:12px">
+        <!-- مؤشرات أعلى المنزلق -->
+        <div id="triLabels" style="position:relative;height:24px;display:flex;justify-content:space-between;padding:0 4px;font-size:13px;font-weight:600;">
+          <div id="pctNoon" style="color:#0072ff;">0%</div>
+          <div id="pctMeem" style="color:#a34bff;text-align:center;flex:1;">0%</div>
+          <div id="pctMadd" style="color:#f59e0b;text-align:right;">0%</div>
+        </div>
+
+        <div id="triTrack">
+          <div class="seg seg-noon" style="left:0;width:33%"><span class="seg-label" id="segLblNoon">0%</span></div>
+          <div class="seg seg-meem" style="left:33%;width:34%"><span class="seg-label" id="segLblMeem">0%</span></div>
+          <div class="seg seg-madd" style="left:67%;width:33%"><span class="seg-label" id="segLblMadd">0%</span></div>
+
+          <div class="handle h1" tabindex="0" style="left:33%"></div>
+          <div class="handle h2" tabindex="0" style="left:67%"></div>
+        </div>
+
+        <!-- نص توضيحي أسفل المنزلق -->
+        <div id="triHint">💡 انقر على الشريط لتبديل العرض بين <strong>% النسبة</strong> و<strong>عدد الأسئلة</strong>.</div>
+      </div>
+
+      <!-- مدخلات رقمية لمزامنة/ضبط أدق -->
+      <div style="display:grid;grid-template-columns: 1fr auto;gap:8px;margin-top:10px">
+        <label for="cntNoon">النون الساكنة والتنوين (يدويًا)</label>
+        <input id="cntNoon" type="number" min="0" max="100" value="8" style="width:90px">
+
+        <label for="cntMeem">الميم الساكنة (يدويًا)</label>
+        <input id="cntMeem" type="number" min="0" max="100" value="6" style="width:90px">
+
+        <label for="cntMadd">أحكام المدود (يدويًا)</label>
+        <input id="cntMadd" type="number" min="0" max="100" value="6" style="width:90px">
+      </div>
+
+      <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <label style="display:flex;align-items:center;gap:6px">
+          <input id="chkStrata" type="checkbox" checked>
+          <span>توزيع طبقي على الأحكام الفرعية داخل كل قسم</span>
+        </label>
+        <div class="muted">يجب أن يطابق المجموع الإجمالي المحدّد بالأعلى.</div>
+      </div>
     </div>
-    <div class="row" style="margin-top:12px">
-      <button id="submit" class="primary">إنهاء الاختبار</button>
-      <button id="reset" class="secondary">إعادة البدء</button>
+
+    <div class="row" style="margin-top:18px">
+      <div id="progress"><div id="bar"></div></div>
     </div>
-    <div id="summary" class="console" style="display:none"></div>
-  </section>
-</main>
-<footer class="container footer muted">
-  <p>© Tajweedy</p>
-</footer>
-<button id="modeBtn" class="mode-fab">🌓</button>
-<script type="module" src="quiz.js"></script>
-<script type="module">
-  import { App } from './app.js';
-  document.addEventListener('DOMContentLoaded', () => App.initTheme('modeBtn'));
-</script>
+
+    <div id="summary" class="row" style="display:none"></div>
+
+    <div id="paper" style="display:none">
+      <div id="list"></div>
+      <div class="row">
+        <button id="submit" class="primary">تصحيح</button>
+        <button id="reset" class="secondary">إعادة ضبط</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./quiz.js"></script>
 </body>
 </html>
