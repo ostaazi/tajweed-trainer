@@ -3,16 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>التجويد - الاختبار الشامل</title>
+  <title>التجويد - الاختبار</title>
   <style>
-    :root{ --ink:#0f172a; --muted:#64748b; --ring:#e2e8f0; --violet:#7B1FA2; --card:#ffffff; }
+    :root{ --ink:#0f172a; --muted:#64748b; --ring:#e2e8f0; --violet:#7B1FA2; }
     html,body{background:#fff;margin:0;padding:0;font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Noto Naskh Arabic', 'Amiri', serif;color:var(--ink)}
     .wrap{max-width:980px;margin:24px auto;padding:16px}
     h1{margin:0 0 12px 0;font-size:22px}
     .muted{color:var(--muted)}
     .btn{padding:10px 16px;border-radius:10px;border:1px solid var(--ring);background:#111;color:#fff;cursor:pointer}
-    .btn.secondary{background:#4F46E5}
-    .btn.info{background:#0ea5e9}
+    .btn.secondary{background:#4F46E5} .btn.info{background:#0ea5e9}
     #list .q h4{margin:0 0 8px 0}
     #list label{display:block;border:1px solid var(--ring);border-radius:10px;padding:8px 10px;margin:6px 0;cursor:pointer}
 
@@ -34,14 +33,6 @@
     #triBar .handle{position:absolute;top:-6px;width:14px;height:38px;border-radius:6px;background:#0ea5e9;cursor:ew-resize;box-shadow:0 0 0 2px #fff}
     #triBar .handle:focus{outline:2px solid #0ea5e9}
     .triHelp{color:var(--muted);font-size:12px;margin:6px 2px 10px}
-
-    details.opts > summary{cursor:pointer; padding:10px 12px; border:1px solid var(--ring); border-radius:12px; background:#fafafa; font-weight:600}
-    details.opts .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin-top:10px}
-    .opt-row{border:1px solid var(--ring); border-radius:12px; padding:10px; background:#fff}
-    .opt-row h4{margin:0 0 8px 0; font-size:14px; color:#111}
-    .opt-row label{display:flex; align-items:center; gap:8px}
-    .pill{display:inline-flex; gap:8px; flex-wrap:wrap}
-    .pill .pbtn{padding:6px 10px; border:1px solid var(--ring); border-radius:999px; background:#fff; cursor:pointer}
   </style>
 </head>
 <body>
@@ -65,6 +56,7 @@
       <input id="totalQ" type="hidden" value="20">
     </div>
 
+    <!-- Legend in correct order: noon → meem → madd -->
     <div id="triLegend" style="display:flex;gap:12px;align-items:center;margin:10px 0 6px">
       <div style="display:flex;align-items:center;gap:6px"><span class="swatch swatch-noon"></span><span>النون الساكنة والتنوين</span></div>
       <div style="display:flex;align-items:center;gap:6px"><span class="swatch swatch-meem"></span><span>الميم الساكنة</span></div>
@@ -81,41 +73,6 @@
       </div>
       <div class="triHelp">انقر أو اسحب الفواصل لتبديل العرض بين % وعدد الأسئلة.</div>
     </div>
-
-    <details class="opts">
-      <summary>⚙️ خيارات متقدمة</summary>
-      <div class="grid">
-        <div class="opt-row">
-          <h4>العرض والحساب</h4>
-          <label><input type="checkbox" id="optCounts"> عرض عدد الأسئلة داخل المقاطع بدل %</label>
-          <div style="height:6px"></div>
-          <div class="pill">
-            <button class="pbtn" data-preset="33,33,34">تقسيم متساوٍ</button>
-            <button class="pbtn" data-preset="50,30,20">٥٠٪ / ٣٠٪ / ٢٠٪</button>
-            <button class="pbtn" data-preset="20,40,40">٢٠٪ / ٤٠٪ / ٤٠٪</button>
-          </div>
-        </div>
-        <div class="opt-row">
-          <h4>الأقسام المشاركة</h4>
-          <label><input type="checkbox" id="incNoon" checked> النون الساكنة والتنوين</label>
-          <label><input type="checkbox" id="incMeem" checked> الميم الساكنة</label>
-          <label><input type="checkbox" id="incMadd" checked> أحكام المدود</label>
-        </div>
-        <div class="opt-row">
-          <h4>سلوك الأسئلة</h4>
-          <label><input type="checkbox" id="optHighlight" checked> تلوين الكلمة المستهدفة</label>
-          <label><input type="checkbox" id="optShuffle" checked> خلط ترتيب الخيارات</label>
-        </div>
-        <div class="opt-row">
-          <h4>إدارة</h4>
-          <div class="pill">
-            <button id="btnReset" class="pbtn">استعادة الافتراضي</button>
-            <button id="btnSave" class="pbtn">حفظ الإعدادات</button>
-          </div>
-          <div class="muted" id="saveNote" style="margin-top:6px"></div>
-        </div>
-      </div>
-    </details>
 
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0">
       <button id="btnComprehensive" class="btn secondary">بدء اختبار شامل</button>
