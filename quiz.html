@@ -8,7 +8,6 @@
     :root{ --ink:#0f172a; --muted:#64748b; --ring:#e2e8f0; --violet:#7B1FA2; }
     html,body{background:#fff;margin:0;padding:0;font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Noto Naskh Arabic', 'Amiri', serif;color:var(--ink)}
     .wrap{max-width:980px;margin:24px auto;padding:16px}
-    h1{margin:0 0 12px 0;font-size:22px}
     .muted{color:var(--muted)}
     .btn{padding:10px 16px;border-radius:10px;border:1px solid var(--ring);background:#111;color:#fff;cursor:pointer}
     .btn.secondary{background:#4F46E5} .btn.info{background:#0ea5e9}
@@ -31,13 +30,12 @@
     #triBar .seg-madd{background:linear-gradient(to bottom,#fff6e8,#ffe8c6)}
     #triBar .pct{pointer-events:none}
     #triBar .handle{position:absolute;top:-6px;width:14px;height:38px;border-radius:6px;background:#0ea5e9;cursor:ew-resize;box-shadow:0 0 0 2px #fff}
-    #triBar .handle:focus{outline:2px solid #0ea5e9}
     .triHelp{color:var(--muted);font-size:12px;margin:6px 2px 10px}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>إعداد الاختبار</h1>
+    <h2>إعداد الاختبار</h2>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
       <select id="sectionSelect">
         <option value="noon">النون الساكنة والتنوين</option>
@@ -47,7 +45,7 @@
       <button id="btnShort" class="btn">بدء اختبار قصير (٥ أسئلة للقسم المحدد)</button>
     </div>
 
-    <div id="controls" class="muted" style="margin-bottom:10px">
+    <div class="muted" style="margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
         <label for="totalRange" style="font-weight:600">حدِّد عدد أسئلة الاختبار</label>
         <span><strong id="sumTarget">20</strong></span>
@@ -67,8 +65,8 @@
         <div class="seg seg-noon"><span class="pct" id="pctNoon">33%</span></div>
         <div class="seg seg-meem"><span class="pct" id="pctMeem">33%</span></div>
         <div class="seg seg-madd"><span class="pct" id="pctMadd">34%</span></div>
-        <div class="handle" id="h1" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="33" aria-label="فاصل 1"></div>
-        <div class="handle" id="h2" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="66" aria-label="فاصل 2"></div>
+        <div class="handle" id="h1"></div>
+        <div class="handle" id="h2"></div>
       </div>
       <div class="triHelp">انقر أو اسحب الفواصل لتبديل العرض بين % وعدد الأسئلة.</div>
     </div>
@@ -76,6 +74,7 @@
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0">
       <button id="btnComprehensive" class="btn secondary">بدء اختبار شامل</button>
       <button id="btnGrade" class="btn info">تصحيح</button>
+      <span id="diag" class="muted"></span>
     </div>
 
     <div id="list"></div>
