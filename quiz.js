@@ -3,33 +3,43 @@
 const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 const el = (h) => { const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstElementChild; };
-const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
 
 let QUESTIONS = [];
 let PAPER = [];
 
-// === Load bank (robust path: try relative then absolute repo path) ===
+// === Load bank with diagnostics (tries 3 paths) ===
 async function loadBank(){
   if (QUESTIONS.length) return;
-  const candidates = ['./questions_bank.json', '/tajweed-trainer/questions_bank.json'];
-  let data = null;
+  const candidates = [
+    './questions_bank.json',
+    '/tajweed-trainer/questions_bank.json',
+    'https://ostaazi.github.io/tajweed-trainer/questions_bank.json'
+  ];
+  let data = null, used = null, err = null;
   for (const url of candidates){
     try{
       const res = await fetch(url, { cache:'no-cache' });
-      if (!res.ok) continue;
+      if (!res.ok) { err = 'HTTP '+res.status; continue; }
       data = await res.json();
+      used = url;
       break;
-    }catch(e){ /* try next */ }
+    }catch(e){ err = e; }
   }
   if (!data){
-    alert('تعذر تحميل questions_bank.json — تأكد من وجوده بجانب الصفحة أو في جذر المستودع.');
+    console.error('فشل تحميل بنك الأسئلة. آخر خطأ:', err);
+    alert('تعذر تحميل questions_bank.json — تأكد من المسار والجذر.');
     return;
   }
   QUESTIONS = Array.isArray(data) ? data : (data.questions || data.items || data.data || []);
   if (!Array.isArray(QUESTIONS) || !QUESTIONS.length){
-    alert('لم أجد مصفوفة أسئلة صالحة داخل questions_bank.json');
+    console.error('الصيغة غير صحيحة:', {used, sample:data});
+    alert('ملف بنك الأسئلة لا يحتوي مصفوفة صالحة.');
     QUESTIONS = [];
+    return;
   }
+  console.log('Loaded questions:', QUESTIONS.length, 'from', used);
+  const badge = document.getElementById('result');
+  if (badge) badge.innerHTML = `تم التحميل: <b>${QUESTIONS.length}</b> سؤالًا`;
 }
 
 // === Uthmani helpers ===
@@ -46,14 +56,8 @@ function findAyahByText(uth, plain){ if(!uth||!plain) return null; const t=norma
 function highlightTargetWord(text, target){ if(!target) return text; const esc=target.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); const re=new RegExp(`(${esc})`,'g'); return text.replace(re, `<span class="target-word">$1</span>`); }
 async function replaceAyahInStem(stem, ref, target){ const m=(stem||'').match(/\{([^}]+)\}/); if(!m) return stem; const within=m[1]; const uth=await loadUthmani(); let ay=null; if(ref){ ay=uth?getAyahByRef(uth,ref):null; if(!ay) ay=await getAyahFromAPI(ref,null); } if(!ay){ ay=uth?findAyahByText(uth,within):null; if(!ay) ay=within; } const hi=highlightTargetWord(ay,target||null); return stem.replace(m[0], `<span class="ayah">${hi}</span>`); }
 
-// === Totals ===
+// === Totals & tri slider ===
 const sumTarget = $('#sumTarget'), totalRange=$('#totalRange'), totalQ=$('#totalQ');
-function getTotal(){ return Math.max(5, Math.min(100, Number(totalQ.value||20))); }
-function syncTargets(){ const T=getTotal(); sumTarget.textContent=T; totalRange.value=T; }
-function onTotalChange(v){ totalQ.value=v; syncTargets(); triLayout(); }
-totalRange?.addEventListener('input', e=> onTotalChange(e.target.value));
-
-// === Tri slider ===
 const tri = {
   wrap: document.getElementById('triBar'),
   segNoon: null, segMeem: null, segMadd: null,
@@ -61,9 +65,13 @@ const tri = {
   pctNoon: document.getElementById('pctNoon'),
   pctMeem: document.getElementById('pctMeem'),
   pctMadd: document.getElementById('pctMadd'),
-  x1: 33, x2: 66,
-  showCounts: false
+  x1: 33, x2: 66, showCounts: false
 };
+function getTotal(){ return Math.max(5, Math.min(100, Number(totalQ.value||20))); }
+function syncTargets(){ const T=getTotal(); sumTarget.textContent=T; totalRange.value=T; }
+function onTotalChange(v){ totalQ.value=v; syncTargets(); triLayout(); }
+totalRange?.addEventListener('input', e=> onTotalChange(e.target.value));
+
 function triLayout(){
   const a=Math.min(tri.x1,tri.x2), b=Math.max(tri.x1,tri.x2);
   tri.segNoon.style.left='0%'; tri.segNoon.style.width=`${a}%`;
@@ -81,7 +89,6 @@ function triCounts(){
 }
 function triInit(){
   tri.segNoon=$('#triBar .seg-noon'); tri.segMeem=$('#triBar .seg-meem'); tri.segMadd=$('#triBar .seg-madd');
-  $('#triBar').addEventListener('click',(e)=>{ if(e.target.classList.contains('handle')) return; tri.showCounts=!tri.showCounts; triLayout(); });
   let dragging=null;
   const onDown=e=>{ dragging=e.target.id; document.body.style.userSelect='none'; };
   const onUp=()=>{ dragging=null; document.body.style.userSelect=''; };
@@ -91,25 +98,24 @@ function triInit(){
   tri.h1.addEventListener('touchstart',onDown,{passive:true}); tri.h2.addEventListener('touchstart',onDown,{passive:true});
   window.addEventListener('touchend',onUp,{passive:true}); window.addEventListener('touchmove',e=>onMove(e.touches[0].clientX),{passive:true});
   document.getElementById('totalRange')?.addEventListener('input', triLayout);
-  triLayout();
+  triLayout(); syncTargets();
 }
 document.addEventListener('DOMContentLoaded', triInit);
 
-// === Section match (Arabic/English) ===
+// === Section match & picker ===
 const SECTION_MAP = {
   noon: ['noon','النون','النون الساكنة','التنوين','النون الساكنة والتنوين'],
   meem: ['meem','الميم','الميم الساكنة'],
   madd: ['madd','المد','المدود','أحكام المد','أحكام المدود']
 };
 function bySection(key){
-  const needles = (SECTION_MAP[key] || [key]).map(s => String(s).toLowerCase());
+  const needles = (SECTION_MAP[key] || [key]).map(s => String(s).toLowerCase().trim());
   return QUESTIONS.filter(q => {
-    const sec  = String(q.section || q.category || q.group || '').toLowerCase();
-    const tags = Array.isArray(q.tags) ? q.tags.map(t => String(t).toLowerCase()) : [];
+    const sec  = String(q.section || q.category || q.group || '').toLowerCase().trim();
+    const tags = Array.isArray(q.tags) ? q.tags.map(t => String(t).toLowerCase().trim()) : [];
     return needles.some(n => sec.includes(n) || tags.includes(n));
   });
 }
-
 function pickRandom(arr,n){ const a=[...arr]; const out=[]; while(out.length<n && a.length){ const k=Math.floor(Math.random()*a.length); out.push(a.splice(k,1)[0]); } return out; }
 
 // === Build & grade ===
@@ -146,10 +152,10 @@ function gradePaper(){
 // === Buttons ===
 $('#btnShort')?.addEventListener('click', async ()=>{
   await loadBank();
-  const sec=$('#sectionSelect').value;
-  const pool=bySection(sec);
-  if(!pool.length){ alert('لا توجد أسئلة في هذا القسم.'); return; }
-  PAPER=pickRandom(pool, Math.min(5, pool.length));
+  const sec  = $('#sectionSelect').value;
+  let pool   = bySection(sec);
+  if (!pool.length) pool = QUESTIONS; // سقوط آمن
+  PAPER = pickRandom(pool, Math.min(5, pool.length));
   await buildPaper(PAPER);
 });
 
@@ -167,6 +173,3 @@ document.getElementById('btnComprehensive')?.addEventListener('click', async ()=
 });
 
 document.getElementById('btnGrade')?.addEventListener('click', gradePaper);
-
-// Init totals
-syncTargets();
