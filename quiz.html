@@ -1,292 +1,92 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>التجويد — الاختبار (v7)</title>
-<style>
-:root{
-  --bg:#0b1220; --fg:#e5e7eb; --muted:#a7b0c0; --accent:#7c3aed; --chip:#111827;
-  --bar1:#c7d2fe; --bar2:#e9d5ff; --bar3:#fde68a; --ok:#16a34a; --bad:#ef4444;
-  --pill:#22c55e; --pill-bg:#e6f4ea;
-}
-html.light{ --bg:#ffffff; --fg:#0f172a; --muted:#6b7280; --accent:#7c3aed;
-  --chip:#f3f4f6; --bar1:#bfdbfe; --bar2:#f5d0fe; --bar3:#fde68a;
-  --ok:#15803d; --bad:#dc2626; --pill:#15803d; --pill-bg:#e6f4ea;
-}
-body{background:var(--bg);color:var(--fg);font-family:"Tajawal",system-ui,Segoe UI,Arial; margin:0; padding:24px;}
-h1{font-size:clamp(22px,3.6vw,34px);font-weight:800;margin:8px 0 24px;}
-.container{max-width:980px;margin-inline:auto;}
-.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:10px 0;}
-select,input[type=text]{padding:10px 12px;border-radius:10px;border:1px solid #334155;background:var(--chip);color:var(--fg);min-width:220px}
-.btn{border:0;border-radius:14px;padding:10px 16px;background:#111827;color:#fff;cursor:pointer}
-.btn.primary{background:#4f46e5}
-.btn.danger{background:#dc2626}
-.btn.ghost{background:transparent;border:1px solid #374151;color:var(--fg)}
-.small{font-size:12px;color:var(--muted)}
-hr{border:0;border-top:1px solid #1f2937;margin:18px 0}
-.slider-wrap{margin:10px 0}
-#tri{position:relative;height:36px;background:#0b1729;border-radius:999px;display:flex; overflow:hidden}
-#tri>div{height:100%;position:relative;display:flex;align-items:center;justify-content:center;font-weight:700}
-#seg1{background:var(--bar1);color:#111827}
-#seg2{background:var(--bar2);color:#111827}
-#seg3{background:var(--bar3);color:#111827}
-.handle{position:absolute;top:3px;width:10px;height:30px;background:#111827;border:2px solid #fff;border-radius:6px;cursor:ew-resize;box-shadow:0 0 0 2px rgba(0,0,0,.1)}
-.handle.h1{right:66%} .handle.h2{right:33%}
-.legend{display:flex;gap:14px;align-items:center;margin-top:6px}
-.legend .chip{display:inline-flex;gap:8px;align-items:center}
-.box{width:14px;height:14px;border-radius:4px}
-.box.b1{background:var(--bar1)} .box.b2{background:var(--bar2)} .box.b3{background:var(--bar3)}
-.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.counter{font-weight:800;margin-inline-start:8px}
-/* Question card */
-.q{padding:16px 12px;border-radius:14px;background:var(--chip);margin:16px 0;border:1px solid #1f2937}
-.q h3{margin:0 0 10px;font-size:20px}
-.opt{display:flex;align-items:center;gap:8px;margin:6px 0}
-.opt input{transform:scale(1.2)}
-.ayah-target{ color: var(--pill) !important; font-weight:700; font-size:1.25em; background: var(--pill-bg); border-radius:6px; padding:0 6px;}
-/* result */
-.badge{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;font-weight:700}
-.badge.ok{background:rgba(34,197,94,.15);color:var(--ok)} .badge.bad{background:rgba(239,68,68,.15);color:var(--bad)}
-.res-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-.print{background:#2563eb}
-/* top bar */
-.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
-.theme{cursor:pointer;border-radius:10px;border:1px solid #334155;padding:8px 10px;background:var(--chip)}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>إعداد الاختبار — التجويد</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-<div class="container">
-  <div class="top">
-    <div class="row"><button class="theme" id="themeBtn">☾/☀︎</button></div>
-    <h1>إعداد الاختبار</h1>
-  </div>
-
-  <div class="row">
-    <select id="sectionSel">
-      <option value="noon_tanween">النون الساكنة والتنوين</option>
-      <option value="meem_sakinah">الميم الساكنة</option>
-      <option value="madds">أحكام المدود</option>
-    </select>
-    <input id="trainee" type="text" placeholder="اسم المتدرب"/>
-    <button class="btn" id="shortBtn">بدء اختبار قصير (٥ أسئلة للقسم المحدد)</button>
-  </div>
-
-  <div class="row controls">
-    <label>حدِّد عدد أسئلة الاختبار</label>
-    <input type="range" id="count" min="5" max="100" value="20" style="flex:1"/>
-    <span class="counter" id="countVal">20</span>
-    <button class="btn primary" id="fullBtn">بدء اختبار شامل</button>
-    <button class="btn danger" id="finishBtn">إنهاء الاختبار</button>
-  </div>
-
-  <div class="legend small">
-    <span class="chip"><span class="box b1"></span>النون الساكنة والتنوين</span>
-    <span class="chip"><span class="box b2"></span>الميم الساكنة</span>
-    <span class="chip"><span class="box b3"></span>أحكام المدود</span>
-  </div>
-  <div class="slider-wrap">
-    <div id="tri" aria-label="توزيع الأسئلة">
-      <div id="seg1" style="width:33%">33%</div>
-      <div id="seg2" style="width:33%">33%</div>
-      <div id="seg3" style="width:34%">34%</div>
-      <div class="handle h1" id="h1" title="فاصل 1"></div>
-      <div class="handle h2" id="h2" title="فاصل 2"></div>
+<body class="theme-dark">
+  <header class="topbar">
+    <div class="left-tools">
+      <button id="themeToggle" class="icon-btn" title="الوضع الداكن/الفاتح">🌙</button>
     </div>
-    <div class="small">انقر أو اسحب الفواصل لتعديل العرض % بين الأقسام.</div>
-  </div>
+    <h1 class="title">إعداد الاختبار</h1>
+  </header>
 
-  <div id="loadState" class="small">تم التحميل: <span id="qCount">—</span> سؤالاً</div>
+  <main class="container">
+    <!-- السطر 1: اسم المتدرب + القائمة + زر الاختبار القصير -->
+    <div class="row controls">
+      <input id="traineeName" class="input" placeholder="اكتب اسم المتدرب">
+      <select id="sectionSelect" class="select">
+        <option value="noon_tanween">النون الساكنة والتنوين</option>
+        <option value="meem_sakinah">الميم الساكنة</option>
+        <option value="madd">أحكام المدود</option>
+      </select>
+      <button id="startShort" class="btn btn-secondary">بدء اختبار قصير (٥ أسئلة للقسم المحدد)</button>
+    </div>
 
-  <div id="questions"></div>
-  <div id="results"></div>
-</div>
+    <!-- السطر 2: زر الاختبار الشامل -->
+    <div class="row controls">
+      <button id="startFull" class="btn btn-primary">بدء اختبار شامل</button>
+      <button id="finishTop" class="btn btn-danger">إنهاء الاختبار</button>
+    </div>
 
-<script>
-(function(){
-  // THEME
-  const root = document.documentElement;
-  const saved = localStorage.getItem('tajweed-theme') || 'dark';
-  if(saved === 'light') root.classList.add('light');
-  document.getElementById('themeBtn').onclick = ()=>{
-    root.classList.toggle('light');
-    localStorage.setItem('tajweed-theme', root.classList.contains('light') ? 'light':'dark');
-  };
+    <!-- تحديد عدد الأسئلة -->
+    <div class="row">
+      <label class="label">حدّد عدد أسئلة الاختبار</label>
+      <input type="range" id="totalQuestions" min="5" max="50" step="1" value="20">
+      <div class="hint" id="totalHint">20</div>
+    </div>
 
-  // TRI-SLIDER
-  const seg1 = document.getElementById('seg1');
-  const seg2 = document.getElementById('seg2');
-  const seg3 = document.getElementById('seg3');
-  const h1 = document.getElementById('h1');
-  const h2 = document.getElementById('h2');
-  const tri = document.getElementById('tri');
-  let p1=33, p2=33, p3=34;
-  function renderSegs(){ seg1.style.width=p1+'%'; seg2.style.width=p2+'%'; seg3.style.width=p3+'%'; seg1.textContent=p1+'%'; seg2.textContent=p2+'%'; seg3.textContent=p3+'%'; h1.style.right=(100-p1)+'%'; h2.style.right=(100-(p1+p2))+'%'; }
-  function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
-  function setByHandles(clientX, handle){
-    const r=tri.getBoundingClientRect(); const x=clamp(clientX-r.left,0,r.width);
-    const perc=Math.round((x/r.width)*100);
-    if(handle===h1){ p1=clamp(perc,5,95); p2=clamp(p2,5,95); if(p1+p2>95) p2=95-p1; p3=100-p1-p2; }
-    else { let left=p1; let mid=clamp(perc-left,5,95); if(left+mid>95) mid=95-left; p2=mid; p3=100-left-mid; }
-    renderSegs();
-  }
-  [h1,h2].forEach(h=>{
-    let drag=false;
-    h.addEventListener('mousedown',e=>{drag=true; e.preventDefault();});
-    window.addEventListener('mousemove',e=>{ if(drag) setByHandles(e.clientX,h); });
-    window.addEventListener('mouseup',()=>drag=false);
-    // touch
-    h.addEventListener('touchstart',e=>{drag=true;});
-    window.addEventListener('touchmove',e=>{ if(drag) setByHandles(e.touches[0].clientX,h); });
-    window.addEventListener('touchend',()=>drag=false);
-  });
-  tri.addEventListener('click',e=>{
-    const r=tri.getBoundingClientRect();
-    const x=e.clientX-r.left;
-    const pos=x/r.width;
-    // decide nearest handle
-    const hp1 = 1 - p1/100;
-    const hp2 = 1 - (p1+p2)/100;
-    const d1=Math.abs(pos-hp1), d2=Math.abs(pos-hp2);
-    setByHandles(e.clientX, d1<d2? h1:h2);
-  });
-  renderSegs();
+    <!-- المنزلق الثلاثي بمقبضين -->
+    <section class="tri-slider-card">
+      <p class="muted">انقر أو اسحب الفواصل لتعديل العرض ٪ بين الأقسام. انقر على الشريط للتبديل بين النسبة وعدد الأسئلة.</p>
+      <div id="triSlider" class="tri-slider">
+        <div class="track"></div>
+        <div class="segment seg-a" title="النون الساكنة والتنوين"></div>
+        <div class="segment seg-b" title="الميم الساكنة"></div>
+        <div class="segment seg-c" title="أحكام المدود"></div>
 
-  // COUNT SLIDER
-  const count = document.getElementById('count'), countVal=document.getElementById('countVal');
-  count.addEventListener('input', ()=> countVal.textContent = count.value);
-  countVal.textContent = count.value;
+        <div class="thumb left" role="slider" aria-label="المقبض الأيسر" tabindex="0"></div>
+        <div class="thumb right" role="slider" aria-label="المقبض الأيمن" tabindex="0"></div>
 
-  // LOAD QUESTIONS
-  let BANK=null;
-  const qCountSpan=document.getElementById('qCount');
-  fetch('questions_bank.json',{cache:'no-store'}).then(r=>r.json()).then(data=>{
-    BANK=data; qCountSpan.textContent = totalCount(data);
-  }).catch(err=>{
-    qCountSpan.textContent='تعذر التحميل'; console.error(err);
-  });
-  function totalCount(bank){
-    let c=0; const s=bank.sections;
-    Object.keys(s).forEach(sec=>{
-      const parts=s[sec].parts;
-      Object.keys(parts).forEach(p=> c+=parts[p].length);
-    });
-    return c;
-  }
-
-  // UTIL: highlight [[...]]
-  function decorateTargets(text){
-    return text.replace(/\[\[(.+?)\]\]/g,'<span class="ayah-target">$1</span>');
-  }
-  function shuffle(arr){ for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
-  function pickRandom(arr,n){ return shuffle(arr.slice()).slice(0,Math.min(n,arr.length)); }
-
-  // BUILD list per section
-  function flatQuestions(secKey){
-    const out=[]; const sec=BANK.sections[secKey]; if(!sec) return out;
-    Object.entries(sec.parts).forEach(([part,arr])=>{
-      arr.forEach(q=> out.push({...q, section:secKey, part}));
-    });
-    return out;
-  }
-
-  // RENDER QUESTIONS
-  const questionsDiv=document.getElementById('questions');
-  const resultsDiv=document.getElementById('results');
-  let currentQs=[]; let finished=false;
-  function renderQuestions(qs){
-    questionsDiv.innerHTML=''; resultsDiv.innerHTML=''; finished=false;
-    qs.forEach((q,idx)=>{
-      const card=document.createElement('div'); card.className='q';
-      const num=idx+1;
-      const stem = decorateTargets(q.question || '');
-      card.innerHTML = `<h3>${num}. قال تعالى: ${stem}</h3>
-        ${['إظهار','إدغام','إخفاء','إقلاب'].map((lbl,i)=>{
-           const id='q'+idx+'o'+i; 
-           return `<label class="opt"><input type="radio" name="q${idx}" value="${i+1}" id="${id}"><span>${lbl}</span></label>`;
-        }).join('')}
-      `;
-      questionsDiv.appendChild(card);
-    });
-  }
-
-  // START buttons
-  document.getElementById('shortBtn').onclick = ()=>{
-    if(!BANK) return alert('لم يتم تحميل بنك الأسئلة بعد.');
-    const sec = document.getElementById('sectionSel').value;
-    const all = flatQuestions(sec);
-    currentQs = pickRandom(all, 5);
-    renderQuestions(currentQs);
-    window.scrollTo({top:questionsDiv.offsetTop-20, behavior:'smooth'});
-  };
-
-  document.getElementById('fullBtn').onclick = ()=>{
-    if(!BANK) return alert('لم يتم تحميل بنك الأسئلة بعد.');
-    const total = parseInt(count.value,10);
-    const n1 = Math.round(total * p1/100);
-    const n2 = Math.round(total * p2/100);
-    const n3 = total - n1 - n2;
-    const s1 = pickRandom(flatQuestions('noon_tanween'), n1);
-    const s2 = pickRandom(flatQuestions('meem_sakinah'), n2);
-    const s3 = pickRandom(flatQuestions('madds'), n3);
-    currentQs = shuffle([...s1,...s2,...s3]);
-    renderQuestions(currentQs);
-    window.scrollTo({top:questionsDiv.offsetTop-20, behavior:'smooth'});
-  };
-
-  // FINISH & SCORE
-  document.getElementById('finishBtn').onclick = ()=>{
-    if(!currentQs.length || finished) return;
-    finished=true;
-    // إجابات المستخدم
-    let correct=0; const detail=[];
-    currentQs.forEach((q,idx)=>{
-      const chosen = (document.querySelector('input[name="q'+idx+'"]:checked')||{}).value || null;
-      const isRight = (chosen && parseInt(chosen,10)===q.answer);
-      if(isRight) correct++;
-      detail.push({idx, chosen, right:q.answer, isRight, q});
-    });
-    const total=currentQs.length;
-    const pct = Math.round((correct/total)*100);
-    // عرض النتيجة المختصرة
-    resultsDiv.innerHTML = `
-      <hr/>
-      <div class="res-header">
-        <div><span class="badge ${pct>=60?'ok':'bad'}">${pct}%</span> — النتيجة</div>
-        <div>
-          <button class="btn ghost" id="backTop">رجوع للاختبار</button>
-          <button class="btn print" id="printBtn">طباعة / PDF</button>
-        </div>
+        <div class="chip chip-a">النون الساكنة والتنوين <span class="val">33%</span></div>
+        <div class="chip chip-b">الميم الساكنة <span class="val">33%</span></div>
+        <div class="chip chip-c">أحكام المدود <span class="val">34%</span></div>
       </div>
-      <div id="detail"></div>
-    `;
-    document.getElementById('backTop').onclick = ()=> window.scrollTo({top:0,behavior:'smooth'});
-    document.getElementById('printBtn').onclick = ()=> window.print();
-    const d=document.getElementById('detail');
-    // تفاصيل
-    detail.forEach((it,i)=>{
-      const q=it.q;
-      const stem=decorateTargets(q.question||'');
-      const row=document.createElement('div'); row.className='q';
-      const your = it.chosen? ['إظهار','إدغام','إخفاء','إقلاب'][it.chosen-1] : '—';
-      const right = ['إظهار','إدغام','إخفاء','إقلاب'][q.answer-1];
-      row.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-          <strong>${i+1}. ${it.isRight?'<span class="badge ok">✔︎ صواب</span>':'<span class="badge bad">✖︎ خطأ</span>'}</strong>
-          <span class="small">${new Date().toLocaleString('ar')}</span>
-        </div>
-        <div style="margin-top:8px">${stem}</div>
-        <div class="small" style="margin-top:8px">
-          إجابتك: <strong>${your}</strong> — الصحيح: <strong>${right}</strong>
-        </div>
-      `;
-      d.appendChild(row);
-    });
-    window.scrollTo({top:resultsDiv.offsetTop-20, behavior:'smooth'});
-  };
+      <div class="chip-row">
+        <button id="resetDist" class="btn btn-ghost">توزيع افتراضي</button>
+      </div>
+      <div class="muted small" id="loadedInfo">تم التحميل: 1100 سؤالًا</div>
+    </section>
 
-})();
-</script>
+    <!-- أسئلة تجريبية لعرض التلوين فقط -->
+    <section id="questions" class="questions">
+      <h2 class="muted">أسئلة تجريبية (لعرض التلوين فقط)</h2>
+
+      <article class="qcard">
+        <div class="qtext">قال تعالى: {كَلَّا لَئِنْ لَمْ يَنْتَهِ لَنَسْفَعًا بِالنَّاصِيَةِ} - أين الكلمة المستهدفة؟ مثال</div>
+        <div class="qayah">كَلَّا لَئِنْ لَمْ يَنْتَهِ لَ<span class="ayah-target">نَسْفَعًا</span> بِالنَّاصِيَةِ</div>
+      </article>
+
+      <article class="qcard">
+        <div class="qtext">قال تعالى: {وَأَنْزَلَ بِهِ رُوحُ الْأَمِينِ} - ما حكم النون الساكنة؟</div>
+        <div class="qayah">وَ<span class="ayah-target">أُنْزِلَ</span> بِهِ رُوحُ الْأَمِينِ</div>
+        <ul class="options">
+          <li><label><input type="radio" name="q2"> إظهار</label></li>
+          <li><label><input type="radio" name="q2"> إدغام</label></li>
+          <li><label><input type="radio" name="q2"> إخفاء</label></li>
+          <li><label><input type="radio" name="q2"> إقلاب</label></li>
+        </ul>
+      </article>
+    </section>
+
+    <div class="row end-actions">
+      <button id="finishBottom" class="btn btn-danger">إنهاء الاختبار</button>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
 </body>
 </html>

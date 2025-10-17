@@ -1,61 +1,74 @@
 /* أساسيات */
-* { box-sizing: border-box; }
-body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Naskh Arabic UI', 'Noto Sans Arabic', Tahoma, Arial, sans-serif; margin:0; background:var(--bg); color:var(--fg); }
-.page { max-width: 960px; margin: 0 auto; padding: 16px; }
-
-:root {
-  --bg:#0b1220;
-  --fg:#e7edf5;
-  --muted:#93a6c6;
-  --card:#0f172a;
-  --bar1:#c7d2fe;   /* أزرق باهت للنون */
-  --bar2:#e9d5ff;   /* بنفسجي باهت للميم */
-  --bar3:#fde68a;   /* أصفر باهت للمدود */
-  --accent:#3b82f6;
-  --danger:#ef4444;
-  --short:#6c5ce7;
-  --badge:#22304d;
-}
-/* وضع فاتح */
-body.light {
-  --bg:#ffffff; --fg:#111827; --muted:#6b7280; --card:#f8fafc; --badge:#eef2ff;
+:root{
+  --bg:#0f172a; --fg:#e2e8f0; --muted:#94a3b8;
+  --chip:#0b132a; --card:#111827; --border:#334155;
+  --primary:#2563eb; --secondary:#7c3aed; --accent:#eab308; --danger:#ef4444;
+  --seg-a:#93c5fd; --seg-b:#e9d5ff; --seg-c:#fde68a;
+  --target-bg:#e6f4ea; --target-fg:#15803d;
 }
 
-.header-grid .row { display:flex; gap:.75rem; align-items:center; margin-bottom:.5rem; }
-#traineeName { max-width:420px; padding:.6rem .7rem; border-radius:10px; border:1px solid #334155; background:var(--card); color:var(--fg); }
-select { padding:.55rem .7rem; border-radius:10px; border:1px solid #334155; background:var(--card); color:var(--fg); }
+body.theme-light{ --bg:#ffffff; --fg:#0f172a; --muted:#475569;
+  --chip:#f1f5f9; --card:#f8fafc; --border:#cbd5e1;
+  --primary:#2563eb; --secondary:#7c3aed; --accent:#f59e0b; --danger:#ef4444;
+  --seg-a:#bfdbfe; --seg-b:#e9d5ff; --seg-c:#fde68a;
+}
 
-.btn { border:0; padding:.65rem 1rem; border-radius:12px; cursor:pointer; font-weight:600; }
-.btn-primary { background:var(--accent); color:#fff; }
-.btn-short { background:var(--short); color:#fff; }
-.btn-danger { background:var(--danger); color:#fff; }
-.end-top, .end-bottom { display:flex; justify-content:flex-start; margin: .75rem 0; }
+html,body{height:100%;}
+body{background:var(--bg); color:var(--fg); font-family:system-ui, -apple-system, 'Segoe UI', 'Noto Naskh Arabic UI', 'Amiri', 'Scheherazade New', sans-serif; margin:0;}
 
-.controls { display:flex; align-items:center; gap:1rem; margin: 1rem 0 .5rem; }
-.controls .lbl { white-space:nowrap; color:var(--muted); }
-#qRange { width: 60%; }
-.qcount { font-weight:700; }
+.topbar{display:flex; align-items:center; justify-content:center; padding:10px 14px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg); z-index:5;}
+.topbar .left-tools{position:absolute; left:14px; top:8px;}
+.title{margin:6px 0; font-size:clamp(18px,2.4vw,28px);}
 
-/* الأشرطة */
-.dist-mode-hint { cursor:pointer; font-size:.85rem; opacity:.75; margin:.25rem 0 .5rem; }
-.dist-bars { display:flex; width:100%; gap:6px; height:32px; margin:.25rem 0; }
-.dist-bar { position:relative; flex:1; border-radius:999px; overflow:hidden; }
-.dist-noon { background:var(--bar1); }
-.dist-meem { background:var(--bar2); }
-.dist-madd { background:var(--bar3); }
-.dist-label { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-weight:700; color:#0b0f19; }
+.container{max-width:980px; margin:0 auto; padding:18px;}
 
-/* البادجات */
-.dist-badges { display:flex; gap:.5rem; flex-wrap:wrap; margin:.4rem 0; }
-.dist-badge { background:var(--badge); color:var(--fg); border-radius:999px; padding:.35rem .6rem; font-size:.9rem; }
-.dist-badge .dot { display:inline-block; width:.65rem; height:.65rem; border-radius:50%; margin-inline:.4rem; vertical-align:middle; }
-.dist-badge.dist-noon .dot { background:#9bb6ff; }
-.dist-badge.dist-meem .dot { background:#e6c6ff; }
-.dist-badge.dist-madd .dot { background:#ffe18a; }
+.row{display:flex; align-items:center; gap:10px; margin:10px 0; flex-wrap:wrap;}
+.controls .input{flex:1 1 280px;}
+.controls .select{flex:0 0 240px;}
 
-.loaded-note { color:var(--muted); margin:.25rem 0 1rem; }
+.input,.select{
+  background:var(--card); color:var(--fg); border:1px solid var(--border); border-radius:10px; padding:12px 14px; font-size:16px; outline:none;
+}
 
-/* سؤال تمثيلي */
-.question { background:var(--card); border:1px solid #1f2a44; border-radius:14px; padding:12px; margin:.75rem 0; }
-.qtitle { font-weight:700; margin-bottom:.5rem; }
-label { display:inline-flex; align-items:center; gap:.35rem; margin-inline:.5rem; }
+.btn{border:1px solid transparent; border-radius:12px; padding:10px 14px; cursor:pointer; font-weight:600;}
+.btn-primary{background:var(--primary); color:#fff;}
+.btn-secondary{background:var(--secondary); color:#fff;}
+.btn-danger{background:var(--danger); color:#fff;}
+.btn-ghost{background:var(--chip); color:var(--fg); border-color:var(--border);}
+
+.icon-btn{background:var(--chip); color:var(--fg); border:1px solid var(--border); border-radius:12px; padding:8px 10px; cursor:pointer;}
+
+.label{margin-bottom:6px;}
+.hint{font-size:14px; color:var(--muted);}
+
+.tri-slider-card{margin:14px 0; padding:12px; border:1px dashed var(--border); border-radius:14px; background:linear-gradient(180deg,transparent,rgba(255,255,255,0.02));}
+.tri-slider{position:relative; height:92px; margin-top:8px;}
+.tri-slider .track{position:absolute; right:0; left:0; top:34px; height:16px; background:var(--chip); border:1px solid var(--border); border-radius:999px;}
+
+.segment{position:absolute; top:34px; height:16px;}
+.seg-a{background:var(--seg-a);}
+.seg-b{background:var(--seg-b);}
+.seg-c{background:var(--seg-c);}
+
+.thumb{position:absolute; top:26px; width:20px; height:32px; background:var(--primary); border-radius:8px; border:2px solid #fff; box-shadow:0 1px 8px rgba(0,0,0,.25); cursor:ew-resize;}
+.thumb.right{background:var(--accent);}
+.thumb.left:focus,.thumb.right:focus{outline:3px solid rgba(99,102,241,.35);}
+
+.chip{position:absolute; top:4px; padding:4px 10px; border-radius:999px; border:1px solid var(--border); background:var(--chip); color:var(--fg); font-size:13px; white-space:nowrap;}
+.chip-a{right:0; transform:translateX(0);}
+.chip-b{right:33%; transform:translateX(50%);}
+.chip-c{left:0; transform:translateX(0);}
+
+.chip-row{display:flex; gap:10px; margin-top:8px;}
+
+.muted{color:var(--muted);} .small{font-size:13px;}
+
+.questions{margin-top:18px;}
+.qcard{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:14px 16px; margin-bottom:14px;}
+.qtext{font-size:18px; margin-bottom:8px;}
+.qayah{font-size:22px; line-height:2;}
+
+.ayah-target{color:var(--target-fg) !important; background:var(--target-bg); border-radius:6px; padding:1px 4px; font-weight:800; font-size:1.25em;}
+
+/* نهاية الصفحة */
+.end-actions{justify-content:flex-start;}

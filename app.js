@@ -1,150 +1,120 @@
+// حفظ/استعادة اسم المتدرب
+const traineeName = document.getElementById('traineeName');
+traineeName.value = localStorage.getItem('tajweed_name') || '';
+traineeName.addEventListener('input', () => localStorage.setItem('tajweed_name', traineeName.value));
 
-const el = sel => document.querySelector(sel);
-const els = sel => Array.from(document.querySelectorAll(sel));
-
-// Theme toggle
-const themeToggle = el('#themeToggle');
-const root = document.body;
-const THEME_KEY = 'tajweed-theme';
-function setTheme(t){ root.classList.toggle('theme-light', t === 'light'); root.classList.toggle('theme-dark', t !== 'light'); localStorage.setItem(THEME_KEY, t); themeToggle.textContent = t === 'light' ? '☀️' : '🌙'; }
-setTheme(localStorage.getItem(THEME_KEY) || 'dark');
-themeToggle.addEventListener('click', ()=> setTheme(root.classList.contains('theme-light') ? 'dark':'light'));
-
-// Student name
-const nameInput = el('#studentName');
-const NAME_KEY = 'tajweed-student';
-nameInput.value = localStorage.getItem(NAME_KEY) || '';
-nameInput.addEventListener('input', ()=> localStorage.setItem(NAME_KEY, nameInput.value.trim()));
-
-// Questions count
-const qCount = el('#qCount');
-const qCountValue = el('#qCountValue');
-const state = {
-  total: parseInt(qCount.value,10) || 20,
-  dist: [33,33,34],
-  mode: 'percent' // 'count'
+// تبديل الثيم
+const themeBtn = document.getElementById('themeToggle');
+const setTheme = (t)=>{
+  document.body.classList.toggle('theme-light', t==='light');
+  document.body.classList.toggle('theme-dark', t!=='light');
+  localStorage.setItem('tajweed_theme', t);
+  themeBtn.textContent = t==='light' ? '🌞' : '🌙';
 };
-function updateQCount(){ state.total = parseInt(qCount.value,10); qCountValue.textContent = state.total; paintTri(); }
-qCount.addEventListener('input', updateQCount); updateQCount();
+setTheme(localStorage.getItem('tajweed_theme') || 'dark');
+themeBtn.addEventListener('click', ()=>{
+  const now = document.body.classList.contains('theme-light') ? 'dark' : 'light';
+  setTheme(now);
+});
 
-// Tri-slider with two handles
-const tri = el('#triSlider'), segA = el('#segA'), segB = el('#segB'), segC = el('#segC');
-const h1 = el('#h1'), h2 = el('#h2'), overlay = el('#overlay');
-const labA = el('#labA'), labB = el('#labB'), labC = el('#labC');
+// شريط عدد الأسئلة
+const total = document.getElementById('totalQuestions');
+const totalHint = document.getElementById('totalHint');
+const updateTotalHint = ()=> totalHint.textContent = total.value;
+total.addEventListener('input', updateTotalHint);
+updateTotalHint();
 
-function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
-function distToCounts(){ return state.dist.map(p=> Math.round(p * state.total / 100)); }
-function countsToDist(counts){
-  const s = counts.reduce((a,b)=>a+b,0) || 1;
-  state.dist = counts.map(c=> Math.round(100*c/s));
-  normalize100();
+// المنزلق الثلاثي (مقبضان)
+const tri = document.getElementById('triSlider');
+const leftThumb = tri.querySelector('.thumb.left');
+const rightThumb = tri.querySelector('.thumb.right');
+const segA = tri.querySelector('.seg-a');
+const segB = tri.querySelector('.seg-b');
+const segC = tri.querySelector('.seg-c');
+const chipA = tri.querySelector('.chip-a .val');
+const chipB = tri.querySelector('.chip-b .val');
+const chipC = tri.querySelector('.chip-c .val');
+
+// الحالة
+let showCounts = false; // التبديل بين % وعدد الأسئلة
+let left = 33; //%
+let right = 66; //%
+const clamp01 = v => Math.min(100, Math.max(0, v));
+
+function layout(){
+  // عرض الشريط
+  const w = tri.clientWidth;
+  const pxL = (left/100)*w;
+  const pxR = (right/100)*w;
+  leftThumb.style.left = (pxL-10)+'px';
+  rightThumb.style.left = (pxR-10)+'px';
+
+  segA.style.left = 0; segA.style.width = pxL+'px';
+  segB.style.left = pxL+'px'; segB.style.width = (pxR-pxL)+'px';
+  segC.style.left = pxR+'px'; segC.style.width = (w-pxR)+'px';
+
+  const a = Math.round(left);
+  const b = Math.round(right-left);
+  const c = Math.round(100-right);
+
+  const valText = (p)=> showCounts ? Math.round(p*total.value/100) + ' سؤال' : p + '%';
+  chipA.textContent = valText(a);
+  chipB.textContent = valText(b);
+  chipC.textContent = valText(c);
 }
-function normalize100(){
-  // ensure sum == 100
-  let s = state.dist.reduce((a,b)=>a+b,0);
-  while(s>100){ // subtract from largest
-    const i = state.dist.indexOf(Math.max(...state.dist));
-    state.dist[i]--; s--;
-  }
-  while(s<100){
-    const i = state.dist.indexOf(Math.min(...state.dist));
-    state.dist[i]++; s++;
-  }
-}
+window.addEventListener('resize', layout);
 
-function paintTri(){
-  normalize100();
-  // widths
-  const [a,b,c] = state.dist;
-  segA.style.left='0%'; segA.style.width = a + '%';
-  segB.style.left=a+'%'; segB.style.width=b+'%';
-  segC.style.left=(a+b)+'%'; segC.style.width=c+'%';
-  // handles positions (at boundaries)
-  h1.style.left = `calc(${a}% - 9px)`;
-  h2.style.left = `calc(${a+b}% - 9px)`;
-  const counts = distToCounts();
-  labA.textContent = state.mode==='percent' ? `${a}%` : `${counts[0]}س`;
-  labB.textContent = state.mode==='percent' ? `${b}%` : `${counts[1]}س`;
-  labC.textContent = state.mode==='percent' ? `${c}%` : `${counts[2]}س`;
-  overlay.textContent = state.mode==='percent' ? `${a}% | ${b}% | ${c}%` : `${counts[0]} | ${counts[1]} | ${counts[2]}`;
-}
-paintTri();
-
-// Drag logic
-let dragging = null;
-function posToDist(x){
+// سحب
+function dragThumb(e, which){
+  e.preventDefault();
   const rect = tri.getBoundingClientRect();
-  const pct = clamp((x-rect.left)/rect.width*100, 0, 100);
-  const a = clamp(Math.round(pct), 0, 100);
-  return a;
-}
-function onDown(e, which){
-  e.preventDefault(); dragging = which;
-}
-function onMove(e){
-  if(!dragging) return;
-  const x = (e.touches ? e.touches[0].clientX : e.clientX);
-  const p = posToDist(x);
-  let [a,b,c] = state.dist;
-  if(dragging==='h1'){
-    a = clamp(p, 0, a+b+c-1);
-    b = clamp(b + (state.dist[0]-a), 0, 100-a);
-    c = 100 - a - b;
-  }else if(dragging==='h2'){
-    const left = state.dist[0];
-    const pb = clamp(p-left, 0, 100-left);
-    b = pb;
-    a = left;
-    c = 100 - a - b;
+  function move(ev){
+    const x = (ev.touches? ev.touches[0].clientX : ev.clientX) - rect.left;
+    const percent = clamp01(x/rect.width*100);
+    if(which==='left'){
+      left = Math.min(percent, right-10); // مسافة دنيا 10%
+    }else{
+      right = Math.max(percent, left+10);
+    }
+    layout();
   }
-  state.dist = [a,b,c];
-  paintTri();
+  function up(){
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
+    document.removeEventListener('touchmove', move);
+    document.removeEventListener('touchend', up);
+  }
+  document.addEventListener('mousemove', move);
+  document.addEventListener('mouseup', up);
+  document.addEventListener('touchmove', move, {passive:false});
+  document.addEventListener('touchend', up);
 }
-function onUp(){ dragging = null; }
+leftThumb.addEventListener('mousedown', e=>dragThumb(e,'left'));
+rightThumb.addEventListener('mousedown', e=>dragThumb(e,'right'));
+leftThumb.addEventListener('touchstart', e=>dragThumb(e,'left'), {passive:false});
+rightThumb.addEventListener('touchstart', e=>dragThumb(e,'right'), {passive:false});
 
-[h1,h2].forEach((h,i)=>{
-  const id = i===0?'h1':'h2';
-  h.addEventListener('mousedown', e=>onDown(e,id));
-  h.addEventListener('touchstart', e=>onDown(e,id), {passive:false});
-});
-window.addEventListener('mousemove', onMove);
-window.addEventListener('touchmove', onMove, {passive:false});
-window.addEventListener('mouseup', onUp);
-window.addEventListener('touchend', onUp);
-
-// Click to toggle mode
+// التبديل بين النسبة والعدد بالنقر على أي مكان في الشريط
 tri.addEventListener('click', (e)=>{
-  // ignore clicks starting on handles (already processed by drag)
-  if(e.target.classList.contains('handle')) return;
-  state.mode = state.mode==='percent' ? 'count' : 'percent';
-  paintTri();
+  // تجاهل إذا كان النقر على المقبض نفسه
+  if(e.target.classList.contains('thumb')) return;
+  showCounts = !showCounts;
+  layout();
 });
 
-// Reset distribution
-el('#resetDist').addEventListener('click', ()=>{ state.dist=[33,33,34]; paintTri(); });
-
-// Sample questions to demonstrate highlighting
-const samples = [
-  {q:"قال تعالى: {كَلَّا لَئِنْ لَمْ يَنْتَهِ لَنَسْفَعًا بِالنَّاصِيَةِ}- أين الكلمة المستهدفة؟ مثال", opts:[], answer:0, text:"... [[النَّاصِيَةِ]] ..."},
-  {q:"قال تعالى: {وَأَنْزَلَ بِهِ رُوحُ الأَمِينِ}- ما حكم النون الساكنة؟", opts:["إظهار","إدغام","إخفاء","إقلاب"], answer:2, text:"... [[أَنْزَلَ]] ..."},
-  {q:"قال تعالى: {إِنَّ رَبَّهُمْ بِهِمْ}- ما حكم الميم الساكنة؟", opts:["إظهار شفوي","إدغام شفوي","إخفاء شفوي قلب","إقلاب"], answer:2, text:"... [[بِهِمْ]] ..."}
-];
-function colorize(text){
-  return text.replace(/\[\[([\s\S]+?)\]\]/g, '<span class="ayah-target">$1</span>');
-}
-function renderSamples(){
-  const ul = el('#sampleList'); ul.innerHTML='';
-  samples.forEach((s,i)=>{
-    const li = document.createElement('li');
-    li.className='question';
-    li.innerHTML = `<div class="q-text">${s.q.replace('...', colorize(s.text))}</div>`;
-    ul.appendChild(li);
-  });
-}
-renderSamples();
-
-// Finish buttons (demo only)
-['#finishTop','#finishBottom'].forEach(sel=>{
-  el(sel).addEventListener('click', ()=> alert('تم إنهاء الاختبار (عرض تجريبي).'));
+// زر توزيع افتراضي
+document.getElementById('resetDist').addEventListener('click', ()=>{
+  left = 33; right = 66; layout();
 });
 
+// أزرار إنهاء الاختبار (عرض تحذير إن وجِد أسئلة غير مُجابة - توضيحي)
+function finish(){
+  if(confirm('هل تريد إنهاء الاختبار؟ سيتم حفظ الدرجات وعرض النتيجة.')){
+    alert('(عرض توضيحي) تم إنهاء الاختبار.');
+  }
+}
+document.getElementById('finishTop').addEventListener('click', finish);
+document.getElementById('finishBottom').addEventListener('click', finish);
+
+// بدء
+layout();

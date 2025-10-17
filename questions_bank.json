@@ -1,4 +1,17 @@
 {
-  "version": "v3",
-  "sections": {}
+  "version": "v3-demo",
+  "sections": {
+    "noon_tanween": {
+      "title": "النون الساكنة والتنوين",
+      "count": 2
+    },
+    "meem_sakinah": {
+      "title": "الميم الساكنة",
+      "count": 1
+    },
+    "madd": {
+      "title": "أحكام المدود",
+      "count": 1
+    }
+  }
 }
