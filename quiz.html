@@ -1,77 +1,82 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>التجويد — الاختبار (نسخة عرض)</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>التجويد - الاختبار (نسخة تجريبية للمنزلق الثلاثي)</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
+  <script defer src="app.js"></script>
 </head>
-<body>
-  <div class="container">
-    <!-- سطر 1: اسم المتدرب + زر تبديل الوضع -->
-    <div class="top-row">
-      <input id="traineeName" class="name-input" placeholder="اسم المتدرب"/>
-      <button id="modeBtn" class="mode-btn" aria-label="تبديل الوضع">🌙/☀️</button>
-    </div>
+<body class="app">
+  <main class="container">
+    <h1 class="title">إعداد الاختبار</h1>
 
-    <!-- سطر 2: القائمة المنسدلة + زر اختبار قصير -->
-    <div class="row">
-      <select id="sectionSelect" class="select">
+    <div class="user-row">
+      <input id="traineeName" class="user-input" placeholder="اسم المتدرّب">
+      <select class="select" id="sectionSelect" aria-label="القسم">
         <option value="noon_tanween">النون الساكنة والتنوين</option>
-        <option value="meem_sakinah">الميم الساكنة</option>
+        <option value="meem_saakinah">الميم الساكنة</option>
         <option value="madd">أحكام المدود</option>
       </select>
-      <button id="shortBtn" class="btn btn-short">بدء اختبار قصير (٥ أسئلة للقسم المحدد)</button>
+      <button class="btn pill" id="btnShort">بدء اختبار قصير (٥ أسئلة للقسم المحدد)</button>
     </div>
 
-    <!-- سطر 3: زر اختبار شامل -->
-    <div class="row">
-      <button id="fullBtn" class="btn btn-primary">بدء اختبار شامل</button>
+    <div class="row gap">
+      <button class="btn primary" id="btnFull">بدء اختبار شامل</button>
+      <button class="btn danger" id="btnFinishTop">إنهاء الاختبار</button>
     </div>
 
-    <!-- محدد عدد الأسئلة -->
-    <div class="row slider-block">
-      <label class="label">حدّد عدد أسئلة الاختبار</label>
-      <input id="countRange" type="range" min="5" max="50" step="1" value="20"/>
-      <div class="count"><span id="countVal">20</span></div>
+    <div class="range-row">
+      <label for="qCount"><b>حدّد عدد أسئلة الاختبار</b></label>
+      <input id="qCount" type="range" min="5" max="100" value="20" step="1">
+      <div class="qcount"><span id="qCountVal">20</span></div>
     </div>
 
-    <!-- المنزلق الثلاثي -->
-    <div class="row">
-      <div class="label small">انقر للتبديل بين % وعدد الأسئلة. اسحب الفواصل لتغيير التوزيع.</div>
-      <div id="triSlider" class="tri">
-        <div id="segA" class="seg seg-a"><span id="segALabel">33%</span></div>
-        <div id="segB" class="seg seg-b"><span id="segBLabel">33%</span></div>
-        <div id="segC" class="seg seg-c"><span id="segCLabel">34%</span></div>
-        <input id="cut1" type="range" min="0" max="100" value="33" step="1"/>
-        <input id="cut2" type="range" min="0" max="100" value="66" step="1"/>
+    <!-- tri slider -->
+    <section class="card">
+      <div class="tri-row">
+        <div class="tri-toolbar">
+          <button id="distToggle" class="btn pill sm" title="التبديل بين النِسَب وعدد الأسئلة">٪</button>
+          <button id="distReset" class="btn pill sm" title="إعادة التوزيع الافتراضي">توزيع افتراضي</button>
+        </div>
+        <div id="triSlider" class="tri-slider"></div>
+        <div class="tri-legend">
+          <span><span class="swatch sw1"></span><b>النون الساكنة والتنوين</b> <small id="valA">33%</small></span>
+          <span><span class="swatch sw2"></span><b>الميم الساكنة</b> <small id="valB">33%</small></span>
+          <span><span class="swatch sw3"></span><b>أحكام المدود</b> <small id="valC">34%</small></span>
+        </div>
       </div>
-      <div class="tags">
-        <span class="tag tag-a">النون الساكنة والتنوين</span>
-        <span class="tag tag-b">الميم الساكنة</span>
-        <span class="tag tag-c">أحكام المدود</span>
-      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="h">أسئلة تجريبية (لعرض التلوين فقط)</h2>
+      <ol class="questions">
+        <li>
+          <div class="qtext">
+            قال تعالى: <span class="ayah">﴿كَلَّا لَئِنْ لَمْ يَنْتَهِ لَنَسْفَعًا بِالنَّاصِيَةِ﴾</span> - <span>أين الكلمة المستهدفة؟</span>
+          </div>
+          <div class="answers demo">مثال</div>
+        </li>
+        <li>
+          <div class="qtext">
+            قال تعالى: <span class="ayah">﴿وَأَنزَلَ بِهِ رُوحُ الْأَمِينِ﴾</span> - ما حكم النون الساكنة؟
+          </div>
+          <div class="answers">
+            <label><input type="radio" name="q2"> إظهار</label>
+            <label><input type="radio" name="q2"> إدغام</label>
+            <label><input type="radio" name="q2"> إخفاء</label>
+            <label><input type="radio" name="q2"> إقلاب</label>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <div class="row end">
+      <button class="btn danger" id="btnFinishBottom">إنهاء الاختبار</button>
     </div>
 
-    <!-- ملصق حالة التحميل -->
-    <div class="row">
-      <span class="muted">تم التحميل: 1100 سؤالًا</span>
-    </div>
-
-    <!-- زر إنهاء أعلى اليسار -->
-    <div class="row end-top">
-      <button id="endTop" class="btn btn-danger align-left">إنهاء الاختبار</button>
-    </div>
-
-    <!-- قائمة الأسئلة -->
-    <ol id="questions" class="questions"></ol>
-
-    <!-- زر إنهاء أسفل اليسار -->
-    <div class="row end-bottom">
-      <button id="endBottom" class="btn btn-danger align-left">إنهاء الاختبار</button>
-    </div>
-  </div>
-
-  <script src="app.js"></script>
+  </main>
 </body>
 </html>

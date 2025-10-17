@@ -1,148 +1,106 @@
-// حفظ الوضع واسم المتدرب
-const root = document.documentElement;
-const savedMode = localStorage.getItem("mode") || "dark";
-if(savedMode === "light"){ document.body.classList.add("light"); }
-const modeBtn = document.getElementById("modeBtn");
-modeBtn.onclick = () => {
-  document.body.classList.toggle("light");
-  localStorage.setItem("mode", document.body.classList.contains("light") ? "light" : "dark");
-};
-
-const nameInput = document.getElementById("traineeName");
-nameInput.value = localStorage.getItem("traineeName") || "";
-nameInput.addEventListener("input", ()=>localStorage.setItem("traineeName", nameInput.value.trim()));
-
-// محدد عدد الأسئلة
-const countRange = document.getElementById("countRange");
-const countVal = document.getElementById("countVal");
-const tri = document.getElementById("triSlider");
-countVal.textContent = countRange.value;
-countRange.addEventListener("input", ()=>{
-  countVal.textContent = countRange.value;
-  updateLabels();
+// حفظ اسم المتدرّب
+const traineeNameEl = document.getElementById('traineeName');
+traineeNameEl.value = localStorage.getItem('traineeName') || '';
+traineeNameEl.addEventListener('input', ()=>{
+  localStorage.setItem('traineeName', traineeNameEl.value.trim());
 });
 
-// المنزلق الثلاثي بقيم نقطتي القطع
-const cut1 = document.getElementById("cut1");
-const cut2 = document.getElementById("cut2");
-const segA = document.getElementById("segA");
-const segB = document.getElementById("segB");
-const segC = document.getElementById("segC");
-const segALabel = document.getElementById("segALabel");
-const segBLabel = document.getElementById("segBLabel");
-const segCLabel = document.getElementById("segCLabel");
+// منزلق عدد الأسئلة
+const qCountEl = document.getElementById('qCount');
+const qCountValEl = document.getElementById('qCountVal');
+qCountValEl.textContent = qCountEl.value;
+qCountEl.addEventListener('input', ()=> qCountValEl.textContent = qCountEl.value);
 
-let showPercent = true; // التبديل بين % وعدد الأسئلة بالنقر على الشريط
-tri.addEventListener("click", (e)=>{
-  // تجاهل النقرات على المقابض
-  if(e.target === cut1 || e.target === cut2) return;
-  showPercent = !showPercent;
-  updateLabels();
+function getTotalQuestions(){ return parseInt(qCountEl.value, 10) || 20; }
+
+// tri slider with noUiSlider
+const DEFAULT_DIST = [33, 66];
+let triMode = localStorage.getItem('triMode') || 'percent'; // 'percent' | 'count'
+
+const triSliderEl = document.getElementById('triSlider');
+const distToggleBtn = document.getElementById('distToggle');
+const distResetBtn  = document.getElementById('distReset');
+const valA = document.getElementById('valA');
+const valB = document.getElementById('valB');
+const valC = document.getElementById('valC');
+
+noUiSlider.create(triSliderEl, {
+  start: DEFAULT_DIST,
+  connect: [true, true, true],
+  range: { min: 0, max: 100 },
+  step: 1
 });
 
-function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
-
-function updateSegments(){
-  // ضبط ترتيب وتداخل النقاط
-  let v1 = parseInt(cut1.value,10);
-  let v2 = parseInt(cut2.value,10);
-  if(v1>v2){ const t=v1; v1=v2; v2=t; cut1.value=v1; cut2.value=v2; }
-
-  // حدود فاصلة لتفادي تطابق تام
-  cut1.value = clamp(v1, 5, 95);
-  cut2.value = clamp(v2, 5, 95);
-
-  v1 = parseInt(cut1.value,10);
-  v2 = parseInt(cut2.value,10);
-
-  const a = v1;
-  const b = v2 - v1;
-  const c = 100 - v2;
-
-  segA.style.width = a + "%";
-  segB.style.left = a + "%";
-  segB.style.width = b + "%";
-  segC.style.left = (a + b) + "%";
-  segC.style.width = c + "%";
-
-  updateLabels();
+function getPercents() {
+  const [p1, p2] = triSliderEl.noUiSlider.get().map(v => Math.round(parseFloat(v)));
+  const a = p1, b = p2 - p1, c = 100 - p2;
+  return [a,b,c];
 }
-
-function updateLabels(){
-  const total = parseInt(countRange.value,10);
-  const a = parseInt(cut1.value,10);
-  const b = parseInt(cut2.value,10) - a;
-  const c = 100 - parseInt(cut2.value,10);
-
-  if(showPercent){
-    segALabel.textContent = a + "%";
-    segBLabel.textContent = b + "%";
-    segCLabel.textContent = c + "%";
+function countsFromPercents(totalQ) {
+  const [a,b,c] = getPercents();
+  let A = Math.round(totalQ * a/100);
+  let B = Math.round(totalQ * b/100);
+  let C = totalQ - A - B;
+  return [A,B,C];
+}
+function renderTriLabels(){
+  const totalQ = getTotalQuestions();
+  if (triMode === 'percent'){
+    const [a,b,c] = getPercents();
+    valA.textContent = `${a}%`; valB.textContent = `${b}%`; valC.textContent = `${c}%`;
+    distToggleBtn.textContent = '٪';
   }else{
-    segALabel.textContent = Math.round(total * a/100);
-    segBLabel.textContent = Math.round(total * b/100);
-    segCLabel.textContent = Math.round(total * c/100);
+    const [A,B,C] = countsFromPercents(totalQ);
+    valA.textContent = `${A} سؤال`; valB.textContent = `${B} سؤال`; valC.textContent = `${C} سؤال`;
+    distToggleBtn.textContent = '#';
   }
 }
+triSliderEl.noUiSlider.on('update', renderTriLabels);
+distToggleBtn.addEventListener('click', ()=>{
+  triMode = (triMode === 'percent') ? 'count' : 'percent';
+  localStorage.setItem('triMode', triMode);
+  renderTriLabels();
+});
+distResetBtn.addEventListener('click', ()=> triSliderEl.noUiSlider.set(DEFAULT_DIST));
+qCountEl.addEventListener('input', renderTriLabels);
+renderTriLabels();
 
-cut1.addEventListener("input", updateSegments);
-cut2.addEventListener("input", updateSegments);
-updateSegments();
-
-// عيّنة أسئلة للتجربة (مع [[...]] للتلوين)
-const sampleQuestions = [
-  { text: "قال تعالى: {كَلاَّ لَئِنْ لَمْ يَنْتَهِ [[لَنَسْفَعًا]] بِالنَّاصِيَةِ} - أين الكلمة المستهدفة؟", opts:["مثال"], answer:0 },
-  { text: "قال تعالى: {[[أُنْزِل]] بِهِ رُوحُ الْأَمِينِ} - ما حكم النون الساكنة؟", opts:["إظهار","إدغام","إخفاء","إقلاب"], answer:0 },
-  { text: "قال تعالى: {إِنَّ رَبَّهُمْ بِهِمْ} - ما حكم الميم الساكنة؟", opts:["إظهار شفوي","إدغام شفوي","إخفاء شفوي قلب","إقلاب"], answer:2 },
-];
-
-const qList = document.getElementById("questions");
-
-function highlightAyah(text){
-  return text.replace(/\[\[(.+?)\]\]/g, '<span class="ayah-target">$1</span>');
-}
-
-function renderQuestions(list){
-  qList.innerHTML = "";
-  list.forEach((q, i)=>{
-    const li = document.createElement("li");
-    li.className = "question";
-    const qtxt = document.createElement("div");
-    qtxt.className = "qtext";
-    qtxt.innerHTML = highlightAyah(q.text);
-    li.appendChild(qtxt);
-
-    const opts = document.createElement("div");
-    opts.className = "options";
-    (q.opts.length ? q.opts : ["مثال"]).forEach((o, idx)=>{
-      const wrap = document.createElement("label"); wrap.className="opt";
-      const radio = document.createElement("input"); radio.type="radio"; radio.name="q"+i; radio.value=idx;
-      wrap.appendChild(radio);
-      wrap.appendChild(document.createTextNode(" "+o));
-      opts.appendChild(wrap);
+// مثال: تلوين الكلمات المستهدفة عبر [[...]] إن وجدت
+function highlightTargetsInContainer(container){
+  const mark = (node)=>{
+    if (node.nodeType !== Node.TEXT_NODE) return;
+    const text = node.nodeValue;
+    if (!text || text.indexOf('[[') === -1) return;
+    const parts = text.split(/(\[\[.*?\]\])/g);
+    const frag = document.createDocumentFragment();
+    parts.forEach(p => {
+      const m = p.match(/^\[\[(.*?)\]\]$/);
+      if (m){
+        const span = document.createElement('span');
+        span.className = 'ayah-target';
+        span.textContent = m[1];
+        frag.appendChild(span);
+      }else{
+        frag.appendChild(document.createTextNode(p));
+      }
     });
-    li.appendChild(opts);
-    qList.appendChild(li);
-  });
+    node.parentNode.replaceChild(frag, node);
+  };
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(mark);
 }
 
-renderQuestions(sampleQuestions);
+// أمثلة تجريبية: أضف أقواسًا لعرض التأثير
+document.addEventListener('DOMContentLoaded', ()=>{
+  // في المثال الأول نُبرز كلمة لنسفعاً و أنزل
+  const ayahs = document.querySelectorAll('.ayah');
+  if (ayahs[0]) ayahs[0].textContent = '﴿كَلَّا لَئِنْ لَمْ يَنْتَهِ لَنَسْفَعًا بِالنَّاصِيَةِ﴾'.replace('لَنَسْفَعًا','[[لَنَسْفَعًا]]');
+  if (ayahs[1]) ayahs[1].textContent = '﴿وَأَنزَلَ بِهِ رُوحُ الْأَمِينِ﴾'.replace('أَنزَلَ','[[أَنزَلَ]]');
+  document.querySelectorAll('.questions').forEach(highlightTargetsInContainer);
+});
 
-// أزرار الإنهاء (تحذير إن بقيت أسئلة دون إجابة)
-function handleEnd(){
-  const total = sampleQuestions.length;
-  const answered = Array.from(document.querySelectorAll('.options'))
-    .filter(el => el.querySelector('input:checked')).length;
-  if(answered < total){
-    const ok = confirm("يوجد أسئلة غير مُجابة ("+(total-answered)+"). هل تريد إنهاء الاختبار؟");
-    if(!ok) return;
-  }
-  alert("انتهى الاختبار. سيتم الانتقال إلى صفحة النتائج.");
-}
-
-document.getElementById("endTop").onclick = handleEnd;
-document.getElementById("endBottom").onclick = handleEnd;
-
-// الأزرار الأخرى (عرض تجريبي)
-document.getElementById("shortBtn").onclick = ()=>alert("اختبار قصير — عرض تجريبي");
-document.getElementById("fullBtn").onclick = ()=>alert("اختبار شامل — عرض تجريبي");
+// أزرار تجريبية
+document.getElementById('btnFinishTop').addEventListener('click', ()=> alert('سيتم إنهاء الاختبار (تجريبي).'));
+document.getElementById('btnFinishBottom').addEventListener('click', ()=> alert('سيتم إنهاء الاختبار (تجريبي).'));
