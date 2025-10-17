@@ -1,0 +1,152 @@
+<!doctype html><html lang="ar" dir="rtl"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Tajweedy — الاختبار (البنك الرئيسي)</title><link rel="stylesheet" href="theme-v2.css"/>
+<style id="tajweedy-inline-fixes">
+/* Highlight only the target tokens */
+.ayah-target{
+  color:#15803d !important;
+  font-weight:700;
+  font-size:1.25em;
+  background:#e6f4ea;
+  border-radius:6px;
+  padding:0 .25rem;
+}
+/* End buttons left in RTL container */
+.end-btn{float:inline-start;}
+/* Floating theme button (only if missing native one) */
+#modeBtn{position:fixed; top:12px; inset-inline-start:12px; z-index:1000; border-radius:999px; padding:.35rem .55rem; background:#111827; color:#fff; border:1px solid #374151; box-shadow:0 2px 8px rgba(0,0,0,.25)}
+body:not(.dark) #modeBtn{background:#f3f4f6; color:#111827; border-color:#d1d5db;}
+/* Simple modal */
+#confirmModal{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.45); z-index:1500;}
+#confirmModal .box{background:var(--card, #fff); color:inherit; width:min(520px,90vw); border-radius:12px; padding:16px 18px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#confirmModal .actions{display:flex; gap:8px; justify-content:flex-end; margin-top:12px}
+#confirmModal .actions button{padding:.5rem .9rem; border-radius:8px}
+#confirmModal .danger{background:#dc2626; color:#fff}
+#confirmModal .secondary{background:#e5e7eb; color:#111827}
+/* Keep question font size normal; target gets emphasized */
+.question-text{font-size:1rem}
+</style>
+
+
+<!-- injected: target-highlights + dark-mode button visibility + end buttons -->
+<style>
+  .ayah-target{
+    color:#15803d!important;
+    background:#e6f4ea;
+    font-weight:700;
+    font-size:1.2em;
+    border-radius:.4rem;
+    padding:.05rem .35rem;
+  }
+  /* keep overall question font normal */
+  .question, .question *:not(.ayah-target){ font-size:inherit; }
+  /* pin end buttons to the left */
+  .end-btn-left{
+    position:sticky; left:0; right:auto; inset-inline-start:0;
+    align-self:flex-start; margin-inline-start:0;
+  }
+  /* ensure theme toggle button always visible */
+  .theme-toggle,.modeBtn{
+    position:sticky; top:.5rem; z-index:1000;
+    opacity:1!important; visibility:visible!important;
+  }
+</style>
+
+</head><body>
+<header class="container header"><div class="brand"><img src="assets/logo.png"/><div><h1>الاختبار — بنك الأسئلة الرئيسي</h1>
+<nav class="nav"><a href="index.html">🏠 الواجهة</a><a href="exercises.html">🧠 التدريبات</a><a href="validator.html">🧪 المدقق</a></nav></div></div></header>
+<main class="container"><section class="card"><h2>إعداد الاختبار</h2>
+<div class="row"><label>القسم</label><select id="section"><option value="noon_tanween">النون الساكنة والتنوين</option><option value="meem_sakinah">الميم الساكنة</option><option value="madd">أحكام المدود</option></select>
+<button id="start" class="primary">بدء اختبار ٥ أسئلة لكل حكم فرعي</button><button id="startFull" class="secondary">اختبار شامل (١٥ سؤالًا)</button></div>
+<p class="muted">يُقرأ من <code>questions_bank.json</code> (اتركه ملفًا مستقلاً).</p></section>
+<section id="paper" class="card" style="display:none"><div class="row"><strong>اسم المتدرّب:</strong><input id="studentName" placeholder="اختياري" style="max-width:280px"></div>
+<div id="list"></div><div class="progress"><span id="bar"></span></div>
+<div class="row" style="margin-top:12px"><button id="submit" class="danger end-btn" class="primary">إنهاء الاختبار</button><button id="reset" class="secondary">إعادة البدء</button></div>
+<div class="row" style="margin-top:8px"><button id="submitBottom" class="danger end-btn">إنهاء الاختبار</button></div>
+<div id="summary" class="console" style="display:none"></div></section></main>
+<footer class="container footer muted"><p>© Tajweedy</p></footer><button id="modeBtn" class="mode-fab">🌓</button><script type="module" src="quiz.js"></script><script type="module">import {App} from './app.js';document.addEventListener('DOMContentLoaded',()=>App.initTheme('modeBtn'));<\/script>
+
+<!-- injected: minimal DOM helpers without touching tri-slider -->
+<script>
+(function(){
+  // 1) Highlight [[target]] anywhere inside quiz container
+  function highlightTargets(root){
+    const walker = document.createTreeWalker(root || document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        return /\[\[[^\]]+\]\]/.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+    const toChange = [];
+    while(walker.nextNode()){ toChange.push(walker.currentNode); }
+    toChange.forEach(node=>{
+      const spanHTML = node.nodeValue.replace(/\[\[([^\]]+)\]\]/g,'<span class="ayah-target">$1</span>');
+      const frag = document.createElement('span');
+      frag.innerHTML = spanHTML;
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  // 2) End-test safety: warn if unanswered remain
+  function wireEndTestGuard(){
+    const btns = Array.from(document.querySelectorAll('button, a')).filter(b=>/إنهاء.?الاختبار/.test(b.textContent||''));
+    btns.forEach(btn=>{
+      btn.classList.add('end-btn-left');
+      if(!btn.dataset.guard){
+        btn.dataset.guard = '1';
+        btn.addEventListener('click', function(ev){
+          // group radios by name
+          const radios = Array.from(document.querySelectorAll('input[type="radio"][name]'));
+          const groups = [...new Set(radios.map(r=>r.name))];
+          const answered = new Set(radios.filter(r=>r.checked).map(r=>r.name));
+          const unanswered = groups.filter(n=>!answered.has(n));
+          if(unanswered.length>0){
+            ev.preventDefault();
+            const ok = confirm(`يوجد ${unanswered.length} سؤال/أسئلة بدون إجابة. هل تريد إنهاء الاختبار على أي حال؟`);
+            if(ok){
+              // re-click without guard to avoid loop
+              btn.removeAttribute('data-guard');
+              btn.click();
+              btn.dataset.guard='1';
+            }
+          }
+        },{capture:true});
+      }
+    });
+    // duplicate end button at bottom if only one exists
+    if(btns.length === 1){
+      const clone = btns[0].cloneNode(true);
+      clone.id = 'endBtnBottom';
+      // place near the very end
+      const container = document.body;
+      const wrapper = document.createElement('div');
+      wrapper.style.margin='2rem 0'; wrapper.style.display='flex'; wrapper.style.justifyContent='flex-start';
+      wrapper.appendChild(clone);
+      container.appendChild(wrapper);
+    }
+  }
+
+  // 3) Make sure theme toggle (☀️ / 🌙) is visible
+  function revealThemeToggle(){
+    const t = document.querySelector('.theme-toggle, #modeBtn, .modeBtn');
+    if(t){ t.style.display='inline-flex'; t.style.opacity='1'; t.style.visibility='visible'; }
+  }
+
+  // Run after DOM and on dynamic renders
+  function initEnhance(){
+    highlightTargets(document.body);
+    wireEndTestGuard();
+    revealThemeToggle();
+  }
+
+  document.addEventListener('DOMContentLoaded', initEnhance);
+  // in case the app re-renders questions dynamically:
+  const obs = new MutationObserver((m)=>{
+    for(const rec of m){
+      if(rec.addedNodes && rec.addedNodes.length){ initEnhance(); break; }
+    }
+  });
+  obs.observe(document.body, {childList:true, subtree:true});
+})();
+</script>
+
+</body></html>
