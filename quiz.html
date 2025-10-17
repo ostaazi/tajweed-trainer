@@ -51,7 +51,8 @@
       #btnBackToExam, #btnExportCSV, #btnExportHistoryCSV, #btnExportHistoryJSON, #btnPrint,
       #btnReviewMode, #btnBackFromReview, #btnPrev, #btnNext, #btnRemedial, #btnShowRule { display:none !important; }
     }
-  </style>
+  .ayah-target{color:#16a34a;font-weight:700;font-size:1.15em;display:inline-block;} @media (max-width:560px){.ayah-target{font-size:1.2em;}}
+</style>
 </head>
 <body>
   <div class="wrap" id="examPage">
@@ -191,7 +192,9 @@ function markAyatInQuestions() {
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node.nodeValue;
         if (text && text.includes('{') && text.includes('}')) {
-          const replaced = text.replace(/\{([^}]+)\}/g, '<span class="ayah">$1</span>');
+          let replaced = text.replace(/\{([^}]+)\}/g, '<span class="ayah">$1</span>');
+          // highlight markers [[...]] inside ayah
+          replaced = replaced.replace(/\[\[([^\]]+)\]\]/g, '<span class="ayah-target">$1</span>');
           if (replaced !== text) {
             const wrapper = document.createElement('span');
             wrapper.innerHTML = replaced;
@@ -215,5 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+  <script src="./quran-api.js"></script>
 </body>
 </html>
