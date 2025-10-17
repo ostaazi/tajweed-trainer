@@ -1,43 +1,183 @@
-<!doctype html><html lang="ar" dir="rtl"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Tajweedy — الاختبار (البنك الرئيسي)</title><link rel="stylesheet" href="theme-v2.css"/>
-<style id="tajweedy-inline-fixes">
-/* Highlight only the target tokens */
-.ayah-target{
-  color:#15803d !important;
-  font-weight:700;
-  font-size:1.25em;
-  background:#e6f4ea;
-  border-radius:6px;
-  padding:0 .25rem;
-}
-/* End buttons left in RTL container */
-.end-btn{float:inline-start;}
-/* Floating theme button (only if missing native one) */
-#modeBtn{position:fixed; top:12px; inset-inline-start:12px; z-index:1000; border-radius:999px; padding:.35rem .55rem; background:#111827; color:#fff; border:1px solid #374151; box-shadow:0 2px 8px rgba(0,0,0,.25)}
-body:not(.dark) #modeBtn{background:#f3f4f6; color:#111827; border-color:#d1d5db;}
-/* Simple modal */
-#confirmModal{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.45); z-index:1500;}
-#confirmModal .box{background:var(--card, #fff); color:inherit; width:min(520px,90vw); border-radius:12px; padding:16px 18px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
-#confirmModal .actions{display:flex; gap:8px; justify-content:flex-end; margin-top:12px}
-#confirmModal .actions button{padding:.5rem .9rem; border-radius:8px}
-#confirmModal .danger{background:#dc2626; color:#fff}
-#confirmModal .secondary{background:#e5e7eb; color:#111827}
-/* Keep question font size normal; target gets emphasized */
-.question-text{font-size:1rem}
-</style>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="font-src 'self' data:;">
+  <link rel="preload" href="./fonts/hafs.woff2" as="font" type="font/woff2" crossorigin>
 
-</head><body>
-<header class="container header"><div class="brand"><img src="assets/logo.png"/><div><h1>الاختبار — بنك الأسئلة الرئيسي</h1>
-<nav class="nav"><a href="index.html">🏠 الواجهة</a><a href="exercises.html">🧠 التدريبات</a><a href="validator.html">🧪 المدقق</a></nav></div></div></header>
-<main class="container"><section class="card"><h2>إعداد الاختبار</h2>
-<div class="row"><label>القسم</label><select id="section"><option value="noon_tanween">النون الساكنة والتنوين</option><option value="meem_sakinah">الميم الساكنة</option><option value="madd">أحكام المدود</option></select>
-<button id="start" class="primary">بدء اختبار ٥ أسئلة لكل حكم فرعي</button><button id="startFull" class="secondary">اختبار شامل (١٥ سؤالًا)</button></div>
-<p class="muted">يُقرأ من <code>questions_bank.json</code> (اتركه ملفًا مستقلاً).</p></section>
-<section id="paper" class="card" style="display:none"><div class="row"><strong>اسم المتدرّب:</strong><input id="studentName" placeholder="اختياري" style="max-width:280px"></div>
-<div id="list"></div><div class="progress"><span id="bar"></span></div>
-<div class="row" style="margin-top:12px"><button id="submit" class="danger end-btn" class="primary">إنهاء الاختبار</button><button id="reset" class="secondary">إعادة البدء</button></div>
-<div class="row" style="margin-top:8px"><button id="submitBottom" class="danger end-btn">إنهاء الاختبار</button></div>
-<div id="summary" class="console" style="display:none"></div></section></main>
-<footer class="container footer muted"><p>© Tajweedy</p></footer><button id="modeBtn" class="mode-fab">🌓</button><script type="module" src="quiz.js"></script><script type="module">import {App} from './app.js';document.addEventListener('DOMContentLoaded',()=>App.initTheme('modeBtn'));<\/script>
-</body></html>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>التجويد - الاختبار</title>
+
+  <style>
+    @font-face{
+      font-family: 'UthmanicHafs';
+      src: url('./fonts/hafs.woff2') format('woff2'), url('./fonts/KFGQPC_Uthmanic_Script_HAFS_Regular.otf') format('opentype');
+      font-display: swap;
+    }
+    :root{ --ink:#0f172a; --muted:#64748b; --ring:#e2e8f0; --violet:#7B1FA2; }
+    html,body{background:#fff;margin:0;padding:0;font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Noto Naskh Arabic', 'Amiri', serif;color:var(--ink)}
+    .wrap{max-width:980px;margin:24px auto;padding:16px}
+    h1{margin:0 0 12px 0;font-size:22px}
+    .muted{color:var(--muted)}
+    .btn{padding:10px 16px;border-radius:10px;border:1px solid var(--ring);background:#111;color:#fff;cursor:pointer}
+    .btn.secondary{background:#4F46E5} .btn.info{background:#0ea5e9} .btn.danger{background:#dc2626}
+    #list .q h4{margin:0 0 8px 0}
+    #list label{display:block;border:1px solid var(--ring);border-radius:10px;padding:8px 10px;margin:6px 0;cursor:pointer}
+
+    .ayah{ font-family:'UthmanicHafs','KFGQPC Uthman Taha Naskh','Noto Naskh Arabic',serif; font-size:1.5rem; line-height:2.3rem; text-align:center; }
+    .target-word{ color: var(--violet); font-weight:700; background:rgba(123,31,162,.08); border-radius:4px; padding:0 3px; }
+
+    .swatch{width:12px;height:12px;border-radius:3px;display:inline-block}
+    .swatch-noon{ background: linear-gradient(to bottom, #d8ecff, #b5dcff); }
+    .swatch-meem{ background: linear-gradient(to bottom, #f1d8ff, #e3b5ff); }
+    .swatch-madd{ background: linear-gradient(to bottom, #fff2dc, #ffe2b5); }
+
+    #triBar{position:relative;width:100%;height:26px;border-radius:999px;outline:1px solid var(--ring);user-select:none;margin-top:6px}
+    #triBar .seg{position:absolute;inset-block:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#3b3b3b}
+    #triBar .seg-noon{background:linear-gradient(to bottom,#e9f5ff,#cfe8ff)}
+    #triBar .seg-meem{background:linear-gradient(to bottom,#f5e4ff,#e8c8ff)}
+    #triBar .seg-madd{background:linear-gradient(to bottom,#fff6e8,#ffe8c6)}
+    #triBar .pct{pointer-events:none}
+    #triBar .handle{position:absolute;top:-6px;width:14px;height:38px;border-radius:6px;background:#0ea5e9;cursor:ew-resize;box-shadow:0 0 0 2px #fff}
+    .triHelp{color:var(--muted);font-size:12px;margin:6px 2px 10px}
+
+    #resultsPage{display:none}
+    #reviewPage{display:none}
+    table{width:100%;border-collapse:collapse}
+    th,td{border:1px solid var(--ring);padding:8px;text-align:right;vertical-align:top}
+    th{background:#f8fafc}
+    .pill{display:inline-block;padding:.15rem .45rem;border-radius:999px;background:#f1f5f9;color:#0f172a;font-size:.78rem}
+    @media print{
+      #btnBackToExam, #btnExportCSV, #btnExportHistoryCSV, #btnExportHistoryJSON, #btnPrint,
+      #btnReviewMode, #btnBackFromReview, #btnPrev, #btnNext, #btnRemedial, #btnShowRule { display:none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="examPage">
+    <h1>إعداد الاختبار</h1>
+
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+      <input id="studentName" type="text" placeholder="اسم المتدرّب" style="padding:10px;border:1px solid var(--ring);border-radius:10px">
+      <select id="sectionSelect">
+        <option value="noon">النون الساكنة والتنوين</option>
+        <option value="meem">الميم الساكنة</option>
+        <option value="madd">أحكام المدود</option>
+      </select>
+      <button id="btnShort" class="btn">بدء اختبار قصير (٥ أسئلة للقسم المحدد)</button>
+      <button id="btnResume" class="btn" style="display:none;margin-inline-start:10px">استئناف</button>
+    </div>
+
+    <div id="controls" class="muted" style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <label for="totalRange" style="font-weight:600">حدِّد عدد أسئلة الاختبار</label>
+        <span><strong id="sumTarget">20</strong></span>
+      </div>
+      <input id="totalRange" type="range" min="5" max="100" step="1" value="20" style="width:100%">
+      <input id="totalQ" type="hidden" value="20">
+    </div>
+
+    <div id="triLegend" style="display:flex;gap:12px;align-items:center;margin:10px 0 6px">
+      <div style="display:flex;align-items:center;gap:6px"><span class="swatch swatch-noon"></span><span>النون الساكنة والتنوين</span></div>
+      <div style="display:flex;align-items:center;gap:6px"><span class="swatch swatch-meem"></span><span>الميم الساكنة</span></div>
+      <div style="display:flex;align-items:center;gap:6px"><span class="swatch swatch-madd"></span><span>أحكام المدود</span></div>
+    </div>
+
+    <div id="triWrap">
+      <div id="triBar" aria-label="توزيع الإجمالي على الأقسام" title="اسحب الفواصل لتعديل النِّسب" dir="ltr">
+        <div class="seg seg-noon"><span class="pct" id="pctNoon">33%</span></div>
+        <div class="seg seg-meem"><span class="pct" id="pctMeem">33%</span></div>
+        <div class="seg seg-madd"><span class="pct" id="pctMadd">34%</span></div>
+        <div class="handle" id="h1"></div>
+        <div class="handle" id="h2"></div>
+      </div>
+      <div class="triHelp">انقر أو اسحب الفواصل لتبديل العرض بين % وعدد الأسئلة.</div>
+    </div>
+
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0">
+      <button id="btnComprehensive" class="btn secondary">بدء اختبار شامل</button>
+      <button id="btnFinish" class="btn danger">إنهاء الاختبار</button>
+      <button id="btnShowDetails" class="btn info" style="display:none">إظهار التفاصيل</button>
+      <span id="diag" class="muted"></span>
+      <span id="scoreSummary" class="pill" style="display:none"></span>
+    </div>
+
+    <div id="list"></div>
+  </div>
+
+  <div class="wrap" id="resultsPage">
+    <h1>نتيجة الاختبار</h1>
+    <p class="muted">
+      المتدرّب: <strong id="resStudent"></strong> —
+      الدرجة: <strong id="resScore"></strong>
+    </p>
+    <div style="display:flex;gap:10px;margin:12px 0;flex-wrap:wrap">
+      <button id="btnBackToExam" class="btn">العودة للاختبار</button>
+      <button id="btnExportCSV" class="btn info">حفظ النتائج CSV</button>
+      <button id="btnExportHistoryCSV" class="btn info">تحميل CSV للسجل</button>
+      <button id="btnExportHistoryJSON" class="btn info">تحميل JSON للسجل</button>
+      <button id="btnPrint" class="btn">طباعة / حفظ PDF</button>
+      <button id="btnReviewMode" class="btn">وضع المراجعة</button>
+    </div>
+
+    <div id="statsSummary" style="margin:14px 0"></div>
+    <div id="subpartStats" style="margin:14px 0"></div>
+
+    <div id="remedialBox" style="margin:14px 0; display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+      <label class="muted">تدريب علاجي من أخطائي:</label>
+      <input id="remedialCount" type="number" min="1" value="5" style="width:80px;padding:8px;border:1px solid var(--ring);border-radius:10px">
+      <label style="display:inline-flex;align-items:center;gap:6px">
+        <input id="focusHard" type="checkbox" checked>
+        <span class="muted">التركيز على الأسئلة الصعبة</span>
+      </label>
+      <button id="btnRemedial" class="btn">بدء تدريب علاجي</button>
+    </div>
+    <div id="remedialFilters" class="muted" style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+      <div>
+        <div style="font-weight:700;margin:6px 0 4px">الأقسام</div>
+        <div id="filterSections" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+      </div>
+      <div>
+        <div style="font-weight:700;margin:6px 0 4px">الأجزاء الفرعية</div>
+        <div id="filterParts" style="display:flex;gap:10px;flex-wrap:wrap;max-width:560px"></div>
+      </div>
+    </div>
+
+    <div id="detailsWrap" style="margin-top:10px"></div>
+
+    <div id="historyBox" style="margin:18px 0">
+      <h2 style="margin:0 0 6px 0;font-size:18px">سجل الاختبارات</h2>
+      <div id="historyTableWrap" class="muted">لا توجد بيانات بعد.</div>
+    </div>
+  </div>
+
+  <div class="wrap" id="reviewPage" style="display:none">
+    <h1>وضع المراجعة</h1>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0">
+      <label class="muted">القسم:</label>
+      <select id="ruleSection"></select>
+      <label class="muted">الجزء الفرعي:</label>
+      <select id="rulePart"></select>
+      <button id="btnShowRule" class="btn">عرض القاعدة</button>
+      <button id="btnBackFromReview" class="btn">العودة للنتائج</button>
+    </div>
+
+    <div id="ruleText" class="muted" style="border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:12px;background:#fff"></div>
+
+    <div id="reviewCard" style="border:1px solid #e2e8f0;border-radius:12px;padding:12px;background:#fff">
+      <div id="reviewHeader" class="muted" style="margin-bottom:8px"></div>
+      <div id="reviewStem" style="margin:8px 0"></div>
+      <div id="reviewChoices" style="margin:6px 0"></div>
+      <div id="reviewVerdict" style="margin:6px 0"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button id="btnPrev" class="btn">السابق</button>
+      <button id="btnNext" class="btn">التالي</button>
+    </div>
+  </div>
+
+  <script src="quiz.js"></script>
+</body>
+</html>
