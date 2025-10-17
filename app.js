@@ -1,161 +1,148 @@
+// حفظ الوضع واسم المتدرب
+const root = document.documentElement;
+const savedMode = localStorage.getItem("mode") || "dark";
+if(savedMode === "light"){ document.body.classList.add("light"); }
+const modeBtn = document.getElementById("modeBtn");
+modeBtn.onclick = () => {
+  document.body.classList.toggle("light");
+  localStorage.setItem("mode", document.body.classList.contains("light") ? "light" : "dark");
+};
 
-const trainee = document.getElementById('trainee');
-const sectionSel = document.getElementById('section');
-const btnShort = document.getElementById('btnShort');
-const btnFull = document.getElementById('btnFull');
-const themeBtn = document.getElementById('theme');
-const countSlider = document.getElementById('countSlider');
-const qCountLabel = document.getElementById('qCount');
-const tri = document.getElementById('tri');
-const segs = [document.getElementById('seg1'), document.getElementById('seg2'), document.getElementById('seg3')];
-const handles = [document.getElementById('h1'), document.getElementById('h2')];
-const modeHint = document.getElementById('modeHint');
-const qList = document.getElementById('qList');
-const endTop = document.getElementById('endTop');
+const nameInput = document.getElementById("traineeName");
+nameInput.value = localStorage.getItem("traineeName") || "";
+nameInput.addEventListener("input", ()=>localStorage.setItem("traineeName", nameInput.value.trim()));
 
-// ---- theme
-function loadTheme(){
-  const t = localStorage.getItem('tajweed_theme') || 'dark';
-  document.documentElement.className = (t === 'light') ? 'light' : 'dark';
-}
-loadTheme();
-themeBtn.addEventListener('click', ()=>{
-  const nowLight = document.documentElement.classList.contains('light');
-  document.documentElement.className = nowLight ? 'dark' : 'light';
-  localStorage.setItem('tajweed_theme', nowLight ? 'dark' : 'light');
+// محدد عدد الأسئلة
+const countRange = document.getElementById("countRange");
+const countVal = document.getElementById("countVal");
+const tri = document.getElementById("triSlider");
+countVal.textContent = countRange.value;
+countRange.addEventListener("input", ()=>{
+  countVal.textContent = countRange.value;
+  updateLabels();
 });
 
-// ---- trainee
-trainee.value = localStorage.getItem('tajweed_trainee') || '';
-trainee.addEventListener('input', ()=> localStorage.setItem('tajweed_trainee', trainee.value));
+// المنزلق الثلاثي بقيم نقطتي القطع
+const cut1 = document.getElementById("cut1");
+const cut2 = document.getElementById("cut2");
+const segA = document.getElementById("segA");
+const segB = document.getElementById("segB");
+const segC = document.getElementById("segC");
+const segALabel = document.getElementById("segALabel");
+const segBLabel = document.getElementById("segBLabel");
+const segCLabel = document.getElementById("segCLabel");
 
-// ---- question count
-qCountLabel.textContent = countSlider.value;
-countSlider.addEventListener('input', ()=> qCountLabel.textContent = countSlider.value);
-
-// ---- tri-slider state
-let total = 100;
-let pcts = [33,33,34]; // [noon, meem, madd]
-let showCounts = false;
-
-function refreshSegs(){
-  for(let i=0;i<3;i++){
-    segs[i].style.width = pcts[i]+'%';
-    segs[i].textContent = showCounts ? Math.round(pcts[i]*countSlider.value/100) : pcts[i]+'%';
-  }
-  handles[0].style.left = pcts[0]+'%';
-  handles[1].style.left = (pcts[0]+pcts[1])+'%';
-  modeHint.textContent = 'الوضع: ' + (showCounts ? 'أعداد الأسئلة' : 'نِسَب مئوية');
-}
-refreshSegs();
-
-// toggle display
-tri.addEventListener('click', (e)=>{
-  if(e.target.classList.contains('handle')) return; // ignore when dragging
-  showCounts = !showCounts;
-  refreshSegs();
+let showPercent = true; // التبديل بين % وعدد الأسئلة بالنقر على الشريط
+tri.addEventListener("click", (e)=>{
+  // تجاهل النقرات على المقابض
+  if(e.target === cut1 || e.target === cut2) return;
+  showPercent = !showPercent;
+  updateLabels();
 });
 
-// drag logic
-let dragging = -1, startX=0, startPcts=null;
-handles.forEach((h,idx)=>{
-  h.addEventListener('mousedown', startDrag(idx));
-  h.addEventListener('touchstart', startDrag(idx), {passive:false});
-});
-function startDrag(idx){
-  return (ev)=>{
-    ev.preventDefault();
-    dragging = idx;
-    startX = ('touches' in ev) ? ev.touches[0].clientX : ev.clientX;
-    startPcts = [...pcts];
-    window.addEventListener('mousemove', onMove, {passive:false});
-    window.addEventListener('touchmove', onMove, {passive:false});
-    window.addEventListener('mouseup', endDrag);
-    window.addEventListener('touchend', endDrag);
-  };
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+function updateSegments(){
+  // ضبط ترتيب وتداخل النقاط
+  let v1 = parseInt(cut1.value,10);
+  let v2 = parseInt(cut2.value,10);
+  if(v1>v2){ const t=v1; v1=v2; v2=t; cut1.value=v1; cut2.value=v2; }
+
+  // حدود فاصلة لتفادي تطابق تام
+  cut1.value = clamp(v1, 5, 95);
+  cut2.value = clamp(v2, 5, 95);
+
+  v1 = parseInt(cut1.value,10);
+  v2 = parseInt(cut2.value,10);
+
+  const a = v1;
+  const b = v2 - v1;
+  const c = 100 - v2;
+
+  segA.style.width = a + "%";
+  segB.style.left = a + "%";
+  segB.style.width = b + "%";
+  segC.style.left = (a + b) + "%";
+  segC.style.width = c + "%";
+
+  updateLabels();
 }
-function onMove(ev){
-  if(dragging<0) return;
-  const x = ('touches' in ev) ? ev.touches[0].clientX : ev.clientX;
-  const dx = x - startX;
-  const rect = tri.getBoundingClientRect();
-  const dPct = (dx/rect.width)*100;
-  if(dragging===0){
-    let newP0 = clamp(startPcts[0]+dPct, 5, 95-startPcts[2]); // leave room for others
-    pcts[1] = startPcts[1] + (startPcts[0]-newP0);
-    pcts[0] = newP0;
+
+function updateLabels(){
+  const total = parseInt(countRange.value,10);
+  const a = parseInt(cut1.value,10);
+  const b = parseInt(cut2.value,10) - a;
+  const c = 100 - parseInt(cut2.value,10);
+
+  if(showPercent){
+    segALabel.textContent = a + "%";
+    segBLabel.textContent = b + "%";
+    segCLabel.textContent = c + "%";
   }else{
-    let cut = startPcts[0]+startPcts[1];
-    let newCut = clamp(cut+dPct, startPcts[0]+5, 95);
-    pcts[1] = newCut - pcts[0];
-    pcts[2] = 100 - newCut;
+    segALabel.textContent = Math.round(total * a/100);
+    segBLabel.textContent = Math.round(total * b/100);
+    segCLabel.textContent = Math.round(total * c/100);
   }
-  refreshSegs();
 }
-function endDrag(){
-  dragging=-1;
-  window.removeEventListener('mousemove', onMove);
-  window.removeEventListener('touchmove', onMove);
-  window.removeEventListener('mouseup', endDrag);
-  window.removeEventListener('touchend', endDrag);
-}
-function clamp(v,min,max){return Math.max(min, Math.min(max,v));}
 
-// ---- demo questions with [[target]] markers
-const BANK = [
-  {section:'noon', text:'قال تعالى: {كَلّا لَئِنْ لَمْ يَنْتَهِ لَنَسْفَعًا بِالنَّاصِيَةِ} - ما حكم النون الساكنة؟', target:'[[يَنْتَهِ]]', options:['إظهار','إدغام','إخفاء','إقلاب'], answer:2},
-  {section:'noon', text:'قال تعالى: {مِنْ رَبِّهِمْ} - ما حكم النون الساكنة؟', target:'[[مِنْ]]', options:['إظهار','إدغام','إخفاء','إقلاب'], answer:0},
-  {section:'meem', text:'قال تعالى: {هُمْ يَسْأَلُونَكَ} - ما حكم الميم الساكنة؟', target:'[[هُمْ]]', options:['إظهار شفوي','إدغام شفوي','إخفاء شفوي','قلب'], answer:2},
-  {section:'meem', text:'قال تعالى: {إِنَّهُمْ بِهِ} - ما حكم الميم الساكنة؟', target:'[[هُمْ]]', options:['إظهار شفوي','إدغام شفوي','إخفاء شفوي','قلب'], answer:0},
-  {section:'madd', text:'قال تعالى: {قَالُوا يَا أَبَانَا} - ما نوع المد؟', target:'[[قَالُوا]]', options:['مد طبيعي','مد منفصل','مد متصل','مد لازم'], answer:0},
-  {section:'madd', text:'قال تعالى: {جَاءَ} - ما نوع المد؟', target:'[[جَاءَ]]', options:['مد طبيعي','مد منفصل','مد متصل','مد لازم'], answer:2},
+cut1.addEventListener("input", updateSegments);
+cut2.addEventListener("input", updateSegments);
+updateSegments();
+
+// عيّنة أسئلة للتجربة (مع [[...]] للتلوين)
+const sampleQuestions = [
+  { text: "قال تعالى: {كَلاَّ لَئِنْ لَمْ يَنْتَهِ [[لَنَسْفَعًا]] بِالنَّاصِيَةِ} - أين الكلمة المستهدفة؟", opts:["مثال"], answer:0 },
+  { text: "قال تعالى: {[[أُنْزِل]] بِهِ رُوحُ الْأَمِينِ} - ما حكم النون الساكنة؟", opts:["إظهار","إدغام","إخفاء","إقلاب"], answer:0 },
+  { text: "قال تعالى: {إِنَّ رَبَّهُمْ بِهِمْ} - ما حكم الميم الساكنة؟", opts:["إظهار شفوي","إدغام شفوي","إخفاء شفوي قلب","إقلاب"], answer:2 },
 ];
 
-function renderQuestion(q, idx){
-  const card = document.createElement('div'); card.className='card';
-  const text = document.createElement('div'); text.className='qtext ayah';
-  text.innerHTML = colorTarget(q.text, q.target);
-  card.appendChild(text);
+const qList = document.getElementById("questions");
 
-  const opts = document.createElement('div'); opts.className='opts';
-  q.options.forEach((label,i)=>{
-    const opt = document.createElement('label'); opt.className='opt';
-    const radio = document.createElement('input'); radio.type='radio'; radio.name='q'+idx; radio.value=i;
-    const span = document.createElement('span'); span.textContent = label;
-    opt.appendChild(radio); opt.appendChild(span); opts.appendChild(opt);
+function highlightAyah(text){
+  return text.replace(/\[\[(.+?)\]\]/g, '<span class="ayah-target">$1</span>');
+}
+
+function renderQuestions(list){
+  qList.innerHTML = "";
+  list.forEach((q, i)=>{
+    const li = document.createElement("li");
+    li.className = "question";
+    const qtxt = document.createElement("div");
+    qtxt.className = "qtext";
+    qtxt.innerHTML = highlightAyah(q.text);
+    li.appendChild(qtxt);
+
+    const opts = document.createElement("div");
+    opts.className = "options";
+    (q.opts.length ? q.opts : ["مثال"]).forEach((o, idx)=>{
+      const wrap = document.createElement("label"); wrap.className="opt";
+      const radio = document.createElement("input"); radio.type="radio"; radio.name="q"+i; radio.value=idx;
+      wrap.appendChild(radio);
+      wrap.appendChild(document.createTextNode(" "+o));
+      opts.appendChild(wrap);
+    });
+    li.appendChild(opts);
+    qList.appendChild(li);
   });
-  card.appendChild(opts);
-  return card;
-}
-function colorTarget(text, target){
-  const escaped = target.replaceAll('[','\[').replaceAll(']','\]');
-  const re = new RegExp(escaped, 'g');
-  return (text+' ').replace(re, (m)=>'<span class="ayah-target">'+m.replaceAll('[','').replaceAll(']','')+'</span>');
 }
 
-function buildDemo(){
-  qList.innerHTML='';
-  const N = +countSlider.value;
-  // pick N from BANK cycling
-  for(let i=0;i<Math.min(N, BANK.length); i++){
-    qList.appendChild(renderQuestion(BANK[i%BANK.length], i));
-  }
-  appendBottomEnd();
-}
-function appendBottomEnd(){
-  const row = document.createElement('div'); row.className='end-row';
-  const btn = document.createElement('button'); btn.className='btn end'; btn.textContent='إنهاء الاختبار';
-  btn.onclick = handleEnd;
-  row.appendChild(btn);
-  qList.appendChild(row);
-}
+renderQuestions(sampleQuestions);
+
+// أزرار الإنهاء (تحذير إن بقيت أسئلة دون إجابة)
 function handleEnd(){
-  // demo only
-  const unanswered = [...document.querySelectorAll('.opts')].filter(x=>!x.querySelector('input:checked')).length;
-  if(unanswered>0 && !confirm('لا تزال هناك أسئلة بلا إجابة ('+unanswered+'). هل تريد الإنهاء؟')) return;
-  alert('تم الإنهاء (عرض تجريبي). اربط هذه الدالة بمصحّحك.');
+  const total = sampleQuestions.length;
+  const answered = Array.from(document.querySelectorAll('.options'))
+    .filter(el => el.querySelector('input:checked')).length;
+  if(answered < total){
+    const ok = confirm("يوجد أسئلة غير مُجابة ("+(total-answered)+"). هل تريد إنهاء الاختبار؟");
+    if(!ok) return;
+  }
+  alert("انتهى الاختبار. سيتم الانتقال إلى صفحة النتائج.");
 }
-endTop.onclick = handleEnd;
 
-btnShort.onclick = buildDemo;
-btnFull.onclick = buildDemo;
+document.getElementById("endTop").onclick = handleEnd;
+document.getElementById("endBottom").onclick = handleEnd;
+
+// الأزرار الأخرى (عرض تجريبي)
+document.getElementById("shortBtn").onclick = ()=>alert("اختبار قصير — عرض تجريبي");
+document.getElementById("fullBtn").onclick = ()=>alert("اختبار شامل — عرض تجريبي");

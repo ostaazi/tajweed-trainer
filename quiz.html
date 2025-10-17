@@ -1,60 +1,77 @@
-
-<!doctype html><html lang="ar" dir="rtl" class="dark">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>التجويد — الاختبار</title>
-<link rel="stylesheet" href="style.css"/>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>التجويد — الاختبار (نسخة عرض)</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-<div class="container">
-  <div class="topbar">
-    <input id="trainee" class="input" placeholder="اسم المتدرّب"/>
-    <select id="section" class="input">
-      <option value="noon">النون الساكنة والتنوين</option>
-      <option value="meem">الميم الساكنة</option>
-      <option value="madd">أحكام المدود</option>
-    </select>
-    <div class="hstack switch">
-      <button id="btnShort" class="btn short">بدء اختبار قصير (٥ أسئلة للقسم المحدد)</button>
-      <button id="btnFull" class="btn full">بدء اختبار شامل</button>
-      <button id="theme" class="toggle" title="الوضع الفاتح/الداكن">🌙 / ☀️</button>
+  <div class="container">
+    <!-- سطر 1: اسم المتدرب + زر تبديل الوضع -->
+    <div class="top-row">
+      <input id="traineeName" class="name-input" placeholder="اسم المتدرب"/>
+      <button id="modeBtn" class="mode-btn" aria-label="تبديل الوضع">🌙/☀️</button>
+    </div>
+
+    <!-- سطر 2: القائمة المنسدلة + زر اختبار قصير -->
+    <div class="row">
+      <select id="sectionSelect" class="select">
+        <option value="noon_tanween">النون الساكنة والتنوين</option>
+        <option value="meem_sakinah">الميم الساكنة</option>
+        <option value="madd">أحكام المدود</option>
+      </select>
+      <button id="shortBtn" class="btn btn-short">بدء اختبار قصير (٥ أسئلة للقسم المحدد)</button>
+    </div>
+
+    <!-- سطر 3: زر اختبار شامل -->
+    <div class="row">
+      <button id="fullBtn" class="btn btn-primary">بدء اختبار شامل</button>
+    </div>
+
+    <!-- محدد عدد الأسئلة -->
+    <div class="row slider-block">
+      <label class="label">حدّد عدد أسئلة الاختبار</label>
+      <input id="countRange" type="range" min="5" max="50" step="1" value="20"/>
+      <div class="count"><span id="countVal">20</span></div>
+    </div>
+
+    <!-- المنزلق الثلاثي -->
+    <div class="row">
+      <div class="label small">انقر للتبديل بين % وعدد الأسئلة. اسحب الفواصل لتغيير التوزيع.</div>
+      <div id="triSlider" class="tri">
+        <div id="segA" class="seg seg-a"><span id="segALabel">33%</span></div>
+        <div id="segB" class="seg seg-b"><span id="segBLabel">33%</span></div>
+        <div id="segC" class="seg seg-c"><span id="segCLabel">34%</span></div>
+        <input id="cut1" type="range" min="0" max="100" value="33" step="1"/>
+        <input id="cut2" type="range" min="0" max="100" value="66" step="1"/>
+      </div>
+      <div class="tags">
+        <span class="tag tag-a">النون الساكنة والتنوين</span>
+        <span class="tag tag-b">الميم الساكنة</span>
+        <span class="tag tag-c">أحكام المدود</span>
+      </div>
+    </div>
+
+    <!-- ملصق حالة التحميل -->
+    <div class="row">
+      <span class="muted">تم التحميل: 1100 سؤالًا</span>
+    </div>
+
+    <!-- زر إنهاء أعلى اليسار -->
+    <div class="row end-top">
+      <button id="endTop" class="btn btn-danger align-left">إنهاء الاختبار</button>
+    </div>
+
+    <!-- قائمة الأسئلة -->
+    <ol id="questions" class="questions"></ol>
+
+    <!-- زر إنهاء أسفل اليسار -->
+    <div class="row end-bottom">
+      <button id="endBottom" class="btn btn-danger align-left">إنهاء الاختبار</button>
     </div>
   </div>
 
-  <div class="rule"></div>
-
-  <div class="count-row">
-    <div>حدِّد عدد أسئلة الاختبار</div>
-    <div id="qCount">20</div>
-  </div>
-  <input id="countSlider" type="range" min="5" max="50" step="1" value="20" style="width:100%"/>
-
-  <div class="slider-wrap">
-    <div class="tip">انقر للتبديل بين % وعدد الأسئلة. اسحب الفواصل لتغيير التوزيع.</div>
-    <div id="tri" class="tri" aria-label="منزلق ثلاثي">
-      <div id="seg1" class="seg">33%</div>
-      <div id="seg2" class="seg">33%</div>
-      <div id="seg3" class="seg">34%</div>
-      <div id="h1" class="handle h1"></div>
-      <div id="h2" class="handle h2"></div>
-    </div>
-    <div class="legend">
-      <span class="badge"><span class="dot" style="background:var(--chip1)"></span>النون الساكنة والتنوين</span>
-      <span class="badge"><span class="dot" style="background:var(--chip2)"></span>الميم الساكنة</span>
-      <span class="badge"><span class="dot" style="background:var(--chip3)"></span>أحكام المدود</span>
-      <span id="modeHint" class="small">الوضع: نسب مئوية</span>
-    </div>
-  </div>
-
-  <div class="rule"></div>
-
-  <div id="qList"></div>
-
-  <div class="end-row">
-    <button class="btn end" id="endTop">إنهاء الاختبار</button>
-  </div>
-</div>
-
-<script src="app.js"></script>
-</body></html>
+  <script src="app.js"></script>
+</body>
+</html>
