@@ -1,24 +1,90 @@
-<!doctype html><html lang="ar" dir="rtl"><head>
-<meta charset="utf-8"><title>Quiz</title>
-<style>
-/* === Highlight v2 === */
-.ayah { font-size: 1em !important; color:#000; }
-.ayah-target{
-  color:#15803d !important;
-  font-weight:700;
-  font-size:1.2em !important;
-  background-color:#e6f4ea;
-  border-radius:6px;
-  padding:1px 3px;
-  display:inline;
-  line-height:1.8;
-}
-.review-mode .ayah-target:hover{
-  background-color:#dbeafe;
-  color:#1e3a8a;
-}
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>التجويد – الاختبار</title>
+  <style>
+    body{font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Naskh Arabic", "Amiri", "KFGQPC Uthmanic Script HAFS", sans-serif; line-height:1.9;}
+    .container{max-width:960px;margin:24px auto;padding:16px;}
+    /* === Highlight v3 === */
+    .ayah{font-size:1em !important;color:#000;}
+    .ayah-target{
+      color:#15803d !important;
+      font-weight:700;
+      font-size:1.2em !important;
+      background:#e6f4ea;
+      border-radius:6px;
+      padding:1px 4px;
+      display:inline;
+      line-height:1.6;
+    }
+    .review-mode .ayah-target:hover{
+      background-color:#dbeafe;
+      color:#1e3a8a;
+      transform:scale(1.03);
+      transition:background-color .25s, transform .1s;
+    }
+    .question{margin:24px 0;}
+    .q-stem{font-size:1.35rem;}
+    .opts{margin-top:12px;}
+    .opt{margin:8px 0;display:flex;gap:8px;align-items:center;}
+    .opt input{transform:scale(1.2);}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 style="margin-bottom:8px;">التجويد – الاختبار (عرض توضيحي)</h1>
+    <p style="margin-top:0;color:#666">هذا الملف يبرهن تحويل الأقواس [[...]] إلى كلمات ملوّنة داخل نص السؤال.</p>
 
-</style>
-</head><body>
-<!-- placeholder; integrate into your repo -->
-</body></html>
+    <!-- مثال توضيحي بسيط: انسخ نفس السكربت إلى مشروعك الفعلي -->
+    <div class="question">
+      <div class="q-stem question-text ayah">قال تعالى: ﴿كَلَّا لَئِنْ لَمْ يَنْتَهِ لَنَسْفَعًا بِالنَّاصِيَةِ﴾ – أين الكلمة المستهدفة؟ [[النَّاصِيَةِ]]</div>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="q1"> مثال</label>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // === v3: تحويل [[...]] إلى <span class="ayah-target">...</span> بشكل آمن ودوري ===
+    function applyAyahHighlight(root = document){
+      const nodes = root.querySelectorAll('.question, .question-stem, .question-text, .ayah, .quiz-body, .quiz-container');
+      nodes.forEach(el => {
+        const html = el.innerHTML;
+        if(!html) return;
+        // لا نكرر إذا كانت التحويلات مطبقة
+        if(html.indexOf('ayah-target') !== -1) return;
+        const replaced = html.replace(/\[\[([\s\S]*?)\]\]/g, '<span class="ayah-target">$1</span>');
+        if(replaced !== html) el.innerHTML = replaced;
+      });
+    }
+
+    // مراقبة تغييرات DOM لأن الأسئلة تُبنى ديناميكياً
+    const observer = new MutationObserver(mutations => {
+      for(const m of mutations){
+        if(m.addedNodes && m.addedNodes.length){
+          applyAyahHighlight(document);
+          break;
+        }
+      }
+    });
+    observer.observe(document.body, {childList:true, subtree:true});
+
+    // تشغيل أولي
+    document.addEventListener('DOMContentLoaded', () => applyAyahHighlight(document));
+
+    // إذا كان لديك دالة ترسم الأسئلة، يمكن التفافها هكذا:
+    (function wrapRender(){
+      const orig = window.renderQuestions;
+      if(typeof orig === 'function'){
+        window.renderQuestions = function(){
+          const r = orig.apply(this, arguments);
+          requestAnimationFrame(() => applyAyahHighlight(document));
+          return r;
+        };
+      }
+    })();
+  </script>
+</body>
+</html>
