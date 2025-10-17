@@ -1,6 +1,6 @@
 {
   "version": "v3",
-  "schema": "tajweedy-questions-demo",
+  "schema": "tajweedy-questions-12parts",
   "sections": {
     "noon_tanween": {
       "title": "أحكام النون الساكنة والتنوين",
@@ -8,38 +8,14 @@
         "idhar_halaqi": [
           {
             "qnum": 1,
-            "question": "قال تعالى: {كَلَّا لَئِن لَمْ يَنتَهِ لَنَسْفَعًا [[بِالنَّاصِيَةِ]]}- أين الكلمة المستهدفة؟",
-            "options": [],
-            "answer": 1,
-            "explain": ""
-          }
-        ]
-      }
-    },
-    "meem_sakinah": {
-      "title": "الميم الساكنة",
-      "parts": {
-        "ikhfa_shafawi": [
-          {
-            "qnum": 1,
-            "question": "قال تعالى: {إِنَّ [[رَبَّهُم]] بِهِمْ}- ما حكم الميم الساكنة؟",
-            "options": [],
-            "answer": 3,
-            "explain": ""
-          }
-        ]
-      }
-    },
-    "ahkam_mudood": {
-      "title": "أحكام المدود",
-      "parts": {
-        "madd_tabi3i": [
-          {
-            "qnum": 1,
-            "question": "قال تعالى: {وَأَنزَلَ [[بِهِ]] رُوحُ الأمين}- ما نوع المد؟",
-            "options": [],
-            "answer": 1,
-            "explain": ""
+            "question": "قال تعالى: {كَلَّا لَئِن لَّمْ يَنتَهِ [[لَنَسْفَعًا]] بِٱلنَّاصِيَةِ}- ما حكم؟",
+            "options": [
+              "إظهار",
+              "إدغام",
+              "إخفاء",
+              "إقلاب"
+            ],
+            "answer": 2
           }
         ]
       }

@@ -1,74 +1,75 @@
+
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>إعداد الاختبار — المنزلق الثلاثي (مقبضان)</title>
-
-  <!-- noUiSlider (CDN) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
-
-  <link rel="stylesheet" href="./style.css"/>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>التجويد — الاختبار</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="container">
+  <div class="container">
+    <div class="topbar">
+      <h1>إعداد الاختبار</h1>
+      <button id="darkToggle" class="toggle" title="الوضع">🌞</button>
+    </div>
 
-    <header class="top">
-      <div class="row">
-        <label class="lbl" for="traineeName">اسم المتدرب</label>
-        <input id="traineeName" class="input" placeholder="اكتب اسم المتدرب"/>
+    <div class="section">
+      <div class="controls-grid">
+        <div>
+          <label>اسم المتدرب</label>
+          <input id="trainee" type="text" placeholder="اكتب اسم المتدرب">
+        </div>
+        <div>
+          <label>القسم</label>
+          <select>
+            <option>النون الساكنة والتنوين</option>
+            <option>الميم الساكنة</option>
+            <option>أحكام المدود</option>
+          </select>
+        </div>
       </div>
 
-      <div class="row g">
-        <select id="sectionSelect" class="select">
-          <option value="noon">النون الساكنة والتنوين</option>
-          <option value="meem">الميم الساكنة</option>
-          <option value="madd">أحكام المدود</option>
-        </select>
-
-        <button id="shortQuiz" class="btn btn-secondary">بدء اختبار قصير (٥ أسئلة للقسم المحدد)</button>
-        <button id="fullQuiz" class="btn btn-primary">بدء اختبار شامل</button>
+      <div class="row" style="margin-top:12px">
+        <button class="btn btn-primary">بدء اختبار شامل</button>
+        <button class="btn btn-ghost">بدء اختبار قصير (٥ أسئلة للقسم المحدد)</button>
       </div>
 
-      <div class="row">
-        <label class="lbl">حدّد عدد أسئلة الاختبار</label>
-        <input type="range" id="totalCount" min="5" max="100" value="20"/>
-        <span id="totalCountVal" class="hint">20</span>
+      <div class="section" style="margin-top:12px">
+        <label>حدّد عدد أسئلة الاختبار</label>
+        <input id="total" type="range" min="5" max="50" value="20" style="width:100%">
+        <div class="small">انقر أو اسحب الفواصل لتعديل العرض % بين الأقسام. انقر على الشريط للتبديل بين % و عدد الأسئلة.</div>
+
+        <div class="slider-wrap">
+          <div class="tri-track" id="triTrack">
+            <div class="segment seg-a"><span>33%</span></div>
+            <div class="segment seg-b"><span>33%</span></div>
+            <div class="segment seg-c"><span>34%</span></div>
+            <div class="handle handle-a"></div>
+            <div class="handle handle-b"></div>
+          </div>
+          <div class="row pills">
+            <span class="badge"><span class="dot a"></span> النون الساكنة والتنوين: <span class="txt">33%</span></span>
+            <span class="badge"><span class="dot b"></span> الميم الساكنة: <span class="txt">33%</span></span>
+            <span class="badge"><span class="dot c"></span> أحكام المدود: <span class="txt">34%</span></span>
+            <button id="resetDist" class="btn btn-ghost" style="margin-inline-start:auto">توزيع افتراضي</button>
+          </div>
+        </div>
       </div>
-    </header>
+    </div>
 
-    <section class="tri-box">
-      <div class="tri-head">
-        <span class="hint">انقر أو اسحب الفواصل لتعديل العرض % بين الأقسام، الضغط يبدّل الوحدة: النِّسب ↔ الأعداد</span>
-        <button id="resetDefault" class="btn btn-light">توزيع افتراضي</button>
-      </div>
+    <div class="end-buttons">
+      <button class="btn btn-danger">إنهاء الاختبار</button>
+    </div>
 
-      <!-- Slider with two handles (three parts) -->
-      <div id="triSlider" class="tri-slider" title="انقر للتبديل بين النِّسب والأعداد"></div>
+    <h3>أسئلة تجريبية (لعرض التلوين فقط)</h3>
+    <div id="sampleZone"></div>
 
-      <!-- Live legend -->
-      <div class="legend" id="legend">
-        <span class="chip chip-blue" id="chip-noon">النون الساكنة والتنوين <b>33%</b></span>
-        <span class="chip chip-violet" id="chip-meem">الميم الساكنة <b>33%</b></span>
-        <span class="chip chip-gold" id="chip-madd">أحكام المدود <b>34%</b></span>
-      </div>
-      <div class="tiny">تم التحميل: <span id="bankCount">—</span> سؤالًا</div>
-    </section>
+    <div class="footer-end">
+      <button class="btn btn-danger">إنهاء الاختبار</button>
+    </div>
+  </div>
 
-    <hr>
-
-    <section class="examples">
-      <h3>أسئلة تجريبية (لعرض التلوين فقط)</h3>
-      <ol id="demoList" class="q-list"></ol>
-    </section>
-
-    <footer class="footer">
-      <button class="btn btn-danger left" id="finishTop">إنهاء الاختبار</button>
-      <button class="btn btn-danger left" id="finishBottom">إنهاء الاختبار</button>
-    </footer>
-  </main>
-
-  <script src="./app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
