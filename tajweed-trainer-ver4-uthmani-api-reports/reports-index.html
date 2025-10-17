@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Tajweedy — سجلّ التقارير</title>
+  <style>
+    :root{ --brand:#166b3b; --ink:#0f172a; --muted:#667085; --bg:#f7f8fb; --card:#ffffff; }
+    html.dark{ --bg:#0b1220; --card:#0f172a; --ink:#e5e7eb; --muted:#9aa4b2; }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"Tajawal","Noto Sans Arabic",Arial,sans-serif}
+    .wrap{max-width:980px;margin:auto;padding:20px 16px}
+    .brand-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .brand-left{display:flex;align-items:center;gap:12px}
+    .brand-left img{width:44px;height:44px;border-radius:10px}
+    .brand-title .name{font-weight:900;color:var(--brand);font-size:1.25rem}
+    .brand-title .sub{color:var(--muted);font-size:.95rem}
+    .tools{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+    .btn{border:1px solid #e2e8f0;background:#fff;color:#0f172a;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:700}
+    .btn.warn{background:#dc2626;color:#fff;border-color:#dc2626}
+    .card{background:var(--card);border:1px solid rgba(2,6,12,.06);border-radius:14px;box-shadow:0 10px 24px rgba(2,6,12,.06);padding:16px}
+    input[type="search"], select{border:1px solid #e2e8f0;background:#fff;color:var(--ink);border-radius:10px;padding:10px 12px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:10px;border-bottom:1px dashed rgba(2,6,12,.08);text-align:start}
+    th{color:var(--muted);font-weight:800}
+    code{background:rgba(2,6,12,.06);padding:2px 6px;border-radius:6px}
+    .empty{color:var(--muted);text-align:center;padding:20px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand-head">
+      <div class="brand-left">
+        <img src="./assets/logo/tajweedy-logo.png" alt="Tajweedy"/>
+        <div class="brand-title">
+          <div class="name">Tajweedy</div>
+          <div class="sub">سجلّ التقارير (محلي)</div>
+        </div>
+      </div>
+      <div>
+        <button id="toggleTheme" class="btn">🌙/☀️</button>
+        <a class="btn" href="./reports.html">العودة لصفحة التقارير</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tools">
+        <input id="q" type="search" placeholder="ابحث بالاسم أو المعرّف أو التاريخ…"/>
+        <select id="sort">
+          <option value="date_desc">الأحدث أولًا</option>
+          <option value="date_asc">الأقدم أولًا</option>
+          <option value="name_asc">الاسم (أ-ي)</option>
+          <option value="name_desc">الاسم (ي-أ)</option>
+          <option value="count_desc">عدد الأسئلة (تنازلي)</option>
+          <option value="count_asc">عدد الأسئلة (تصاعدي)</option>
+        </select>
+        <button id="exportCSV" class="btn">تصدير CSV</button>
+        <button id="clearAll" class="btn warn">حذف الكل</button>
+      </div>
+
+      <table id="tbl">
+        <thead><tr><th>المعرّف</th><th>الاسم</th><th>التاريخ</th><th>عدد الأسئلة</th><th>إجراءات</th></tr></thead>
+        <tbody></tbody>
+      </table>
+
+      <div id="empty" class="empty" hidden>لا توجد تقارير محفوظة بعد.</div>
+    </div>
+  </div>
+
+  <script src="./reports-index.js"></script>
+</body>
+</html>
