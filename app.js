@@ -1,93 +1,161 @@
-// حفظ اسم المتدرّب
-const traineeNameEl = document.getElementById('traineeName');
-traineeNameEl.value = localStorage.getItem('traineeName') || '';
-traineeNameEl.addEventListener('input', () => localStorage.setItem('traineeName', traineeNameEl.value));
 
-// الأزرار
-document.getElementById('btnShort').addEventListener('click', () => {
-  // هنا مناداة منطق الاختبار القصير الحقيقي لديك
-  alert('بدء اختبار قصير للقسم المحدد');
-});
+const trainee = document.getElementById('trainee');
+const sectionSel = document.getElementById('section');
+const btnShort = document.getElementById('btnShort');
+const btnFull = document.getElementById('btnFull');
+const themeBtn = document.getElementById('theme');
+const countSlider = document.getElementById('countSlider');
+const qCountLabel = document.getElementById('qCount');
+const tri = document.getElementById('tri');
+const segs = [document.getElementById('seg1'), document.getElementById('seg2'), document.getElementById('seg3')];
+const handles = [document.getElementById('h1'), document.getElementById('h2')];
+const modeHint = document.getElementById('modeHint');
+const qList = document.getElementById('qList');
+const endTop = document.getElementById('endTop');
 
-document.getElementById('btnFull').addEventListener('click', () => {
-  alert('بدء اختبار شامل');
-});
-
-// إنهاء الاختبار + تحذير الأسئلة غير المُجابة
-function hasUnanswered() {
-  return [...document.querySelectorAll('.question')].some(q=>!q.querySelector('input[type=radio]:checked'));
+// ---- theme
+function loadTheme(){
+  const t = localStorage.getItem('tajweed_theme') || 'dark';
+  document.documentElement.className = (t === 'light') ? 'light' : 'dark';
 }
-function gradeAndShowResults(){
-  alert('تم إنهاء الاختبار (مثال توضيحي)');
+loadTheme();
+themeBtn.addEventListener('click', ()=>{
+  const nowLight = document.documentElement.classList.contains('light');
+  document.documentElement.className = nowLight ? 'dark' : 'light';
+  localStorage.setItem('tajweed_theme', nowLight ? 'dark' : 'light');
+});
+
+// ---- trainee
+trainee.value = localStorage.getItem('tajweed_trainee') || '';
+trainee.addEventListener('input', ()=> localStorage.setItem('tajweed_trainee', trainee.value));
+
+// ---- question count
+qCountLabel.textContent = countSlider.value;
+countSlider.addEventListener('input', ()=> qCountLabel.textContent = countSlider.value);
+
+// ---- tri-slider state
+let total = 100;
+let pcts = [33,33,34]; // [noon, meem, madd]
+let showCounts = false;
+
+function refreshSegs(){
+  for(let i=0;i<3;i++){
+    segs[i].style.width = pcts[i]+'%';
+    segs[i].textContent = showCounts ? Math.round(pcts[i]*countSlider.value/100) : pcts[i]+'%';
+  }
+  handles[0].style.left = pcts[0]+'%';
+  handles[1].style.left = (pcts[0]+pcts[1])+'%';
+  modeHint.textContent = 'الوضع: ' + (showCounts ? 'أعداد الأسئلة' : 'نِسَب مئوية');
+}
+refreshSegs();
+
+// toggle display
+tri.addEventListener('click', (e)=>{
+  if(e.target.classList.contains('handle')) return; // ignore when dragging
+  showCounts = !showCounts;
+  refreshSegs();
+});
+
+// drag logic
+let dragging = -1, startX=0, startPcts=null;
+handles.forEach((h,idx)=>{
+  h.addEventListener('mousedown', startDrag(idx));
+  h.addEventListener('touchstart', startDrag(idx), {passive:false});
+});
+function startDrag(idx){
+  return (ev)=>{
+    ev.preventDefault();
+    dragging = idx;
+    startX = ('touches' in ev) ? ev.touches[0].clientX : ev.clientX;
+    startPcts = [...pcts];
+    window.addEventListener('mousemove', onMove, {passive:false});
+    window.addEventListener('touchmove', onMove, {passive:false});
+    window.addEventListener('mouseup', endDrag);
+    window.addEventListener('touchend', endDrag);
+  };
+}
+function onMove(ev){
+  if(dragging<0) return;
+  const x = ('touches' in ev) ? ev.touches[0].clientX : ev.clientX;
+  const dx = x - startX;
+  const rect = tri.getBoundingClientRect();
+  const dPct = (dx/rect.width)*100;
+  if(dragging===0){
+    let newP0 = clamp(startPcts[0]+dPct, 5, 95-startPcts[2]); // leave room for others
+    pcts[1] = startPcts[1] + (startPcts[0]-newP0);
+    pcts[0] = newP0;
+  }else{
+    let cut = startPcts[0]+startPcts[1];
+    let newCut = clamp(cut+dPct, startPcts[0]+5, 95);
+    pcts[1] = newCut - pcts[0];
+    pcts[2] = 100 - newCut;
+  }
+  refreshSegs();
+}
+function endDrag(){
+  dragging=-1;
+  window.removeEventListener('mousemove', onMove);
+  window.removeEventListener('touchmove', onMove);
+  window.removeEventListener('mouseup', endDrag);
+  window.removeEventListener('touchend', endDrag);
+}
+function clamp(v,min,max){return Math.max(min, Math.min(max,v));}
+
+// ---- demo questions with [[target]] markers
+const BANK = [
+  {section:'noon', text:'قال تعالى: {كَلّا لَئِنْ لَمْ يَنْتَهِ لَنَسْفَعًا بِالنَّاصِيَةِ} - ما حكم النون الساكنة؟', target:'[[يَنْتَهِ]]', options:['إظهار','إدغام','إخفاء','إقلاب'], answer:2},
+  {section:'noon', text:'قال تعالى: {مِنْ رَبِّهِمْ} - ما حكم النون الساكنة؟', target:'[[مِنْ]]', options:['إظهار','إدغام','إخفاء','إقلاب'], answer:0},
+  {section:'meem', text:'قال تعالى: {هُمْ يَسْأَلُونَكَ} - ما حكم الميم الساكنة؟', target:'[[هُمْ]]', options:['إظهار شفوي','إدغام شفوي','إخفاء شفوي','قلب'], answer:2},
+  {section:'meem', text:'قال تعالى: {إِنَّهُمْ بِهِ} - ما حكم الميم الساكنة؟', target:'[[هُمْ]]', options:['إظهار شفوي','إدغام شفوي','إخفاء شفوي','قلب'], answer:0},
+  {section:'madd', text:'قال تعالى: {قَالُوا يَا أَبَانَا} - ما نوع المد؟', target:'[[قَالُوا]]', options:['مد طبيعي','مد منفصل','مد متصل','مد لازم'], answer:0},
+  {section:'madd', text:'قال تعالى: {جَاءَ} - ما نوع المد؟', target:'[[جَاءَ]]', options:['مد طبيعي','مد منفصل','مد متصل','مد لازم'], answer:2},
+];
+
+function renderQuestion(q, idx){
+  const card = document.createElement('div'); card.className='card';
+  const text = document.createElement('div'); text.className='qtext ayah';
+  text.innerHTML = colorTarget(q.text, q.target);
+  card.appendChild(text);
+
+  const opts = document.createElement('div'); opts.className='opts';
+  q.options.forEach((label,i)=>{
+    const opt = document.createElement('label'); opt.className='opt';
+    const radio = document.createElement('input'); radio.type='radio'; radio.name='q'+idx; radio.value=i;
+    const span = document.createElement('span'); span.textContent = label;
+    opt.appendChild(radio); opt.appendChild(span); opts.appendChild(opt);
+  });
+  card.appendChild(opts);
+  return card;
+}
+function colorTarget(text, target){
+  const escaped = target.replaceAll('[','\[').replaceAll(']','\]');
+  const re = new RegExp(escaped, 'g');
+  return (text+' ').replace(re, (m)=>'<span class="ayah-target">'+m.replaceAll('[','').replaceAll(']','')+'</span>');
+}
+
+function buildDemo(){
+  qList.innerHTML='';
+  const N = +countSlider.value;
+  // pick N from BANK cycling
+  for(let i=0;i<Math.min(N, BANK.length); i++){
+    qList.appendChild(renderQuestion(BANK[i%BANK.length], i));
+  }
+  appendBottomEnd();
+}
+function appendBottomEnd(){
+  const row = document.createElement('div'); row.className='end-row';
+  const btn = document.createElement('button'); btn.className='btn end'; btn.textContent='إنهاء الاختبار';
+  btn.onclick = handleEnd;
+  row.appendChild(btn);
+  qList.appendChild(row);
 }
 function handleEnd(){
-  if (hasUnanswered()){
-    if (!confirm('هناك أسئلة غير مُجابة. هل تريد إنهاء الاختبار؟')) return;
-  }
-  gradeAndShowResults();
+  // demo only
+  const unanswered = [...document.querySelectorAll('.opts')].filter(x=>!x.querySelector('input:checked')).length;
+  if(unanswered>0 && !confirm('لا تزال هناك أسئلة بلا إجابة ('+unanswered+'). هل تريد الإنهاء؟')) return;
+  alert('تم الإنهاء (عرض تجريبي). اربط هذه الدالة بمصحّحك.');
 }
-document.getElementById('btnEndTop').onclick = handleEnd;
-document.getElementById('btnEndBottom').onclick = handleEnd;
+endTop.onclick = handleEnd;
 
-// عدد الأسئلة
-const qRange = document.getElementById('qRange');
-const qCountSpan = document.getElementById('qCount');
-let totalQuestionsSelected = parseInt(qRange.value,10);
-qRange.addEventListener('input', e=>{
-  totalQuestionsSelected = parseInt(e.target.value,10);
-  qCountSpan.textContent = totalQuestionsSelected;
-  renderDistributionBars();
-});
-
-// نسب الأقسام الابتدائية
-let percents = { noon:33, meem:33, madd:34 };
-
-// وضع العرض
-let sliderMode = localStorage.getItem('sliderMode') || 'percent';
-
-function computeAllocation(total, P){ // P: [p1,p2,p3]
-  let counts = P.map(p=>Math.floor(total*p/100));
-  let sum = counts.reduce((a,b)=>a+b,0);
-  let ord = P.map((p,i)=>[p,i]).sort((a,b)=>b[0]-a[0]).map(x=>x[1]);
-  for(let i=0;i<total-sum;i++) counts[ord[i%3]]++;
-  return counts;
-}
-
-function renderDistributionBars(){
-  const P = [percents.noon, percents.meem, percents.madd];
-  const C = computeAllocation(totalQuestionsSelected, P);
-
-  const bars = document.querySelectorAll('.dist-bar');
-  const labels = document.querySelectorAll('.dist-label');
-  [0,1,2].forEach(i => {
-    bars[i].style.flex = P[i];
-    labels[i].textContent = (sliderMode==='percent') ? `${P[i]}%` : `${C[i]}`;
-  });
-
-  const badges = document.querySelectorAll('.dist-badge span');
-  [0,1,2].forEach(i => {
-    badges[i].textContent = (sliderMode==='percent') ? `${P[i]}%` : `${C[i]}`;
-  });
-}
-
-function toggleSliderMode(){
-  sliderMode = (sliderMode==='percent')?'count':'percent';
-  localStorage.setItem('sliderMode', sliderMode);
-  renderDistributionBars();
-}
-
-document.addEventListener('click', (e)=>{
-  if (e.target.closest('.dist-bar') || e.target.closest('.dist-badge') || e.target.closest('#dist-mode-toggle')) {
-    toggleSliderMode();
-  }
-});
-
-// تفعيل الوضع الفاتح/الداكن (اختياري بسيط)
-function setTheme(mode){
-  document.body.classList.toggle('light', mode==='light');
-  localStorage.setItem('theme', mode);
-}
-setTheme(localStorage.getItem('theme') || 'dark');
-
-// بداية
-renderDistributionBars();
+btnShort.onclick = buildDemo;
+btnFull.onclick = buildDemo;

@@ -1,85 +1,60 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
+
+<!doctype html><html lang="ar" dir="rtl" class="dark">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>التجويد — الاختبار</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>التجويد — الاختبار</title>
+<link rel="stylesheet" href="style.css"/>
 </head>
-<body class="theme-auto">
-  <div class="page">
-
-    <!-- ===== رأس الصفحة المرتّب ===== -->
-    <div class="header-grid">
-      <!-- السطر 1: اسم المتدرّب -->
-      <div class="row">
-        <input id="traineeName" type="text" placeholder="اسم المتدرّب" autocomplete="name">
-      </div>
-
-      <!-- السطر 2: القائمة + اختبار قصير -->
-      <div class="row">
-        <select id="sectionSelect" class="w-auto">
-          <option value="noon">النون الساكنة والتنوين</option>
-          <option value="meem">الميم الساكنة</option>
-          <option value="madd">أحكام المدود</option>
-        </select>
-        <button id="btnShort" class="btn btn-short">بدء اختبار قصير (٥ أسئلة للقسم المحدد)</button>
-      </div>
-
-      <!-- السطر 3: اختبار شامل -->
-      <div class="row">
-        <button id="btnFull" class="btn btn-primary">بدء اختبار شامل</button>
-      </div>
+<body>
+<div class="container">
+  <div class="topbar">
+    <input id="trainee" class="input" placeholder="اسم المتدرّب"/>
+    <select id="section" class="input">
+      <option value="noon">النون الساكنة والتنوين</option>
+      <option value="meem">الميم الساكنة</option>
+      <option value="madd">أحكام المدود</option>
+    </select>
+    <div class="hstack switch">
+      <button id="btnShort" class="btn short">بدء اختبار قصير (٥ أسئلة للقسم المحدد)</button>
+      <button id="btnFull" class="btn full">بدء اختبار شامل</button>
+      <button id="theme" class="toggle" title="الوضع الفاتح/الداكن">🌙 / ☀️</button>
     </div>
-
-    <!-- زر إنهاء أعلى اليسار -->
-    <div class="end-top">
-      <button id="btnEndTop" class="btn btn-danger">إنهاء الاختبار</button>
-    </div>
-
-    <!-- التحكم بعدد الأسئلة -->
-    <div class="controls">
-      <label for="qRange" class="lbl">حدّد عدد أسئلة الاختبار</label>
-      <input id="qRange" type="range" min="5" max="100" value="20">
-      <div class="qcount"><span id="qCount">20</span></div>
-    </div>
-
-    <!-- توزيع الأقسام -->
-    <div id="dist-mode-toggle" class="dist-mode-hint">انقر للتبديل بين ٪ وعدد الأسئلة</div>
-
-    <div class="dist-bars">
-      <div class="dist-bar dist-noon"><span class="dist-label">33%</span></div>
-      <div class="dist-bar dist-meem"><span class="dist-label">33%</span></div>
-      <div class="dist-bar dist-madd"><span class="dist-label">34%</span></div>
-    </div>
-
-    <div class="dist-badges">
-      <div class="dist-badge dist-noon"><i class="dot"></i> النون الساكنة والتنوين <span>33%</span></div>
-      <div class="dist-badge dist-meem"><i class="dot"></i> الميم الساكنة <span>33%</span></div>
-      <div class="dist-badge dist-madd"><i class="dot"></i> أحكام المدود <span>34%</span></div>
-    </div>
-
-    <div class="loaded-note">تم التحميل: <strong>1100</strong> سؤالًا</div>
-
-    <!-- أسئلة (تمثيليًا) -->
-    <div id="questions">
-      <!-- المثال التالي فقط لتجربة زر الإنهاء والحساب -->
-      <div class="question">
-        <div class="qtitle">1. قال تعالى: ... ما حكم النون الساكنة؟</div>
-        <label><input type="radio" name="q1"> إظهار</label>
-        <label><input type="radio" name="q1"> إدغام</label>
-        <label><input type="radio" name="q1"> إخفاء</label>
-        <label><input type="radio" name="q1"> إقلاب</label>
-      </div>
-    </div>
-
-    <!-- زر إنهاء أسفل آخر سؤال -->
-    <div class="end-bottom">
-      <button id="btnEndBottom" class="btn btn-danger">إنهاء الاختبار</button>
-    </div>
-
   </div>
 
-  <script src="app.js"></script>
-</body>
-</html>
+  <div class="rule"></div>
+
+  <div class="count-row">
+    <div>حدِّد عدد أسئلة الاختبار</div>
+    <div id="qCount">20</div>
+  </div>
+  <input id="countSlider" type="range" min="5" max="50" step="1" value="20" style="width:100%"/>
+
+  <div class="slider-wrap">
+    <div class="tip">انقر للتبديل بين % وعدد الأسئلة. اسحب الفواصل لتغيير التوزيع.</div>
+    <div id="tri" class="tri" aria-label="منزلق ثلاثي">
+      <div id="seg1" class="seg">33%</div>
+      <div id="seg2" class="seg">33%</div>
+      <div id="seg3" class="seg">34%</div>
+      <div id="h1" class="handle h1"></div>
+      <div id="h2" class="handle h2"></div>
+    </div>
+    <div class="legend">
+      <span class="badge"><span class="dot" style="background:var(--chip1)"></span>النون الساكنة والتنوين</span>
+      <span class="badge"><span class="dot" style="background:var(--chip2)"></span>الميم الساكنة</span>
+      <span class="badge"><span class="dot" style="background:var(--chip3)"></span>أحكام المدود</span>
+      <span id="modeHint" class="small">الوضع: نسب مئوية</span>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <div id="qList"></div>
+
+  <div class="end-row">
+    <button class="btn end" id="endTop">إنهاء الاختبار</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body></html>
