@@ -1,106 +1,110 @@
-// حفظ اسم المتدرّب
-const traineeNameEl = document.getElementById('traineeName');
-traineeNameEl.value = localStorage.getItem('traineeName') || '';
-traineeNameEl.addEventListener('input', ()=>{
-  localStorage.setItem('traineeName', traineeNameEl.value.trim());
+// Utilities
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+// Theme toggle + persisted name
+const body = document.body;
+const nameInput = $('#traineeName');
+const savedName = localStorage.getItem('taj_name');
+if (savedName) nameInput.value = savedName;
+nameInput.addEventListener('input', ()=> localStorage.setItem('taj_name', nameInput.value));
+
+$('#toggleTheme')?.addEventListener('click', ()=>{
+  body.classList.toggle('theme-light');
+  body.classList.toggle('theme-dark');
+  localStorage.setItem('taj_theme', body.classList.contains('theme-dark') ? 'dark' : 'light');
 });
+// Apply saved theme
+const savedTheme = localStorage.getItem('taj_theme');
+if (savedTheme === 'light'){ body.classList.remove('theme-dark'); body.classList.add('theme-light'); }
 
-// منزلق عدد الأسئلة
-const qCountEl = document.getElementById('qCount');
-const qCountValEl = document.getElementById('qCountVal');
-qCountValEl.textContent = qCountEl.value;
-qCountEl.addEventListener('input', ()=> qCountValEl.textContent = qCountEl.value);
+// Count slider
+const countRange = $('#countRange');
+const countValue = $('#countValue');
+countRange.addEventListener('input', ()=> countValue.textContent = countRange.value);
+countValue.textContent = countRange.value;
 
-function getTotalQuestions(){ return parseInt(qCountEl.value, 10) || 20; }
-
-// tri slider with noUiSlider
-const DEFAULT_DIST = [33, 66];
-let triMode = localStorage.getItem('triMode') || 'percent'; // 'percent' | 'count'
-
-const triSliderEl = document.getElementById('triSlider');
-const distToggleBtn = document.getElementById('distToggle');
-const distResetBtn  = document.getElementById('distReset');
-const valA = document.getElementById('valA');
-const valB = document.getElementById('valB');
-const valC = document.getElementById('valC');
-
-noUiSlider.create(triSliderEl, {
-  start: DEFAULT_DIST,
+// Tri slider (noUiSlider with 2 handles to split 3 segments)
+const tri = document.getElementById('triSlider');
+noUiSlider.create(tri, {
+  start: [33, 66],
   connect: [true, true, true],
   range: { min: 0, max: 100 },
-  step: 1
+  step: 1,
+  direction: 'rtl'
 });
+let showPercent = true;
+const pNoon = $('#pNoon'), pMeem = $('#pMeem'), pMadd = $('#pMadd');
 
-function getPercents() {
-  const [p1, p2] = triSliderEl.noUiSlider.get().map(v => Math.round(parseFloat(v)));
-  const a = p1, b = p2 - p1, c = 100 - p2;
-  return [a,b,c];
-}
-function countsFromPercents(totalQ) {
-  const [a,b,c] = getPercents();
-  let A = Math.round(totalQ * a/100);
-  let B = Math.round(totalQ * b/100);
-  let C = totalQ - A - B;
-  return [A,B,C];
-}
-function renderTriLabels(){
-  const totalQ = getTotalQuestions();
-  if (triMode === 'percent'){
-    const [a,b,c] = getPercents();
-    valA.textContent = `${a}%`; valB.textContent = `${b}%`; valC.textContent = `${c}%`;
-    distToggleBtn.textContent = '٪';
+function updateBadges(){
+  const [h1, h2] = tri.noUiSlider.get().map(v=>Math.round(parseFloat(v)));
+  const a = h1;
+  const b = h2 - h1;
+  const c = 100 - h2;
+  const total = parseInt(countRange.value,10);
+  const sA = Math.round(total * a/100);
+  const sB = Math.round(total * b/100);
+  const sC = total - sA - sB;
+  if (showPercent){
+    pNoon.textContent = a + '%';
+    pMeem.textContent = b + '%';
+    pMadd.textContent = c + '%';
   }else{
-    const [A,B,C] = countsFromPercents(totalQ);
-    valA.textContent = `${A} سؤال`; valB.textContent = `${B} سؤال`; valC.textContent = `${C} سؤال`;
-    distToggleBtn.textContent = '#';
+    pNoon.textContent = sA + ' سؤال';
+    pMeem.textContent = sB + ' سؤال';
+    pMadd.textContent = sC + ' سؤال';
   }
 }
-triSliderEl.noUiSlider.on('update', renderTriLabels);
-distToggleBtn.addEventListener('click', ()=>{
-  triMode = (triMode === 'percent') ? 'count' : 'percent';
-  localStorage.setItem('triMode', triMode);
-  renderTriLabels();
-});
-distResetBtn.addEventListener('click', ()=> triSliderEl.noUiSlider.set(DEFAULT_DIST));
-qCountEl.addEventListener('input', renderTriLabels);
-renderTriLabels();
+tri.noUiSlider.on('update', updateBadges);
+countRange.addEventListener('input', updateBadges);
+updateBadges();
 
-// مثال: تلوين الكلمات المستهدفة عبر [[...]] إن وجدت
-function highlightTargetsInContainer(container){
-  const mark = (node)=>{
-    if (node.nodeType !== Node.TEXT_NODE) return;
-    const text = node.nodeValue;
-    if (!text || text.indexOf('[[') === -1) return;
-    const parts = text.split(/(\[\[.*?\]\])/g);
-    const frag = document.createDocumentFragment();
-    parts.forEach(p => {
-      const m = p.match(/^\[\[(.*?)\]\]$/);
-      if (m){
-        const span = document.createElement('span');
-        span.className = 'ayah-target';
-        span.textContent = m[1];
-        frag.appendChild(span);
-      }else{
-        frag.appendChild(document.createTextNode(p));
-      }
-    });
-    node.parentNode.replaceChild(frag, node);
-  };
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
-  const nodes = [];
-  while (walker.nextNode()) nodes.push(walker.currentNode);
-  nodes.forEach(mark);
+// Toggle % / count
+$('#toggleMode').addEventListener('click', ()=>{
+  showPercent = !showPercent;
+  $('#toggleMode').textContent = showPercent ? '٪' : '#';
+  updateBadges();
+});
+// Reset distribution
+$('#resetDist').addEventListener('click', ()=>{
+  tri.noUiSlider.set([33,66]);
+});
+
+// End test buttons confirmation
+function confirmEnd(){
+  const unanswered = $$('.qcard input[type="radio"]').length ?
+    $$('.qcard').filter(q => !q.querySelector('input[type="radio"]:checked')).length : 0;
+  const warn = unanswered ? `يوجد ${unanswered} سؤال/أسئلة بدون إجابة. هل تريد إنهاء الاختبار؟` : 'هل تريد إنهاء الاختبار؟';
+  if (confirm(warn)){
+    alert('تم إنهاء الاختبار (عرض توضيحي).');
+  }
+}
+$('#endTop').addEventListener('click', confirmEnd);
+$('#endBottom').addEventListener('click', confirmEnd);
+
+// --- Demo questions & highlighting ---
+// Minimal demo list. Replace with real loader if needed.
+const sample = [
+  {q:"قال تعالى: {كَلَّا لَئِن لَمْ يَنتَهِ لَنَسْفَعًا [[بِالنَّاصِيَةِ]]}- أين الكلمة المستهدفة؟", options:["مثال"], answer:1},
+  {q:"قال تعالى: {وَأَنزَلَ [[بِهِ]] رُوحُ الأمين}- ما حكم النون الساكنة؟", options:["إظهار","إدغام","إخفاء","إقلاب"], answer:3},
+  {q:"قال تعالى: {إِنَّ [[رَبَّهُم]] بِهِمْ}- ما حكم الميم الساكنة؟", options:["إظهار شفوي","إدغام شفوي","إخفاء شفوي قلب","إقلاب"], answer:3},
+];
+
+function ayahHighlight(str){
+  return str.replace(/\[\[([\s\S]+?)\]\]/g, '<span class="ayah-target">$1</span>');
 }
 
-// أمثلة تجريبية: أضف أقواسًا لعرض التأثير
-document.addEventListener('DOMContentLoaded', ()=>{
-  // في المثال الأول نُبرز كلمة لنسفعاً و أنزل
-  const ayahs = document.querySelectorAll('.ayah');
-  if (ayahs[0]) ayahs[0].textContent = '﴿كَلَّا لَئِنْ لَمْ يَنْتَهِ لَنَسْفَعًا بِالنَّاصِيَةِ﴾'.replace('لَنَسْفَعًا','[[لَنَسْفَعًا]]');
-  if (ayahs[1]) ayahs[1].textContent = '﴿وَأَنزَلَ بِهِ رُوحُ الْأَمِينِ﴾'.replace('أَنزَلَ','[[أَنزَلَ]]');
-  document.querySelectorAll('.questions').forEach(highlightTargetsInContainer);
-});
-
-// أزرار تجريبية
-document.getElementById('btnFinishTop').addEventListener('click', ()=> alert('سيتم إنهاء الاختبار (تجريبي).'));
-document.getElementById('btnFinishBottom').addEventListener('click', ()=> alert('سيتم إنهاء الاختبار (تجريبي).'));
+function render(){
+  const host = $('#questions');
+  host.innerHTML = '';
+  const tpl = $('#questionTpl');
+  sample.forEach((item, i)=>{
+    const node = tpl.content.cloneNode(true);
+    node.querySelector('.qnum').textContent = i+1;
+    node.querySelector('.qtext').innerHTML = ayahHighlight(item.q);
+    const name = 'q_'+i;
+    node.querySelectorAll('input[type="radio"]').forEach(r=> r.setAttribute('name', name));
+    host.appendChild(node);
+  });
+}
+render();
