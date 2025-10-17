@@ -1,1 +1,1 @@
-// placeholder for compatibility; logic is embedded in quiz.html v7\n
+// placeholder
