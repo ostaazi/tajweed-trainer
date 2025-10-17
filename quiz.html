@@ -179,5 +179,41 @@
   </div>
 
   <script src="quiz.js"></script>
+
+<script>
+// يلف أي نص داخل الأقواس المعقوفة {...} بعنصر span.ayah ليظهر بالرسم العثماني
+function markAyatInQuestions() {
+  const nodes = document.querySelectorAll('.question, .question-text, .quiz-question');
+  nodes.forEach(el => {
+    // تخطّي العناصر التي عولجت مسبقًا
+    if (el.dataset && el.dataset.ayatMarked === '1') return;
+    const walk = (node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.nodeValue;
+        if (text && text.includes('{') && text.includes('}')) {
+          const replaced = text.replace(/\{([^}]+)\}/g, '<span class="ayah">$1</span>');
+          if (replaced !== text) {
+            const wrapper = document.createElement('span');
+            wrapper.innerHTML = replaced;
+            node.parentNode.replaceChild(wrapper, node);
+          }
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        Array.from(node.childNodes).forEach(walk);
+      }
+    };
+    walk(el);
+    if (el.dataset) el.dataset.ayatMarked = "1";
+  });
+}
+// حاول التشغيل بعد تحميل الأسئلة وفي كل تنقل
+document.addEventListener('DOMContentLoaded', () => {
+  markAyatInQuestions();
+  // مراقب تغييرات الـ DOM ليعمل مع أي أسئلة تُضاف ديناميكيًا
+  const obs = new MutationObserver(() => markAyatInQuestions());
+  obs.observe(document.body, {childList: true, subtree: true});
+});
+</script>
+
 </body>
 </html>
