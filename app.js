@@ -1,217 +1,150 @@
 
-// State
+const el = sel => document.querySelector(sel);
+const els = sel => Array.from(document.querySelectorAll(sel));
+
+// Theme toggle
+const themeToggle = el('#themeToggle');
+const root = document.body;
+const THEME_KEY = 'tajweed-theme';
+function setTheme(t){ root.classList.toggle('theme-light', t === 'light'); root.classList.toggle('theme-dark', t !== 'light'); localStorage.setItem(THEME_KEY, t); themeToggle.textContent = t === 'light' ? '☀️' : '🌙'; }
+setTheme(localStorage.getItem(THEME_KEY) || 'dark');
+themeToggle.addEventListener('click', ()=> setTheme(root.classList.contains('theme-light') ? 'dark':'light'));
+
+// Student name
+const nameInput = el('#studentName');
+const NAME_KEY = 'tajweed-student';
+nameInput.value = localStorage.getItem(NAME_KEY) || '';
+nameInput.addEventListener('input', ()=> localStorage.setItem(NAME_KEY, nameInput.value.trim()));
+
+// Questions count
+const qCount = el('#qCount');
+const qCountValue = el('#qCountValue');
 const state = {
-  total: 20,
-  viewMode: 'percent', // percent | count
-  parts: [33, 33, 34], // [noon, meem, madd] percent
-  defaultParts: [33, 33, 34],
-  bank: null,
-  trainee: localStorage.getItem('tajweed_name') || '',
+  total: parseInt(qCount.value,10) || 20,
+  dist: [33,33,34],
+  mode: 'percent' // 'count'
 };
+function updateQCount(){ state.total = parseInt(qCount.value,10); qCountValue.textContent = state.total; paintTri(); }
+qCount.addEventListener('input', updateQCount); updateQCount();
 
-// Elements
-const nameInput = () => document.querySelector('#trainee');
-const darkBtn = () => document.querySelector('#darkToggle');
-const partBadges = () => document.querySelectorAll('.pills .badge');
-const triTrack = () => document.querySelector('.tri-track');
-const segA = () => document.querySelector('.seg-a');
-const segB = () => document.querySelector('.seg-b');
-const segC = () => document.querySelector('.seg-c');
-const hA = () => document.querySelector('.handle-a');
-const hB = () => document.querySelector('.handle-b');
-const totalSlider = () => document.querySelector('#total');
-const sampleZone = () => document.querySelector('#sampleZone');
+// Tri-slider with two handles
+const tri = el('#triSlider'), segA = el('#segA'), segB = el('#segB'), segC = el('#segC');
+const h1 = el('#h1'), h2 = el('#h2'), overlay = el('#overlay');
+const labA = el('#labA'), labB = el('#labB'), labC = el('#labC');
 
-// Dark mode
-function initDark() {
-  const mode = localStorage.getItem('tajweed_theme') || 'dark';
-  document.documentElement.classList.toggle('light', mode === 'light');
-  darkBtn().textContent = mode === 'light' ? '🌙' : '🌞';
-  darkBtn().onclick = () => {
-    const cur = document.documentElement.classList.contains('light') ? 'light' : 'dark';
-    const next = cur === 'light' ? 'dark' : 'light';
-    document.documentElement.classList.toggle('light', next === 'light');
-    darkBtn().textContent = next === 'light' ? '🌙' : '🌞';
-    localStorage.setItem('tajweed_theme', next);
-  };
+function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+function distToCounts(){ return state.dist.map(p=> Math.round(p * state.total / 100)); }
+function countsToDist(counts){
+  const s = counts.reduce((a,b)=>a+b,0) || 1;
+  state.dist = counts.map(c=> Math.round(100*c/s));
+  normalize100();
 }
-
-// Name
-function initName() {
-  nameInput().value = state.trainee;
-  nameInput().addEventListener('input', e => {
-    state.trainee = e.target.value;
-    localStorage.setItem('tajweed_name', state.trainee);
-  });
-}
-
-// Total slider
-function initTotal() {
-  totalSlider().value = state.total;
-  totalSlider().addEventListener('input', () => {
-    state.total = +totalSlider().value;
-    renderBadges();
-    renderSegments();
-  });
-}
-
-// Tri slider (two handles + three segments)
-function initTriSlider() {
-  const track = triTrack();
-  let dragging = null;
-
-  const px = p => (track.clientWidth * p / 100);
-
-  const updateFromHandles = () => {
-    const left = parseFloat(hA().style.left) || 0;
-    const right = parseFloat(hB().style.left) || 0;
-
-    // Handles constrained
-    let p1 = Math.max(0, Math.min(left, track.clientWidth));
-    let p2 = Math.max(p1+12, Math.min(right, track.clientWidth)); // keep gap for handles
-
-    const a = Math.round((p1 / track.clientWidth) * 100);
-    const b = Math.round(((p2 - p1) / track.clientWidth) * 100);
-    const c = 100 - a - b;
-    state.parts = [a, b, c];
-    renderSegments();
-    renderBadges();
-  };
-
-  const onDown = (which, e) => {
-    dragging = which;
-    e.preventDefault();
-  };
-  const onMove = e => {
-    if(!dragging) return;
-    const rect = track.getBoundingClientRect();
-    let x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-
-    if (dragging==='a') {
-      x = Math.max(0, Math.min(x, track.clientWidth-24));
-      hA().style.left = x + 'px';
-    } else {
-      // ensure right handle >= left+24
-      const leftX = parseFloat(hA().style.left)||0;
-      x = Math.max(leftX+24, Math.min(x, track.clientWidth));
-      hB().style.left = x + 'px';
-    }
-    updateFromHandles();
-  };
-  const onUp = () => dragging = null;
-
-  hA().addEventListener('mousedown', e=>onDown('a',e));
-  hB().addEventListener('mousedown', e=>onDown('b',e));
-  hA().addEventListener('touchstart', e=>onDown('a',e), {passive:false});
-  hB().addEventListener('touchstart', e=>onDown('b',e), {passive:false});
-  window.addEventListener('mousemove', onMove);
-  window.addEventListener('touchmove', onMove, {passive:false});
-  window.addEventListener('mouseup', onUp);
-  window.addEventListener('touchend', onUp);
-
-  // click toggles display mode
-  track.addEventListener('click', () => {
-    state.viewMode = state.viewMode === 'percent' ? 'count' : 'percent';
-    renderSegments();
-    renderBadges();
-  });
-
-  // reset button
-  document.querySelector('#resetDist').onclick = () => {
-    state.parts = [...state.defaultParts];
-    // set handles by parts
-    const aLeft = triTrack().clientWidth * (state.parts[0]/100);
-    const bLeft = triTrack().clientWidth * ((state.parts[0]+state.parts[1])/100);
-    hA().style.left = aLeft + 'px';
-    hB().style.left = bLeft + 'px';
-    renderSegments();
-    renderBadges();
-  };
-
-  // initial handles
-  const aLeft = px(state.parts[0]);
-  const bLeft = px(state.parts[0]+state.parts[1]);
-  hA().style.left = aLeft + 'px';
-  hB().style.left = bLeft + 'px';
-
-  // initial paint
-  renderSegments();
-  renderBadges();
-
-  // handle resize
-  new ResizeObserver(()=>{
-    const total = state.parts[0]+state.parts[1];
-    hA().style.left = px(state.parts[0]) + 'px';
-    hB().style.left = px(total) + 'px';
-    renderSegments();
-  }).observe(track);
-}
-
-function renderSegments(){
-  const [a,b,c] = state.parts;
-  const total = triTrack().clientWidth;
-  segA().style.left = '0px';
-  segA().style.width = (total * a/100) + 'px';
-
-  segB().style.left = (total * a/100) + 'px';
-  segB().style.width = (total * b/100) + 'px';
-
-  segC().style.left = (total * (a+b)/100) + 'px';
-  segC().style.width = (total * c/100) + 'px';
-
-  const counts = partsToCounts();
-  segA().innerHTML = `<span>${state.viewMode==='percent'? a+'%': counts[0]+' س'}</span>`;
-  segB().innerHTML = `<span>${state.viewMode==='percent'? b+'%': counts[1]+' س'}</span>`;
-  segC().innerHTML = `<span>${state.viewMode==='percent'? c+'%': counts[2]+' س'}</span>`;
-}
-
-function partsToCounts(){
-  const [a,b,c] = state.parts;
-  let n1 = Math.round(state.total * a/100);
-  let n2 = Math.round(state.total * b/100);
-  let n3 = state.total - n1 - n2;
-  return [n1,n2,n3];
-}
-
-function renderBadges(){
-  const [n1,n2,n3] = partsToCounts();
-  const nodes = partBadges();
-  if (state.viewMode==='percent'){
-    nodes[0].querySelector('.txt').textContent = `${state.parts[0]}%`;
-    nodes[1].querySelector('.txt').textContent = `${state.parts[1]}%`;
-    nodes[2].querySelector('.txt').textContent = `${state.parts[2]}%`;
-  } else {
-    nodes[0].querySelector('.txt').textContent = `${n1} سؤال`;
-    nodes[1].querySelector('.txt').textContent = `${n2} سؤال`;
-    nodes[2].querySelector('.txt').textContent = `${n3} سؤال`;
+function normalize100(){
+  // ensure sum == 100
+  let s = state.dist.reduce((a,b)=>a+b,0);
+  while(s>100){ // subtract from largest
+    const i = state.dist.indexOf(Math.max(...state.dist));
+    state.dist[i]--; s--;
+  }
+  while(s<100){
+    const i = state.dist.indexOf(Math.min(...state.dist));
+    state.dist[i]++; s++;
   }
 }
 
-function highlightTargets(str){
-  // replace [[...]] with span.ayah-target
-  return str.replace(/\[\[([^\]]+)\]\]/g, '<span class="ayah-target">$1</span>');
+function paintTri(){
+  normalize100();
+  // widths
+  const [a,b,c] = state.dist;
+  segA.style.left='0%'; segA.style.width = a + '%';
+  segB.style.left=a+'%'; segB.style.width=b+'%';
+  segC.style.left=(a+b)+'%'; segC.style.width=c+'%';
+  // handles positions (at boundaries)
+  h1.style.left = `calc(${a}% - 9px)`;
+  h2.style.left = `calc(${a+b}% - 9px)`;
+  const counts = distToCounts();
+  labA.textContent = state.mode==='percent' ? `${a}%` : `${counts[0]}س`;
+  labB.textContent = state.mode==='percent' ? `${b}%` : `${counts[1]}س`;
+  labC.textContent = state.mode==='percent' ? `${c}%` : `${counts[2]}س`;
+  overlay.textContent = state.mode==='percent' ? `${a}% | ${b}% | ${c}%` : `${counts[0]} | ${counts[1]} | ${counts[2]}`;
 }
+paintTri();
 
-function renderSamples(){
-  const samples = [
-    {q:`قال تعالى: {كَلَّا لَئِن لَّمْ يَنتَهِ لَنَسْفَعًا بِٱلنَّاصِيَةِ}- أين الكلمة المستهدفة؟`, a:'', opts:['مثال']},
-    {q:`قال تعالى: {وَأَنزَلَ بِهِ رُوحُ ٱلْأَمِينِ}- ما حكم النون الساكنة؟`, a:2, opts:['إظهار','إدغام','إخفاء','إقلاب']},
-  ];
-  sampleZone().innerHTML = samples.map((s,i)=>`
-    <div class="section question">
-      <div class="qtext"><span class="qspan">${highlightTargets(s.q.replace('[[','[[').replace('ٱلنَّاصِيَةِ','[[ٱلنَّاصِيَةِ]]').replace('وَأَنزَلَ','[[أَنزَلَ]]'))}</span></div>
-      ${s.opts.length>1? `<div class="options">` + s.opts.map((o,k)=>`
-        <label class="option"><input name="s${i}" type="radio"> ${o}</label>
-      `).join('') + `</div>` : ''}
-    </div>
-  `).join('');
+// Drag logic
+let dragging = null;
+function posToDist(x){
+  const rect = tri.getBoundingClientRect();
+  const pct = clamp((x-rect.left)/rect.width*100, 0, 100);
+  const a = clamp(Math.round(pct), 0, 100);
+  return a;
 }
+function onDown(e, which){
+  e.preventDefault(); dragging = which;
+}
+function onMove(e){
+  if(!dragging) return;
+  const x = (e.touches ? e.touches[0].clientX : e.clientX);
+  const p = posToDist(x);
+  let [a,b,c] = state.dist;
+  if(dragging==='h1'){
+    a = clamp(p, 0, a+b+c-1);
+    b = clamp(b + (state.dist[0]-a), 0, 100-a);
+    c = 100 - a - b;
+  }else if(dragging==='h2'){
+    const left = state.dist[0];
+    const pb = clamp(p-left, 0, 100-left);
+    b = pb;
+    a = left;
+    c = 100 - a - b;
+  }
+  state.dist = [a,b,c];
+  paintTri();
+}
+function onUp(){ dragging = null; }
 
-// Init
-document.addEventListener('DOMContentLoaded', () => {
-  initDark();
-  initName();
-  initTotal();
-  initTriSlider();
-  renderSamples();
+[h1,h2].forEach((h,i)=>{
+  const id = i===0?'h1':'h2';
+  h.addEventListener('mousedown', e=>onDown(e,id));
+  h.addEventListener('touchstart', e=>onDown(e,id), {passive:false});
 });
+window.addEventListener('mousemove', onMove);
+window.addEventListener('touchmove', onMove, {passive:false});
+window.addEventListener('mouseup', onUp);
+window.addEventListener('touchend', onUp);
+
+// Click to toggle mode
+tri.addEventListener('click', (e)=>{
+  // ignore clicks starting on handles (already processed by drag)
+  if(e.target.classList.contains('handle')) return;
+  state.mode = state.mode==='percent' ? 'count' : 'percent';
+  paintTri();
+});
+
+// Reset distribution
+el('#resetDist').addEventListener('click', ()=>{ state.dist=[33,33,34]; paintTri(); });
+
+// Sample questions to demonstrate highlighting
+const samples = [
+  {q:"قال تعالى: {كَلَّا لَئِنْ لَمْ يَنْتَهِ لَنَسْفَعًا بِالنَّاصِيَةِ}- أين الكلمة المستهدفة؟ مثال", opts:[], answer:0, text:"... [[النَّاصِيَةِ]] ..."},
+  {q:"قال تعالى: {وَأَنْزَلَ بِهِ رُوحُ الأَمِينِ}- ما حكم النون الساكنة؟", opts:["إظهار","إدغام","إخفاء","إقلاب"], answer:2, text:"... [[أَنْزَلَ]] ..."},
+  {q:"قال تعالى: {إِنَّ رَبَّهُمْ بِهِمْ}- ما حكم الميم الساكنة؟", opts:["إظهار شفوي","إدغام شفوي","إخفاء شفوي قلب","إقلاب"], answer:2, text:"... [[بِهِمْ]] ..."}
+];
+function colorize(text){
+  return text.replace(/\[\[([\s\S]+?)\]\]/g, '<span class="ayah-target">$1</span>');
+}
+function renderSamples(){
+  const ul = el('#sampleList'); ul.innerHTML='';
+  samples.forEach((s,i)=>{
+    const li = document.createElement('li');
+    li.className='question';
+    li.innerHTML = `<div class="q-text">${s.q.replace('...', colorize(s.text))}</div>`;
+    ul.appendChild(li);
+  });
+}
+renderSamples();
+
+// Finish buttons (demo only)
+['#finishTop','#finishBottom'].forEach(sel=>{
+  el(sel).addEventListener('click', ()=> alert('تم إنهاء الاختبار (عرض تجريبي).'));
+});
+

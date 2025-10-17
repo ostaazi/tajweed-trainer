@@ -1,74 +1,77 @@
-
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>التجويد — الاختبار</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css"/>
 </head>
-<body>
-  <div class="container">
-    <div class="topbar">
+<body class="theme-dark">
+  <header class="toolbar">
+    <div class="left">
+      <button id="themeToggle" class="btn icon" title="تبديل الوضع">🌙</button>
+    </div>
+    <div class="center">
       <h1>إعداد الاختبار</h1>
-      <button id="darkToggle" class="toggle" title="الوضع">🌞</button>
     </div>
+    <div class="right"></div>
+  </header>
 
-    <div class="section">
-      <div class="controls-grid">
-        <div>
-          <label>اسم المتدرب</label>
-          <input id="trainee" type="text" placeholder="اكتب اسم المتدرب">
-        </div>
-        <div>
-          <label>القسم</label>
-          <select>
-            <option>النون الساكنة والتنوين</option>
-            <option>الميم الساكنة</option>
-            <option>أحكام المدود</option>
-          </select>
-        </div>
+  <main class="container">
+    <section class="controls">
+      <div class="row">
+        <label class="label">اسم المتدرب</label>
+        <input id="studentName" class="input" placeholder="اكتب اسم المتدرب"/>
       </div>
 
-      <div class="row" style="margin-top:12px">
-        <button class="btn btn-primary">بدء اختبار شامل</button>
-        <button class="btn btn-ghost">بدء اختبار قصير (٥ أسئلة للقسم المحدد)</button>
+      <div class="row">
+        <label class="label">القسم</label>
+        <select id="sectionSelect" class="select">
+          <option value="noon_tanween">النون الساكنة والتنوين</option>
+          <option value="meem_saakina">الميم الساكنة</option>
+          <option value="ahkam_mudood">أحكام المدود</option>
+        </select>
       </div>
 
-      <div class="section" style="margin-top:12px">
-        <label>حدّد عدد أسئلة الاختبار</label>
-        <input id="total" type="range" min="5" max="50" value="20" style="width:100%">
-        <div class="small">انقر أو اسحب الفواصل لتعديل العرض % بين الأقسام. انقر على الشريط للتبديل بين % و عدد الأسئلة.</div>
+      <div class="row">
+        <label class="label">حدد عدد أسئلة الاختبار</label>
+        <input id="qCount" class="range" type="range" min="5" max="50" step="1" value="20"/>
+        <div class="qCountValue"><span id="qCountValue">20</span></div>
+      </div>
 
-        <div class="slider-wrap">
-          <div class="tri-track" id="triTrack">
-            <div class="segment seg-a"><span>33%</span></div>
-            <div class="segment seg-b"><span>33%</span></div>
-            <div class="segment seg-c"><span>34%</span></div>
-            <div class="handle handle-a"></div>
-            <div class="handle handle-b"></div>
-          </div>
-          <div class="row pills">
-            <span class="badge"><span class="dot a"></span> النون الساكنة والتنوين: <span class="txt">33%</span></span>
-            <span class="badge"><span class="dot b"></span> الميم الساكنة: <span class="txt">33%</span></span>
-            <span class="badge"><span class="dot c"></span> أحكام المدود: <span class="txt">34%</span></span>
-            <button id="resetDist" class="btn btn-ghost" style="margin-inline-start:auto">توزيع افتراضي</button>
-          </div>
+      <div class="row">
+        <div class="hint">انقر أو اسحب الفواصل لتعديل العرض بين الأقسام. انقر على الشريط للتبديل بين ٪ وعدد الأسئلة.</div>
+        <div id="triSlider" class="tri-slider" tabindex="0" aria-label="منزلق توزيع الأقسام">
+          <div class="segment seg-a" id="segA"></div>
+          <div class="segment seg-b" id="segB"></div>
+          <div class="segment seg-c" id="segC"></div>
+          <button class="handle" id="h1" aria-label="المقبض الأول"></button>
+          <button class="handle" id="h2" aria-label="المقبض الثاني"></button>
+          <div class="overlay" id="overlay"></div>
+        </div>
+        <div class="chips">
+          <span class="chip chip-a"><b id="labA">33%</b> النون الساكنة والتنوين</span>
+          <span class="chip chip-b"><b id="labB">33%</b> الميم الساكنة</span>
+          <span class="chip chip-c"><b id="labC">34%</b> أحكام المدود</span>
+          <button id="resetDist" class="btn small">توزيع افتراضي</button>
         </div>
       </div>
-    </div>
 
-    <div class="end-buttons">
-      <button class="btn btn-danger">إنهاء الاختبار</button>
-    </div>
+      <div class="row actions">
+        <button id="startFull" class="btn primary">بدء اختبار شامل</button>
+        <button id="startShort" class="btn">بدء اختبار قصير (٥ أسئلة للقسم المحدد)</button>
+        <button id="finishTop" class="btn danger left">إنهاء الاختبار</button>
+      </div>
+    </section>
 
-    <h3>أسئلة تجريبية (لعرض التلوين فقط)</h3>
-    <div id="sampleZone"></div>
-
-    <div class="footer-end">
-      <button class="btn btn-danger">إنهاء الاختبار</button>
-    </div>
-  </div>
+    <section class="sample">
+      <h2>أسئلة تجريبية (لعرض التلوين فقط)</h2>
+      <ol id="sampleList" class="qa"></ol>
+      <div class="row actions bottom">
+        <button id="finishBottom" class="btn danger left">إنهاء الاختبار</button>
+      </div>
+    </section>
+  </main>
 
   <script src="app.js"></script>
 </body>

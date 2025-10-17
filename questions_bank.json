@@ -1,24 +1,4 @@
 {
   "version": "v3",
-  "schema": "tajweedy-questions-12parts",
-  "sections": {
-    "noon_tanween": {
-      "title": "أحكام النون الساكنة والتنوين",
-      "parts": {
-        "idhar_halaqi": [
-          {
-            "qnum": 1,
-            "question": "قال تعالى: {كَلَّا لَئِن لَّمْ يَنتَهِ [[لَنَسْفَعًا]] بِٱلنَّاصِيَةِ}- ما حكم؟",
-            "options": [
-              "إظهار",
-              "إدغام",
-              "إخفاء",
-              "إقلاب"
-            ],
-            "answer": 2
-          }
-        ]
-      }
-    }
-  }
+  "sections": {}
 }
