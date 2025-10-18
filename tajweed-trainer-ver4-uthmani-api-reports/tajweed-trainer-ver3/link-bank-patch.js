@@ -1,4 +1,4 @@
-/* link-bank-patch.js — Smart Bank Loader for GitHub Pages (v2) */
+/* link-bank-patch.js — Smart Bank Loader for GitHub Pages (v3) */
 (async function(){
   async function loadJSON(url){
     const r = await fetch(url, {headers:{'Content-Type':'application/json'}});
@@ -18,25 +18,34 @@
       const merged=[];
       for (const sec of bank.sections){
         if (sec && Array.isArray(sec.questions)) merged.push(...sec.questions);
+        else if (sec && Array.isArray(sec.items)) merged.push(...sec.items);
       }
       if (merged.length) return merged;
     }
 
+    // Deep scan for arrays of questions
     const merged=[];
     for (const k in bank){
-      if (Array.isArray(bank[k])) merged.push(...bank[k]);
+      const v = bank[k];
+      if (Array.isArray(v)) merged.push(...v);
+      else if (v && typeof v==='object'){
+        if (Array.isArray(v.questions)) merged.push(...v.questions);
+        if (Array.isArray(v.items))     merged.push(...v.items);
+      }
     }
     return merged;
   }
 
   async function init(){
     try{
+      // الأولوية لبنكك الرئيسي
       let bank = await loadJSON('questions_bank.json');
       let questions = normalizeBank(bank);
 
+      // لو صفر، جرّب ملفًا بديلاً شائعًا
       if (!questions.length){
         try{
-          const alt = await loadJSON('quiz_bank.json');
+          const alt = await loadJSON('quiz_bank.json'); // سيُعاد توجيهه إلى data/ بواسطة app.js
           questions = normalizeBank(alt);
         }catch(_){}
       }
@@ -56,6 +65,9 @@
       }
 
       console.log('[link-bank-patch] Bank linked. Questions:', window.QUESTIONS.length);
+      if (!window.QUESTIONS.length){
+        console.log('[link-bank-patch] Debug keys of bank:', bank && Object.keys(bank));
+      }
     }catch(e){
       console.error('[link-bank-patch] Error:', e);
     }

@@ -1,6 +1,5 @@
-// app.js — GitHub Pages READY + Hotfix + safe DOM writes
+// app.js — GitHub Pages READY (redirect JSONs to /data/ + hotfix + safe DOM writes)
 (function(){
-  // Redirect JSON fetches from root to /data/ if needed
   const _origFetch = window.fetch;
   window.fetch = function(resource, init){
     try{
@@ -8,18 +7,17 @@
       let redirected = url;
       if (/(^|\/)questions_bank\.json(\?|$)/.test(url)) redirected = url.replace(/(^|\/)questions_bank\.json(\?|$)/, '$1data/questions_bank.json$2');
       if (/(^|\/)quran_uthmani\.json(\?|$)/.test(url)) redirected = url.replace(/(^|\/)quran_uthmani\.json(\?|$)/, '$1data/quran_uthmani.json$2');
+      if (/(^|\/)quiz_bank\.json(\?|$)/.test(url)) redirected = url.replace(/(^|\/)quiz_bank\.json(\?|$)/, '$1data/quiz_bank.json$2');
       if (redirected !== url) return _origFetch(redirected, init);
     }catch{}
     return _origFetch(resource, init);
   };
 
-  // Safe text setter helper to avoid null textContent errors
   window.__tt_safeText = function(sel, value){
     var el = document.querySelector(sel);
     if (el) el.textContent = value;
   };
 
-  // Normalize section and fill default options
   const normalizeSection = (sec) => {
     if (!sec) return 'other';
     sec = String(sec).trim();
