@@ -1,4 +1,4 @@
-// Tajweed Trainer quiz.js (full, with highlight fix)
+// quiz.js — تلوين الكلمة المستهدفة (غير حساس للتشكيل) + عرض بسيط للسؤال
 (function(){
   const AR_DIAC = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g;
   const stripDiac = s => (s||'').replace(AR_DIAC, '');
@@ -20,9 +20,15 @@
     }catch(e){ return text; }
   };
 
+  // عرض بسيط للسؤال دون تغيير في تصميمك العام
   window.renderQuestion = function(q){
-    const el = document.getElementById('quizContainer');
-    const html = `<div class='q-ayah'>${highlightTargetWord(q.question,q.targetWord)}</div>`;
-    el.innerHTML = html + '<hr>' + (q.options||[]).map(o=>`<div><label><input type="radio" name="opt">${o}</label></div>`).join('');
+    const host = document.getElementById('quizContainer');
+    const ayahHTML = `<div class="q-ayah">${highlightTargetWord(q.question, q.targetWord)}</div>`;
+    const opts = (q.options||[]).map((o,i)=>`
+      <div class="form-check" style="max-width:600px;margin:0.35rem auto;">
+        <input class="form-check-input" type="radio" name="opt" id="o${i}">
+        <label class="form-check-label" for="o${i}">${o}</label>
+      </div>`).join('');
+    host.innerHTML = ayahHTML + '<div style="margin-top:10px;">' + opts + '</div>';
   };
 })();
