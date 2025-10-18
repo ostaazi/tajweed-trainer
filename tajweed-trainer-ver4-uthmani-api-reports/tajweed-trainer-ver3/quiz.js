@@ -1,4 +1,6 @@
-// quiz.js — تلوين الكلمة المستهدفة (غير حساس للتشكيل) + عرض بسيط للسؤال
+// quiz.js — Logic-only helpers (no CSS/layout changes)
+// Use applyUthmaniFont(el) on the ayah node; it only sets font-family.
+// Use highlightTargetWord(text, target) and assign to innerHTML.
 (function(){
   const AR_DIAC = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g;
   const stripDiac = s => (s||'').replace(AR_DIAC, '');
@@ -11,24 +13,20 @@
     return new RegExp(body, 'g');
   }
 
-  window.highlightTargetWord = function(text, target){
+  // Only color + bolder; NO size/margins/padding to keep layout intact.
+  window.highlightTargetWord = function(text, target, color){
     if (!target) return text;
     try{
       const rx = makeInsensitiveRegex(target);
       if (!rx) return text;
-      return text.replace(rx, (m)=>`<span class="target-word">${m}</span>`);
-    }catch(e){ return text; }
+      const col = color || '#0d6efd'; // you may pass your theme color
+      return text.replace(rx, (m)=>`<span class="target-word" style="color:${col};font-weight:700">${m}</span>`);
+    }catch{ return text; }
   };
 
-  // عرض بسيط للسؤال دون تغيير في تصميمك العام
-  window.renderQuestion = function(q){
-    const host = document.getElementById('quizContainer');
-    const ayahHTML = `<div class="q-ayah">${highlightTargetWord(q.question, q.targetWord)}</div>`;
-    const opts = (q.options||[]).map((o,i)=>`
-      <div class="form-check" style="max-width:600px;margin:0.35rem auto;">
-        <input class="form-check-input" type="radio" name="opt" id="o${i}">
-        <label class="form-check-label" for="o${i}">${o}</label>
-      </div>`).join('');
-    host.innerHTML = ayahHTML + '<div style="margin-top:10px;">' + opts + '</div>';
+  // Apply Uthmani font family only (keeps original sizes/line-height)
+  window.applyUthmaniFont = function(el){
+    if (!el) return;
+    el.style.fontFamily = `'KFGQPC Uthmanic Script HAFS','Uthmanic Hafs',serif`;
   };
 })();
