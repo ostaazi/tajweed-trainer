@@ -1,0 +1,9 @@
+<!doctype html><html lang="ar" dir="rtl"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Tajweedy — مدقق التكرار</title><link rel="stylesheet" href="theme-v2.css"/></head><body>
+<header class="container header"><div class="brand"><img src="assets/logo.png"/><div><h1>🧪 مدقق التكرار بين البنكين</h1>
+<nav class="nav"><a href="index.html">🏠 الواجهة</a><a href="quiz.html">📘 الاختبار</a><a href="exercises.html">🧠 التدريبات</a></nav></div></div></header>
+<main class="container"><section class="card"><p>يفحص تكرار نص السؤال (stem) بين <code>questions_bank.json</code> و <code>exercises_bank.json</code>.</p>
+<div class="row"><button id="run" class="primary">تشغيل الفحص</button></div></section><section class="card"><h3>النتيجة</h3><div id="out" class="console">—</div></section></main>
+<footer class="container footer muted"><p>© Tajweedy</p></footer><button id="modeBtn" class="mode-fab">🌓</button><script type="module" src="validator.js"></script><script type="module">import {App} from './app.js';document.addEventListener('DOMContentLoaded',()=>App.initTheme('modeBtn'));<\/script>
+</body></html>

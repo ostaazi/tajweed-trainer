@@ -1,0 +1,86 @@
+Tajweedy Trainer – Hotfix (UTC 2025-10-18T04:59:36)
+
+1) Fixed mismatched options for أحكام المدود:
+   - 'flattenV3ToArray' now treats both 'ahkam_al_mudood' and 'madd' as Madd sections.
+   - As a result, Madd questions now show options: [مد طبيعي، مد متصل، مد منفصل، مد لازم].
+
+2) Uthmani ayah meta control:
+   - Replaced the meta checkbox with a single button: "إظهار/إخفاء اسم السورة ورقم الآية".
+   - The button toggles a global SHOW_META flag and re-renders the list.
+
+3) Start/Finish mutual exclusivity:
+   - 'إنهاء الاختبار' is hidden on load.
+   - Starting any test hides 'بدء اختبار شامل' and shows 'إنهاء الاختبار'.
+   - After finishing, the start button reappears automatically.
+
+Files touched:
+- tajweed-trainer-ver3/quiz.js
+- tajweed-trainer-ver3/quiz.html
+
+Enhancements (UTC 2025-10-18T05:06:31):
+4) Robust Arabic matching for target words (diacritics/hamza variants tolerant).
+5) Added Dark Mode toggle with theme variables.
+6) Cairo font applied to UI; Uthmani Hafs preserved for ayah text.
+7) Controls moved to a top toolbar with a distinct Ayah Meta button.
+
+
+Audio Feature (UTC 2025-10-18T05:10:18):
+- Added per-ayah audio playback via Quran.com v4 API endpoint /recitations/{id}/by_ayah/{chapter:verse}?format=audio.
+- Toolbar now includes a Reciter selector (default: Mishary Alafasy – id=2).
+- A small inline '▶️ استماع' button is injected next to each displayed ayah.
+
+
+Audio Enhancements (UTC 2025-10-18T05:15:17):
+- Auto-populate Reciters list from Quran.com API (Arabic names) with fallback.
+- Upgraded audio controls: Play/Pause/Stop per ayah + inline progress bar.
+
+
+Audio UX Upgrades (UTC 2025-10-18T05:19:52):
+- Added per-ayah time display (current/duration) synced with progress.
+- Added per-ayah loop toggle (repeat playback).
+
+
+Audio UX Upgrades 2 (UTC 2025-10-18T05:22:38):
+- Added per-ayah Volume slider with live percentage and binding to CURRENT_AUDIO.
+- Introduced Toast notification system for success/error/info messages, compatible with dark/light modes.
+
+
+Results UX & Export (UTC 2025-10-18T05:29:53):
+- Big purple result card with large, bold typography for quick visibility.
+- Auto-export on finish: POST to configurable endpoint (localStorage.RESULTS_POST_URL),
+  fallback to localStorage batching and JSON download if server unreachable.
+- Result schema: traineeId, startedAt/finishedAt, durationSec, correct, total, scorePct (+sections optional).
+
+
+Question Card UI (UTC 2025-10-18T05:32:27):
+- Each question with its stem, options, and audio controls is now styled inside a clean card (.q-card) for visual organization.
+- Options are laid out in a responsive grid; works in dark/light mode.
+
+
+Sidebar & Settings (UTC 2025-10-18T05:40:20):
+- Added off-canvas right sidebar with overlay and a top 'menu' button.
+- Settings modal to choose which controls live in the sidebar vs. top toolbar.
+- Layout persisted in localStorage under SIDEBAR_ITEMS; wrappers created for movable controls.
+
+
+System Settings & Reports (UTC 2025-10-18T05:53:04):
+- Sidebar grouped into sections (الإجراءات/العرض/الصوت/النتائج).
+- System Settings modal expanded with tabs: التخطيط/المظهر/الصوت/التقارير.
+- Theme (light/dark/auto) persisted; audio visibility toggle SHOW_AUDIO; reports visibility toggle SHOW_REPORTS.
+- Detailed correction report next to result card with per-question rule, exports (JSON/CSV) + print.
+- Basic analytics modal (individual/aggregate) with export/print and weak-topic extraction.
+- Remedial plan skeleton generation from weak topics.
+
+
+Remedial & Reports Merge (UTC 2025-10-18T05:55:35):
+- Sidebar: 'ابدأ التمرين العلاجي' + 'استئناف خطة علاجية'.
+- Remedial: حفظ خطة لكل متدرّب (localStorage) وتشغيل جلسة علاجية من بنك الأسئلة أو أخطاء الجلسة.
+- Reports: دمج نتائج الخادم (RESULTS_FETCH_URL) مع المحلية + فلاتر (متدرّب/تاريخ/موضوع).
+- تحترم التصديرات والفلاتر عند العرض.
+
+
+v14 (UTC 2025-10-18T06:04:43):
+- زر 'ابدأ التمرين العلاجي' يظهر فقط بعد ظهور النتيجة وعند وجود أخطاء، بجوار بطاقة النتيجة.
+- إضافة 'اختبار قصير (5 أسئلة)' باختيار القسم والجزء الفرعي.
+- موضع 'معرّف المتدرّب' قابل للتعديل (الشريط العلوي/القائمة الجانبية) من صفحة الإعدادات.
+- ربط التقارير بالخادم مع تحديث تلقائي افتراضي 60 ثانية (قابل للتعديل من الإعدادات).
