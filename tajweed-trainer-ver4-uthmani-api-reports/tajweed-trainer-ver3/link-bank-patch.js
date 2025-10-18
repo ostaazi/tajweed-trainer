@@ -1,6 +1,6 @@
 // link-bank-patch.js — Minimal, design-safe patch to link the quiz to the questions bank on GitHub Pages.
 // Drop this file next to quiz.html and include it AFTER app.js and BEFORE/OR AFTER quiz.js.
-// It loads /data/questions_bank.json and /data/quran_uthmani.json, exposes them on window,
+// It loads /questions_bank.json and /quran_uthmani.json, exposes them on window,
 // and invokes the existing hotfix (if present). No UI/design changes.
 
 (function(){
