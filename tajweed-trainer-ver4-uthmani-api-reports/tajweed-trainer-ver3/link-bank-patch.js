@@ -13,8 +13,8 @@
   async function init(){
     try{
       const [bank, mushaf] = await Promise.all([
-        loadJSON('data/questions_bank.json'),
-        loadJSON('data/quran_uthmani.json')
+        loadJSON('questions_bank.json'),
+        loadJSON('quran_uthmani.json')
       ]);
 
       // Expose globally for existing code
