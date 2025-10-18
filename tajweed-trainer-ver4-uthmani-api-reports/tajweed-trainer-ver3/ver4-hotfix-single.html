@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Tajweed Trainer — ver4 hotfix (Single File)</title>
+
+  <!-- Bootstrap RTL (ver4 style) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+
+  <!-- اضبط قاعدة الروابط تلقائيًا لمسار الصفحة على gh-pages -->
+  <base href="" id="__BASE__">
+  <script>
+    (function(){
+      const base = location.pathname.replace(/[^/]+$/, ''); // ينتهي بـ '/'
+      const b = document.getElementById('__BASE__'); if (b) b.setAttribute('href', base);
+      window.__TT_BASE__ = base;
+    })();
+  </script>
+
+  <style>
+    body{background-color:#f8fafc;}
+    .tt-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px}
+    .chip{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .6rem;border:1px solid #e5e7eb;border-radius:999px;background:#f1f5f9;margin:.25rem .3rem;font-size:.9rem}
+    .chip input{margin-inline-start:.4rem}
+    .tt-muted{color:#64748b}
+    .tt-progress{height:.5rem;background:#e2e8f0;border-radius:999px;overflow:hidden}
+    .tt-progress > i{display:block;height:100%;background:#0d6efd;width:0%}
+    canvas.sig{border:1px dashed #cbd5e1;border-radius:10px;background:#fff}
+    [data-theme="dark"] body{background:#0b0f16}
+    [data-theme="dark"] .tt-card{background:#0e1622;border-color:#1f2937}
+    [data-theme="dark"] .chip{background:#0f172a;border-color:#1f2937;color:#e5e7eb}
+    [data-theme="dark"] .tt-muted{color:#94a3b8}
+  </style>
+</head>
+<body>
+  <div class="container my-4">
+
+    <!-- رأس الصفحة -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h1 class="h4 m-0">إعداد الاختبار</h1>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="darkMode">
+        <label class="form-check-label" for="darkMode">الوضع الداكن</label>
+      </div>
+    </div>
+
+    <!-- بطاقة الإعدادات -->
+    <div class="tt-card p-3 p-md-4 mb-4">
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">اسم/معرّف المتدرّب</label>
+          <input id="learnerName" type="text" class="form-control" placeholder="اكتب اسمك هنا">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">القارئ</label>
+          <select id="readerSelect" class="form-select">
+            <option value="مشاري">مشاري العفاسي</option>
+            <option value="الحصري">محمود خليل الحصري</option>
+            <option value="منشاوي">محمد صديق المنشاوي</option>
+          </select>
+        </div>
+
+        <div class="col-md-4 d-flex align-items-end">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="useAyahAPI">
+            <label class="form-check-label" for="useAyahAPI">استخدام نصّ الآية من API (آمن التعطّل)</label>
+          </div>
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">حدِّد عدد أسئلة الاختبار</label>
+          <input id="qCount" type="number" min="5" step="5" value="20" class="form-control">
+          <div class="form-text">لن تُمنح شهادة امتياز إذا كان العدد أقل من 20.</div>
+        </div>
+
+        <div class="col-md-8">
+          <label class="form-label">الأقسام</label>
+          <div id="sectionChips" class="d-flex flex-wrap"></div>
+          <div class="form-text">انقر لتفعيل/تعطيل الأقسام. يمكنك السحب لتغيير العرض لاحقًا (إن أردت تخصيص نسب).</div>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-3">
+        <div class="col-md-4">
+          <button id="quick5" class="btn btn-outline-secondary w-100">اختبار قصير (5 أسئلة)</button>
+        </div>
+        <div class="col-md-4">
+          <button id="showCertificates" class="btn btn-outline-secondary w-100">الشهادات</button>
+        </div>
+        <div class="col-md-4 text-md-end">
+          <button id="startQuiz" class="btn btn-primary w-100">بدء الاختبار</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- بطاقة الاختبار -->
+    <div id="quizArea" class="tt-card p-3 p-md-4 mb-4 d-none">
+      <div class="d-flex align-items-center justify-content-between">
+        <h2 class="h5 m-0">الاختبار</h2>
+        <div style="min-width:240px">
+          <div class="tt-progress mb-1"><i id="progressBar"></i></div>
+          <div id="progressText" class="tt-muted small text-end">0%</div>
+        </div>
+      </div>
+      <div id="qList" class="mt-3"></div>
+      <div class="d-flex gap-2 justify-content-between mt-3">
+        <button id="submitQuiz" class="btn btn-success">إنهاء وتصحيح</button>
+        <button id="backToSetup" class="btn btn-outline-secondary">عودة للإعدادات</button>
+      </div>
+    </div>
+
+    <!-- بطاقة النتائج -->
+    <div id="resultArea" class="tt-card p-3 p-md-4 mb-5 d-none">
+      <h2 class="h5">النتائج</h2>
+      <p class="mb-1">الاسم: <b id="rName">-</b></p>
+      <p class="mb-3">الدرجة: <b id="rScore">-</b></p>
+      <p id="rHonorNote" class="tt-muted"></p>
+      <hr class="my-3">
+      <h3 class="h6">التوقيع على الشهادة</h3>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">رفع صورة توقيع</label>
+          <input id="sigFile" type="file" accept="image/*" class="form-control">
+          <img id="sigPreview" alt="Signature preview" class="img-fluid rounded border mt-2 d-none">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">أو التوقيع الحر</label>
+          <canvas id="sigPad" class="sig w-100" width="500" height="180"></canvas>
+          <div class="d-flex gap-2 mt-2">
+            <button id="sigClear" class="btn btn-outline-secondary">مسح</button>
+            <button id="useCanvasSig" class="btn btn-primary">اعتماد التوقيع</button>
+          </div>
+        </div>
+      </div>
+      <hr class="my-3">
+      <button id="downloadCert" class="btn btn-primary" disabled>تنزيل الشهادة (PNG)</button>
+      <div class="form-text">شهادة الامتياز تمنح فقط عند ≥ 90% ومع ≥ 20 سؤالًا.</div>
+    </div>
+  </div>
+
+  <!-- بنك أسئلة محلي مضمّن كاحتياطي -->
+  <script type="application/json" id="local-bank">
+  {
+    "sections": {
+      "النون الساكنة والتنوين": {
+        "weight": 1,
+        "questions": [
+          {"id":"n1","text":"قال تعالى: ﴿مَنْ آمَنَ﴾ — ما الحكم؟","choices":["إظهار حلقي","إدغام بغنة","إدغام بغير غنة","إخفاء حقيقي"],"answer":0,"ayah":"مَنْ آمَنَ","surah":"البقرة","ayah_no":62},
+          {"id":"n2","text":"﴿سَمِيعٌ عَلِيمٌ﴾ — ما الحكم بين الكلمتين؟","choices":["إدغام بغنة","إظهار حلقي","إقلاب","إخفاء"],"answer":0}
+        ]
+      },
+      "الميم الساكنة": {
+        "weight": 1,
+        "questions": [
+          {"id":"m1","text":"﴿كَمْ بِكُمْ﴾ — ما الحكم؟","choices":["إقلاب","إظهار شفوي","إخفاء شفوي","إدغام شفوي"],"answer":2}
+        ]
+      },
+      "أحكام المدود": {
+        "weight": 1,
+        "questions": [
+          {"id":"md1","text":"﴿قَائِمَةٌ﴾ — ما نوع المد؟","choices":["مد طبيعي","مد متصل","مد منفصل","مد لازم"],"answer":0}
+        ]
+      }
+    }
+  }
+  </script>
+
+  <script>
+    // ========== الوضع الداكن ==========
+    (function(){
+      const t = localStorage.getItem('tt_theme');
+      if (t) document.documentElement.setAttribute('data-theme', t);
+      const chk = document.getElementById('darkMode');
+      chk.checked = (t === 'dark');
+      chk.addEventListener('change', ()=>{
+        const theme = chk.checked ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('tt_theme', theme);
+      });
+    })();
+
+    // ========== متغيرات عامة ==========
+    const MIN_FOR_HONOR = 20;
+    let QUESTIONS = [];
+    let SECTIONS = [];
+    let CURRENT = { total:0, answers:{}, selected:[], score:0 };
+
+    // ========== تحميل بنك الأسئلة (خارجي ➜ داخلي ➜ مصغّر) ==========
+    async function loadBank(){
+      if (QUESTIONS.length) return;
+
+      const BASE = (window.__TT_BASE__ || (new URL('.', location.href)).href);
+      const pick = (...xs) => xs.filter(Boolean);
+
+      let data = null, lastErr=null;
+
+      const candidates = pick(
+        `${BASE}questions_bank.json`,
+        `${BASE}data/questions_bank.json`,
+        `${BASE}data/quiz_bank.json`,
+        `https://ostaazi.github.io/tajweed-trainer/questions_bank.json`
+      );
+      for (const url of candidates){
+        try{
+          const res = await fetch(url, {cache:'no-cache'});
+          if (!res.ok) { lastErr = new Error('HTTP '+res.status); continue; }
+          data = await res.json();
+          break;
+        }catch(e){ lastErr = e; }
+      }
+
+      if (!data){
+        try{
+          const raw = (document.getElementById('local-bank')?.textContent || '').trim();
+          if (raw) data = JSON.parse(raw);
+        }catch(e){ lastErr = e; }
+      }
+
+      if (!data || !data.sections || !Object.keys(data.sections).length){
+        console.warn('Fallback: using minimal built-in bank. Cause:', lastErr);
+        data = {
+          sections:{
+            "النون الساكنة والتنوين":{weight:1,questions:[
+              {"id":"n0","text":"﴿إِنَّا أَعْطَيْنَاكَ﴾ — ما الحكم في (إِنَّا)؟","choices":["غنة مشددة","إظهار","إخفاء","إدغام"],"answer":0}
+            ]},
+            "الميم الساكنة":{weight:1,questions:[
+              {"id":"m0","text":"﴿لَهُمْ مَا﴾ — ما الحكم؟","choices":["إظهار شفوي","إخفاء شفوي","إدغام شفوي","إقلاب"],"answer":2}
+            ]}
+          }
+        };
+        if (!document.getElementById('bankWarn')){
+          const note = document.createElement('div');
+          note.id = 'bankWarn';
+          note.className = 'alert alert-warning mt-2';
+          note.textContent = 'ملاحظة: جارٍ استخدام بنك أسئلة افتراضي لأن الملف الخارجي/المضمّن لم يُقرأ.';
+          document.querySelector('.tt-card').prepend(note);
+        }
+      }
+
+      const sections = data.sections || {};
+      SECTIONS = Object.keys(sections);
+      QUESTIONS = [];
+      SECTIONS.forEach(name=>{
+        const arr = sections[name]?.questions || [];
+        arr.forEach(q=>QUESTIONS.push({...q, __section:name}));
+      });
+    }
+
+    // ========== Ayah API آمن التعطّل ==========
+    function canUseAyahAPI(){ return typeof fetch === 'function'; }
+    async function safeFetchAyah(ref){
+      if (!document.getElementById('useAyahAPI').checked) return null;
+      if (!canUseAyahAPI()) return null;
+      try{
+        // ضع نداء API الحقيقي هنا إذا رغبت — نعيد null افتراضيًا لتجنّب الأعطال.
+        return null;
+      }catch(e){
+        console.warn('تعذر جلب نصّ الآية من API. سيتم استخدام النص المحلي.', e);
+        return null;
+      }
+    }
+
+    // ========== واجهة الأقسام ==========
+    function renderSectionChips(){
+      const host = document.getElementById('sectionChips');
+      host.innerHTML = '';
+      SECTIONS.forEach((name, idx)=>{
+        const id = 'sec_'+idx;
+        const el = document.createElement('label');
+        el.className = 'chip';
+        el.innerHTML = `<input type="checkbox" id="${id}" checked> ${name}`;
+        host.appendChild(el);
+      });
+    }
+    function getEnabledSections(){
+      const host = document.getElementById('sectionChips');
+      return [...host.querySelectorAll('input[type=checkbox]')]
+        .filter(c=>c.checked).map(c=>c.parentElement.textContent.trim());
+    }
+
+    // ========== اختيار الأسئلة ==========
+    function sampleQuestions(count, enabledSecs){
+      const pool = QUESTIONS.filter(q => enabledSecs.includes(q.__section));
+      for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+      return pool.slice(0, Math.max(1, Math.min(count, pool.length)));
+    }
+
+    // ========== بناء الأسئلة ==========
+    async function renderQuiz(list){
+      const host = document.getElementById('qList'); host.innerHTML='';
+      let idx = 0;
+
+      for(const q of list){
+        const div = document.createElement('div');
+        div.className = 'border rounded p-3 mb-3';
+        const h = document.createElement('h4'); h.className='h6 mb-2';
+        h.textContent = `س${++idx}: ${q.text}`; div.appendChild(h);
+
+        const apiAyah = await safeFetchAyah({surah:q.surah, ayah_no:q.ayah_no});
+        if(apiAyah || q.ayah){
+          const small = document.createElement('div');
+          small.className = 'small tt-muted mb-2';
+          small.textContent = `النص: ${apiAyah || q.ayah || ''}${q.surah?` — (${q.surah}:${q.ayah_no||''})`:''}`;
+          div.appendChild(small);
+        }
+
+        const answers = document.createElement('div');
+        q.choices.forEach((c,i)=>{
+          const id = `q_${q.id}_${i}`;
+          const w = document.createElement('div'); w.className='form-check';
+          w.innerHTML = `<input class="form-check-input" type="radio" name="q_${q.id}" id="${id}" value="${i}">
+                         <label class="form-check-label" for="${id}">${c}</label>`;
+          answers.appendChild(w);
+        });
+        div.appendChild(answers);
+        host.appendChild(div);
+      }
+
+      const bar = document.getElementById('progressBar');
+      const txt = document.getElementById('progressText');
+      let answered = 0;
+      host.addEventListener('change', e=>{
+        if(e.target.name?.startsWith('q_')){
+          CURRENT.answers[e.target.name] = true;
+          answered = Object.keys(CURRENT.answers).length;
+          const pct = Math.round((answered/list.length)*100);
+          bar.style.width = pct+'%';
+          txt.textContent = pct+'%';
+        }
+      }, {passive:true});
+    }
+
+    // ========== التصحيح ==========
+    function grade(list){
+      let correct = 0;
+      list.forEach(q=>{
+        const picked = document.querySelector(`input[name="q_${q.id}"]:checked`);
+        if (picked && Number(picked.value) === Number(q.answer)) correct++;
+      });
+      const pct = Math.round((correct/list.length)*100);
+      return {correct,total:list.length,pct};
+    }
+
+    // ========== توليد شهادة PNG ==========
+    async function drawCertificatePNG({name, pct, total, honored, sigImg}){
+      const W=1200,H=800;
+      const c=document.createElement('canvas'); c.width=W; c.height=H;
+      const g=c.getContext('2d');
+      g.fillStyle='#ffffff'; g.fillRect(0,0,W,H);
+      g.fillStyle='#111827'; g.textAlign='center';
+      g.font='bold 44px "Cairo", system-ui'; g.fillText(honored?'شهادة امتياز':'شهادة إتمام', W/2, 110);
+      g.font='36px "Cairo", system-ui'; g.fillText(`يُمنح: ${name||'متدرّب'}`, W/2, 200);
+      g.font='28px "Cairo", system-ui'; g.fillText(`النتيجة: ${pct}% من ${total} سؤالًا`, W/2, 260);
+      if(!honored){ g.fillStyle='#ef4444'; g.fillText('الامتياز يتطلب ≥ 90% ومع ≥ 20 سؤالًا.', W/2, 300); g.fillStyle='#111827'; }
+      g.strokeStyle='#e5e7eb'; g.lineWidth=2; g.beginPath(); g.moveTo(120,340); g.lineTo(W-120,340); g.stroke();
+      g.textAlign='left'; g.font='22px "Cairo", system-ui'; g.fillText('التوقيع:', 140, 580);
+      if(sigImg){ g.drawImage(sigImg, 220, 510, 360, 160); } else { g.fillStyle='#6b7280'; g.fillText('(لا يوجد توقيع مُرفق)', 220, 580); }
+      g.textAlign='center'; g.font='bold 18px "Cairo"'; g.fillStyle='#111827'; g.fillText('Tajweed Trainer', W-180, 580);
+      return c.toDataURL('image/png');
+    }
+
+    // ========== ربط الواجهة ==========
+    const els = {
+      qCount: document.getElementById('qCount'),
+      quick5: document.getElementById('quick5'),
+      start: document.getElementById('startQuiz'),
+      areaQuiz: document.getElementById('quizArea'),
+      areaSetup: document.querySelector('.tt-card'),
+      list: document.getElementById('qList'),
+      back: document.getElementById('backToSetup'),
+      submit: document.getElementById('submitQuiz'),
+      result: document.getElementById('resultArea'),
+      rName: document.getElementById('rName'),
+      rScore: document.getElementById('rScore'),
+      rHonorNote: document.getElementById('rHonorNote'),
+      learner: document.getElementById('learnerName'),
+      sectionChips: document.getElementById('sectionChips'),
+      sigFile: document.getElementById('sigFile'),
+      sigPreview: document.getElementById('sigPreview'),
+      sigCanvas: document.getElementById('sigPad'),
+      sigClear: document.getElementById('sigClear'),
+      useCanvasSig: document.getElementById('useCanvasSig'),
+      downloadCert: document.getElementById('downloadCert')
+    };
+
+    // لوحة التوقيع
+    (function initSignaturePad(){
+      const c = els.sigCanvas, g = c.getContext('2d');
+      let drawing=false, last=null; const to = p=>({x:p.offsetX, y:p.offsetY});
+      c.addEventListener('pointerdown', e=>{ drawing=true; last=to(e); });
+      c.addEventListener('pointermove', e=>{
+        if(!drawing) return; const p=to(e);
+        g.strokeStyle='#111'; g.lineWidth=2; g.lineCap='round';
+        g.beginPath(); g.moveTo(last.x,last.y); g.lineTo(p.x,p.y); g.stroke(); last=p;
+      });
+      window.addEventListener('pointerup', ()=> drawing=false);
+      els.sigClear.addEventListener('click', ()=> g.clearRect(0,0,c.width,c.height));
+    })();
+
+    // صورة التوقيع
+    let SigImage = null;
+    els.sigFile.addEventListener('change', ()=>{
+      const f = els.sigFile.files?.[0]; if(!f) return;
+      const url = URL.createObjectURL(f);
+      els.sigPreview.src = url; els.sigPreview.classList.remove('d-none');
+      const img = new Image(); img.onload = ()=>{ SigImage = img; }; img.src = url;
+    });
+    els.useCanvasSig.addEventListener('click', ()=>{
+      const img = new Image();
+      img.onload = ()=>{ SigImage = img; els.sigPreview.src = img.src; els.sigPreview.classList.remove('d-none'); };
+      img.src = els.sigCanvas.toDataURL('image/png');
+    });
+
+    // بدء التهيئة
+    window.addEventListener('DOMContentLoaded', async ()=>{
+      try{
+        await loadBank();
+        renderSectionChips();
+        if (!SECTIONS.length){
+          alert('لم يتم العثور على أقسام للأسئلة. تم تفعيل بنك افتراضي مؤقت.');
+          renderSectionChips();
+        }
+      }catch(e){
+        console.error('خطأ أثناء التهيئة:', e);
+        alert('حدث خطأ أثناء التهيئة. راجع Console.');
+      }
+    });
+
+    // أزرار
+    els.quick5.addEventListener('click', ()=>{ els.qCount.value = 5; });
+
+    els.start.addEventListener('click', async ()=>{
+      await loadBank();
+      const count = Math.max(1, parseInt(els.qCount.value||'20',10));
+      const enabled = getEnabledSections();
+      if(enabled.length===0){ alert('يرجى تفعيل قسم واحد على الأقل.'); return; }
+      const set = sampleQuestions(count, enabled);
+      CURRENT = { total:set.length, answers:{}, selected:set, score:0 };
+      await renderQuiz(set);
+      els.areaQuiz.classList.remove('d-none');
+      document.getElementById('resultArea').classList.add('d-none');
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+
+    els.back.addEventListener('click', ()=>{
+      els.areaQuiz.classList.add('d-none');
+      document.getElementById('resultArea').classList.add('d-none');
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+
+    els.submit.addEventListener('click', ()=>{
+      const g = grade(CURRENT.selected);
+      CURRENT.score = g.pct;
+      els.rName.textContent = els.learner.value || 'متدرّب';
+      els.rScore.textContent = `${g.pct}% (${g.correct}/${g.total})`;
+      const honored = (g.pct >= 90) && (g.total >= MIN_FOR_HONOR);
+      els.rHonorNote.textContent = honored
+        ? 'مبروك! مؤهل لشهادة الامتياز.'
+        : (g.total < MIN_FOR_HONOR
+              ? 'تنبيه: لا تُمنح شهادة الامتياز إذا كان عدد الأسئلة أقل من 20.'
+              : 'يمكنك إعادة المحاولة لرفع النسبة إلى 90% فأعلى.');
+      els.areaQuiz.classList.add('d-none');
+      document.getElementById('resultArea').classList.remove('d-none');
+
+      els.downloadCert.disabled = false;
+      els.downloadCert.onclick = async ()=>{
+        const dataURL = await drawCertificatePNG({
+          name: els.learner.value || 'متدرّب',
+          pct: g.pct, total: g.total,
+          honored,
+          sigImg: SigImage
+        });
+        const a = document.createElement('a');
+        a.href = dataURL;
+        a.download = honored ? 'Honor-Certificate.png' : 'Certificate.png';
+        a.click();
+      };
+    });
+  </script>
+</body>
+</html>
