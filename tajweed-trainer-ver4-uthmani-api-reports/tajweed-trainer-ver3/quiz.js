@@ -1,4 +1,4 @@
-// quiz.js — FINAL (green highlight, original layout preserved)
+// quiz.js — Apply Uthmani font + green highlight (original layout untouched)
 (function(){
   const AR_DIAC = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g;
   const stripDiac = s => (s||'').replace(AR_DIAC, '');
@@ -16,9 +16,7 @@
     try{
       const rx = makeInsensitiveRegex(target);
       if (!rx) return text;
-      const color = '#009c47';
-      const bg    = 'rgba(0, 200, 120, 0.18)';
-      return text.replace(rx, (m)=>'<span class="target-word" style="color:'+color+';background:'+bg+';font-weight:700;border-radius:3px;padding:0 2px">'+m+'</span>');
+      return text.replace(rx, (m)=>'<span class="target-word" style="color:#009c47;background:rgba(0,200,120,.18);font-weight:700;border-radius:3px;padding:0 2px">'+m+'</span>');
     }catch{ return text; }
   };
 
