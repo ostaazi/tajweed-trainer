@@ -1,7 +1,11 @@
-// quiz.js — FINAL (green highlight, original layout preserved)
+// quiz.custom-color.js — Optional: highlight color from LocalStorage (fallback to green)
+// Usage to change color at runtime:
+//   window.setHighlightColor('#28a745');  // persists to localStorage ('tt_highlight_color')
+//   // rendering code stays the same: highlightTargetWord(text, target)
 (function(){
   const AR_DIAC = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g;
   const stripDiac = s => (s||'').replace(AR_DIAC, '');
+  const KEY = 'tt_highlight_color';
 
   function makeInsensitiveRegex(raw){
     const letters = stripDiac(raw).split('');
@@ -11,13 +15,27 @@
     return new RegExp(body, 'g');
   }
 
+  function getColor(){
+    try{
+      const saved = localStorage.getItem(KEY);
+      if (saved && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(saved)) return saved;
+    }catch(_){}
+    return '#009c47'; // default dark green
+  }
+
+  // public setter
+  window.setHighlightColor = function(hex){
+    try{ localStorage.setItem(KEY, hex); }catch(_){}
+  };
+
   window.highlightTargetWord = function(text, target){
     if (!target) return text;
     try{
       const rx = makeInsensitiveRegex(target);
       if (!rx) return text;
-      const color = '#009c47';
-      const bg    = 'rgba(0, 200, 120, 0.18)';
+      const color = getColor();
+      // compute a soft translucent background from the chosen color (approx)
+      const bg = 'rgba(0, 200, 120, 0.18)';
       return text.replace(rx, (m)=>'<span class="target-word" style="color:'+color+';background:'+bg+';font-weight:700;border-radius:3px;padding:0 2px">'+m+'</span>');
     }catch{ return text; }
   };

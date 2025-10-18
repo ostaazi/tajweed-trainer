@@ -1,6 +1,5 @@
-// app.js — Logic-only hotfix (no visual changes)
-// Unify section aliases (madd/ahkam) and generate correct options if missing.
-// Call once AFTER loading the question bank:  __tt_applyOptionsHotfix(QUESTIONS);
+// app.js — FINAL (original layout preserved)
+// Call once AFTER loading the question bank:  QUESTIONS = __tt_applyOptionsHotfix(QUESTIONS);
 (function(){
   const normalizeSection = (sec) => {
     if (!sec) return 'other';
@@ -21,10 +20,10 @@
     if (!Array.isArray(QUESTIONS)) return QUESTIONS;
     QUESTIONS.forEach(q => {
       const secType = normalizeSection(q.__section || q.section || q.category);
+      // Fill missing options from the question text (author order) or sane defaults by section
       if (!q.options || q.options.length === 0){
-        // Prefer author order if the question text already lists madd types
-        const m = q.question && q.question.match(/مد طبيعي|مد متصل|مد منفصل|مد لازم/g);
-        if (m && m.length >= 2){ q.options = [...new Set(m)]; return; }
+        const listed = q.question && q.question.match(/مد طبيعي|مد متصل|مد منفصل|مد لازم/g);
+        if (listed && listed.length >= 2){ q.options = [...new Set(listed)]; return; }
         if (defaults[secType]) q.options = defaults[secType].slice(0);
       }
     });
