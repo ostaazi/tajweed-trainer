@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tajweedy — التقرير الموحد</title>
+  <link rel="stylesheet" href="theme-v2.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+  <div class="tools"><button id="modeBtn" class="mode-fab" title="الوضع"><i data-lucide="moon-star"></i></button></div>
+  <header class="container header"><div class="brand"><img src="assets/logo.png"><h1>التقرير الموحد</h1></div></header>
+  <main class="container">
+    <section class="card print-section" id="fullCard">
+      <div class="row">
+        <button id="pdf" class="primary">تصدير PDF</button>
+        <button id="printAll" class="secondary">طباعة الكل</button>
+        <button id="exp" class="secondary">تصدير JSON</button>
+        <input type="file" id="imp" accept="application/json">
+      </div>
+      <div id="allReports"></div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+  <script>
+    taj.initModeToggleFAB(); 
+    taj.renderAllReports('allReports');
+    document.getElementById('pdf').onclick=()=>taj.exportPDF('#fullCard');
+    document.getElementById('exp').onclick=()=>taj.exportAttemptsJSON();
+    document.getElementById('imp').onchange=(e)=>taj.importAttemptsJSON(e);
+    document.getElementById('printAll').onclick=()=>window.print();
+  </script>
+
+<script> if(window.lucide) lucide.createIcons(); </script>
+</body>
+</html>

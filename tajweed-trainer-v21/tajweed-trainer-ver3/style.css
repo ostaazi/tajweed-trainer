@@ -1,0 +1,97 @@
+/* ========== الأساسيات ========== */
+:root {
+  --bg: #0b1220;
+  --fg: #e8eef5;
+  --muted: #a7b4c8;
+  --card: #0f172a;
+  --chip: #1e293b;
+  --accent: #2563eb;
+  --danger: #dc2626;
+  --gold: #f59e0b;
+  --violet: #a78bfa;
+  --blue: #93c5fd;
+  --radius: 12px;
+  --pad: 14px;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: system-ui, "Segoe UI", Tahoma, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.8;
+}
+.container { max-width: 980px; margin: 0 auto; padding: 18px; }
+
+hr { border: 0; border-top: 1px solid #20304a; margin: 16px 0; }
+
+.row { display: flex; align-items: center; gap: 12px; margin: 8px 0; flex-wrap: wrap; }
+.row.g { gap: 10px; }
+.lbl { min-width: 120px; color: var(--muted); }
+.input, .select {
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid #23324a;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  min-width: 260px;
+  font-size: 16px;
+}
+.input::placeholder { color: #7f8aa0; }
+
+/* Buttons */
+.btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  cursor: pointer; white-space: nowrap;
+  font-weight: 600;
+}
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-secondary { background: #6d28d9; color: #fff; }
+.btn-light { background: #1f2a40; color: var(--fg); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn:hover { filter: brightness(1.05); }
+.left { float: inline-start; margin-inline-start: 0; }
+
+.hint, .tiny { color: var(--muted); font-size: 13px; }
+.tiny { margin-top: 6px; }
+
+/* Questions list */
+.q-list { padding-inline-start: 22px; }
+.q-item { background: var(--card); padding: var(--pad); border-radius: var(--radius); margin: 12px 0; }
+
+/* ========== تلوين الكلمة المستهدفة ========== */
+.ayah-target {
+  color: #15803d !important;
+  font-weight: 800;
+  font-size: 1.25em;
+  background: #e6f4ea;
+  border-radius: 8px;
+  padding: 1px 6px;
+}
+
+/* ========== tri slider ========== */
+.tri-box { background: #0e1628; border: 1px solid #1d2b46; border-radius: var(--radius); padding: 14px; }
+.tri-head { display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+
+.tri-slider { margin: 14px 4px 8px; background: #111b33; border-radius: 10px; padding: 14px 8px; }
+
+/* noUiSlider overrides */
+.noUi-target { background: #12203c; border: 1px solid #1f335c; box-shadow: inset 0 0 0 1px #1a2a4a; }
+.noUi-connect { background: linear-gradient(90deg, #60a5fa, #a78bfa, #fbbf24); }
+.noUi-horizontal .noUi-handle {
+  width: 22px; height: 22px; border-radius: 50%; top: -8px;
+  background: #fff; border: 2px solid #111827; box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+.noUi-handle:after, .noUi-handle:before { display: none; }
+
+.legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; background: var(--chip); padding: 6px 10px; border-radius: 999px; font-size: 14px; }
+.chip b { background: rgba(255,255,255,.08); border-radius: 999px; padding: 2px 8px; }
+.chip-blue { background: #0b3a63; }
+.chip-violet { background: #3a2a6c; }
+.chip-gold { background: #5a4200; }
+
+.footer { display:flex; justify-content: space-between; margin-top: 18px; }

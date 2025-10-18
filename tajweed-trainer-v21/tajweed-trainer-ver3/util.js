@@ -1,0 +1,1 @@
+export function initMode(btnId='modeBtn'){const b=document.getElementById(btnId);if(!b)return;const a=()=>{const d=localStorage.getItem('taj_MODE')==='dark';document.documentElement.classList.toggle('dark',d);b.innerText=d?'🌞':'🌓'};a();b.onclick=()=>{localStorage.setItem('taj_MODE',localStorage.getItem('taj_MODE')==='dark'?'light':'dark');a();};}

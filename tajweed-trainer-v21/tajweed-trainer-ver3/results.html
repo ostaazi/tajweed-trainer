@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نتيجة الاختبار – التجويد</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+  <h1>النتيجة التفصيلية</h1>
+  <div id="summary" class="card"></div>
+  <div class="footer">
+    <button class="button ghost" id="btnExport">تصدير CSV</button>
+    <button class="button ghost" id="btnPrint">طباعة/حفظ PDF</button>
+    <a class="button" href="quiz.html">رجوع للاختبار</a>
+  </div>
+  <hr>
+  <div id="details"></div>
+</div>
+<script>
+function toCSV(rec){
+  const rows = [['الاسم','التاريخ','المجموع','الصحيح','النسبة'],[rec.trainee,new Date(rec.ts).toLocaleString('ar-EG'),rec.total,rec.correct,rec.pct],[],['#','السؤال','إجابتك','الصحيح','صواب؟']];
+  rec.details.forEach(d=>rows.push([d.idx, d.question.replace(/\n/g,' '), d.picked, d.correct, d.isCorrect?'✔':'✘']));
+  return rows.map(r=>r.map(c=>`"${(c||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
+}
+function download(filename, content, type='text/csv'){
+  const blob = new Blob([content], {type});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function applyAyahHighlight(root=document){
+  const nodes = root.querySelectorAll('.q-stem, .ayah, .question-text, .detail');
+  nodes.forEach(el=>{
+    const html = el.innerHTML; if(!html) return;
+    if(html.indexOf('ayah-target')!==-1) return;
+    const replaced = html.replace(/\[\[([\s\S]*?)\]\]/g,'<span class="ayah-target">$1</span>');
+    if(replaced!==html) el.innerHTML=replaced;
+  });
+}
+function render(){
+  const rec = JSON.parse(localStorage.getItem('tajweed:last_result')||'null');
+  if(!rec){ document.getElementById('summary').innerHTML='لا توجد نتيجة محفوظة.'; return; }
+  document.getElementById('summary').innerHTML = `
+    الاسم: <b>${rec.trainee||'-'}</b> —
+    التاريخ: <b>${new Date(rec.ts).toLocaleString('ar-EG')}</b> —
+    النتيجة: <b>${rec.correct}/${rec.total}</b> (<b>${rec.pct}%</b>)
+  `;
+  const html = rec.details.map(d=>`
+    <div class="question detail">
+      <div class="q-stem ayah">${d.idx}. ${d.question}</div>
+      <div class="meta">إجابتك: <b>${d.picked||'-'}</b> — الصحيح: <b>${d.correct||'-'}</b> — ${d.isCorrect ? '✔ صواب' : '✘ خطأ'}</div>
+    </div>
+  `).join('');
+  document.getElementById('details').innerHTML = html;
+  applyAyahHighlight(document);
+
+  document.getElementById('btnExport').onclick = ()=>download(`tajweed_result_${rec.pct}pct.csv`, toCSV(rec));
+  document.getElementById('btnPrint').onclick = ()=>window.print();
+}
+document.addEventListener('DOMContentLoaded', render);
+</script>
+</body>
+</html>
