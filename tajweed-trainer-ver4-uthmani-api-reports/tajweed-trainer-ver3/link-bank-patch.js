@@ -1,48 +1,59 @@
-// link-bank-patch.js — Minimal, design-safe patch to link the quiz to the questions bank on GitHub Pages.
-// Drop this file next to quiz.html and include it AFTER app.js and BEFORE/OR AFTER quiz.js.
-// It loads /data/questions_bank.json and /data/quran_uthmani.json, exposes them on window,
-// and invokes the existing hotfix (if present). No UI/design changes.
-
-(function(){
+/* link-bank-patch.js — Smart Bank Loader for GitHub Pages */
+(async function(){
   async function loadJSON(url){
-    const res = await fetch(url, {headers: {'Content-Type':'application/json'}});
-    if (!res.ok) throw new Error('Failed to load '+url+' ('+res.status+')');
-    return await res.json();
+    const res = await fetch(url, {headers:{'Content-Type':'application/json'}});
+    if(!res.ok) throw new Error(url + ' → ' + res.status);
+    return res.json();
+  }
+
+  function normalizeBank(bank){
+    if(Array.isArray(bank)) return bank;
+    if(!bank || typeof bank!=='object') return [];
+    if(Array.isArray(bank.questions)) return bank.questions;
+    if(Array.isArray(bank.data)) return bank.data;
+    if(Array.isArray(bank.items)) return bank.items;
+    const merged=[];
+    for(const key in bank){
+      if(Array.isArray(bank[key])) merged.push(...bank[key]);
+    }
+    return merged;
   }
 
   async function init(){
     try{
-      const [bank, mushaf] = await Promise.all([
-        loadJSON('questions_bank.json'),
-        loadJSON('quran_uthmani.json')
-      ]);
+      let bank = await loadJSON('questions_bank.json');
+      let questions = normalizeBank(bank);
 
-      // Expose globally for existing code
-      window.QUESTIONS = Array.isArray(bank) ? bank : (bank.questions || bank.data || []);
+      if(!questions.length){
+        try{
+          const alt = await loadJSON('quiz_bank.json');
+          questions = normalizeBank(alt);
+        }catch(_){}
+      }
+
+      const mushaf = await loadJSON('quran_uthmani.json');
       window.QURAN_UTHMANI = mushaf;
+      window.QUESTIONS = questions;
 
-      // Apply the hotfix if available (fills missing options / normalizes sections)
-      if (typeof window.__tt_applyOptionsHotfix === 'function'){
+      if(typeof window.__tt_applyOptionsHotfix === 'function'){
         window.QUESTIONS = window.__tt_applyOptionsHotfix(window.QUESTIONS);
       }
 
-      // If your app has an init/build function, call it safely
-      if (typeof window.buildQuiz === 'function'){
+      if(typeof window.buildQuiz === 'function'){
         window.buildQuiz(window.QUESTIONS);
-      } else if (typeof window.initQuiz === 'function'){
+      }else if(typeof window.initQuiz === 'function'){
         window.initQuiz(window.QUESTIONS);
       }
 
       console.log('[link-bank-patch] Bank linked. Questions:', window.QUESTIONS.length);
-    } catch (e){
+    }catch(e){
       console.error('[link-bank-patch] Error:', e);
     }
   }
 
-  // Start after DOM ready
-  if (document.readyState === 'loading'){
+  if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded', init);
-  } else {
+  }else{
     init();
   }
 })();
