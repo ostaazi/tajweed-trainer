@@ -1,53 +1,0 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Tajweedy — سجلّ التقارير</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/brand.css">
-</head>
-<body>
-  <div class="container">
-    <header class="brand-header">
-      <div class="brand-left">
-        <img src="./assets/logo/tajweedy-logo.png" alt="Tajweedy">
-        <div class="brand-title">
-          <div class="name">Tajweedy</div>
-          <div class="sub">سجلّ التقارير (محلي)</div>
-        </div>
-      </div>
-      <div style="display:flex; gap:8px">
-        <button id="toggleTheme" class="btn" title="الوضع الداكن/الفاتح">🌙/☀️</button>
-        <a href="./reports.html" class="btn">العودة للتقارير</a>
-      </div>
-    </header>
-
-    <div class="card">
-      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px">
-        <input id="q" type="search" placeholder="ابحث بالاسم أو المعرّف أو التاريخ…" class="btn" style="min-width:260px">
-        <select id="sort" class="btn">
-          <option value="date_desc">الأحدث أولًا</option>
-          <option value="date_asc">الأقدم أولًا</option>
-          <option value="name_asc">الاسم (أ-ي)</option>
-          <option value="name_desc">الاسم (ي-أ)</option>
-          <option value="count_desc">عدد الأسئلة (تنازلي)</option>
-          <option value="count_asc">عدد الأسئلة (تصاعدي)</option>
-        </select>
-        <button id="exportCSV" class="btn">تصدير CSV</button>
-        <button id="clearAll" class="btn btn-danger">حذف الكل</button>
-      </div>
-
-      <table id="tbl" style="width:100%; border-collapse:collapse">
-        <thead>
-          <tr><th>المعرّف</th><th>الاسم</th><th>التاريخ</th><th>عدد الأسئلة</th><th>إجراءات</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div id="empty" class="muted" style="text-align:center; padding:20px" hidden>لا توجد تقارير محفوظة بعد.</div>
-    </div>
-  </div>
-  <script type="module" src="./js/theme.js"></script>
-  <script type="module" src="./js/reports-index.js"></script>
-</body>
-</html>
