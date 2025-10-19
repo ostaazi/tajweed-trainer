@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Tajweedy — Quiz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/brand.css">
+  <meta property="og:title" content="Tajweedy — Quiz">
+  <meta property="og:description" content="اختبارات تجويد دقيقة وتقارير احترافية بواجهة عربية.">
+  <meta property="og:image" content="./assets/og/og-tajweedy.png">
+  <meta name="theme-color" content="#166B3B">
+</head>
+<body>
+  <div class="container">
+    <header class="brand-header card">
+      <div class="brand-left">
+        <img src="./assets/logo/tajweedy-logo.png" alt="Tajweedy">
+        <div class="brand-title">
+          <div class="name">Tajweedy</div>
+          <div class="sub">تدريب التجويد</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px">
+        <button id="toggleTheme" class="btn" title="الوضع الداكن/الفاتح">🌙/☀️</button>
+        <button id="btnToggleMeta" class="btn-meta">إظهار اسم السورة ورقم الآية</button>
+        <button id="btnStartComprehensive" class="btn btn-primary">بدء اختبار شامل</button>
+        <button id="btnFinish" class="btn btn-danger hidden">إنهاء الاختبار</button>
+      </div>
+    </header>
+
+    <div id="quizHost" class="card"></div>
+  </div>
+
+  <script type="module" src="./js/theme.js"></script>
+  <script type="module" src="./js/quran-api.js"></script>
+  <script type="module" src="./js/quiz.js"></script>
+</body>
+</html>
