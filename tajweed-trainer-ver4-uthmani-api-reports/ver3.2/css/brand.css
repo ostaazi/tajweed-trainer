@@ -1,0 +1,17 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+:root{--brand:#0f5132;--brand-600:#146c43;--accent:#e6f4ea;--danger:#dc3545;--muted:#6c757d;--text:#0b1324;--bg:#f7f8fc;--card:#ffffff;}
+:root.dark{--bg:#0b1324;--card:#0f172a;--text:#e6edf6;--muted:#9aa7b2;--accent:#123524;--brand:#2dd4bf;--brand-600:#22b38f;}
+html,body{font-family:'Cairo',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);margin:0}
+.container{max-width:1100px;margin:2rem auto;padding:0 1rem}.card{background:var(--card);border-radius:16px;box-shadow:0 4px 20px rgba(2,6,23,.06);padding:1.25rem}
+.header{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem}.header img{width:44px;height:44px}.h1{font-size:clamp(24px,3vw,36px);font-weight:800;margin:0}
+.btn{border:0;border-radius:10px;padding:.7rem 1rem;cursor:pointer;font-weight:700}.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-600)}
+.btn-danger{background:var(--danger);color:#fff}.btn-ghost{background:transparent;border:1px solid var(--muted);color:var(--text)}
+.row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}.select,input[type="text"]{border:1px solid #d0d7de;background:var(--card);color:var(--text);border-radius:12px;padding:.6rem .8rem;min-width:240px}
+.range{width:100%}.badge{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .6rem;background:var(--accent);color:var(--brand);border-radius:999px;font-weight:700}.badge .dot{width:8px;height:8px;border-radius:999px;background:var(--brand)}
+.q-ayah{font-family:'Hafs','Cairo',serif;font-size:26px;line-height:1.9}
+@font-face{font-family:'Hafs';src:url('../assets/fonts/hafs.woff2') format('woff2');font-weight:normal;font-style:normal;font-display:swap}
+.ayah-target{color:#15803d !important;font-weight:800;font-size:1.25em;background-color:#e6f4ea;border-radius:6px;padding:1px 4px}
+.toggle-theme{border-radius:10px;border:1px solid #d0d7de;background:var(--card);padding:.4rem .6rem;display:flex;gap:.4rem;align-items:center}.toggle-theme span{font-size:14px;color:var(--muted)}
+.hide{display:none !important}.footer{margin:2rem auto;text-align:center;color:var(--muted)}
+.watermark{position:fixed;inset:0;pointer-events:none;opacity:.04;background:url('../assets/logo/tajweedy-logo.png') center/420px no-repeat}

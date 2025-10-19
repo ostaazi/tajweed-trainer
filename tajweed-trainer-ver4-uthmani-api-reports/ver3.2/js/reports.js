@@ -1,0 +1,3 @@
+
+function drawQR(text){const c=document.getElementById('qr'),ctx=c.getContext('2d');const url='https://chart.googleapis.com/chart?cht=qr&chld=M|0&chs=200x200&chl='+encodeURIComponent(text);const img=new Image();img.crossOrigin='anonymous';img.onload=()=>{ctx.drawImage(img,0,0,128,128)};img.src=url;}
+document.addEventListener('DOMContentLoaded',()=>{const p=new URLSearchParams(location.search);const name=p.get('name')||'—';const rid=p.get('id')||Date.now()+'';document.getElementById('studentName').textContent=name;document.getElementById('reportMeta').textContent='رقم التقرير: '+rid;drawQR(location.href);document.getElementById('reportBody').innerHTML='<p>سيظهر هنا ملخص الأداء والإجابات الصحيحة/الخاطئة والإحصاءات.</p>';});
