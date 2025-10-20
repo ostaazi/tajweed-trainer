@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tajweedy — بنك الأسئلة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="preload" href="fonts/hafs.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="icon" href="assets/tajweedy-logo.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <img src="assets/tajweedy-logo.png" alt="Tajweedy" class="logo">
+      <h1><span>الاختبار —</span> بنك الأسئلة</h1>
+    </div>
+
+    <div class="controls">
+      <button id="toggleTheme" class="icon-btn" title="الوضع الفاتح/الداكن">🌙</button>
+      <div class="count-wrap">
+        <label for="qCount">حدد عدد أسئلة الاختبار</label>
+        <div class="count-row">
+          <span id="qCountValue">10</span>
+          <input id="qCount" type="range" min="5" max="30" step="1" value="10">
+        </div>
+      </div>
+      <select id="sectionSelect" class="select"></select>
+      <button id="startBtn" class="btn primary">بدء اختبار شامل</button>
+      <button id="endBtn" class="btn danger" style="display:none">إنهاء الاختبار</button>
+      <button id="toggleRefBtn" class="btn light" style="display:none">إظهار اسم السورة والآية</button>
+    </div>
+  </header>
+
+  <main id="quizArea">
+    <div id="notice" class="notice">⏳ جارِ تحميل بنك الأسئلة...</div>
+    <ol id="questions" class="questions"></ol>
+  </main>
+
+  <footer class="site-footer">
+    <span>© Tajweedy</span>
+  </footer>
+
+  <script>window.BANK_URL = "https://ostaazi.github.io/tajweed-trainer/tajweed-trainer-ver4-uthmani-api-reports/ver3.2/questions_bank.json";</script>
+  <script src="quiz.js"></script>
+</body>
+</html>

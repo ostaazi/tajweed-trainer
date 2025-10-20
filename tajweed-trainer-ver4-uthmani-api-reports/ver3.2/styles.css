@@ -1,43 +1,58 @@
+
 :root{
-  --brand:#0b5f3a;
-  --brand-2:#146f45;
-  --muted:#6b7280;
-  --bg:#f6f8fb;
-  --card:#ffffff;
-  --ring:#e5e7eb;
-  --text:#0f172a;
-  --danger:#dc2626;
-  --ok:#059669;
+  --bg:#f6f8fb; --fg:#0f172a; --card:#fff; --muted:#64748b; --brand:#0f5132; --accent:#0ea5a3;
+  --danger:#d43f52; --badge:#e6f4ea; --badge-fg:#166534;
 }
+[data-theme="dark"]{
+  --bg:#0b1020; --fg:#dfe7ff; --card:#0f172a; --muted:#94a3b8; --brand:#7dd3fc; --accent:#34d399;
+  --danger:#ef4444; --badge:#083d2e; --badge-fg:#86efac;
+}
+@font-face{
+  font-family:'HafsUthmani';
+  src:url('fonts/hafs.woff2') format('woff2');
+  font-display:swap;
+}
+*{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--text);font-family:"Cairo",system-ui,Arial}
-body.theme-dark{--bg:#0b1220;--card:#0f1526;--ring:#1f2937;--text:#e5e7eb}
-.app-header{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--ring);padding:16px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
-.brand{display:flex;align-items:center;gap:12px}
-.brand-logo{width:42px;height:42px;object-fit:contain}
-.brand-title{margin:0;font-size:clamp(18px,2.3vw,28px);color:var(--brand)}
-.header-controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
-.select,.btn{height:40px;border-radius:10px;border:1px solid var(--ring);background:var(--card);color:var(--text);padding:0 12px;font-weight:600}
-.btn{cursor:pointer;transition:.2s ease;display:inline-flex;align-items:center;gap:8px}
-.btn-primary{background:var(--brand);color:#fff;border-color:transparent}
-.btn-danger{background:var(--danger);color:#fff;border-color:transparent}
-.btn-lite{background:var(--card)}
-.btn.icon{width:44px;justify-content:center}
-.range-label{font-size:14px;color:var(--muted)}
-.range-wrap{display:flex;align-items:center;gap:10px}
-#countRange{width:240px}
-.badge{background:#e6f4ea;color:#065f46;font-weight:800;padding:6px 10px;border-radius:999px}
-.quiz-area{max-width:1100px;margin:24px auto;padding:0 16px;position:relative}
-.question-card{background:var(--card);border:1px solid var(--ring);border-radius:14px;padding:16px;margin:16px 0;box-shadow:0 4px 14px rgba(0,0,0,.04)}
-.q-header{display:flex;align-items:flex-start;gap:12px;justify-content:flex-end;margin-bottom:12px}
-.q-number{color:var(--muted);font-weight:700}
-.ayah{display:inline-block;font-size:1.4rem;line-height:2.1}
-.ayah-uthmani{font-family:"Hafs","Scheherazade New","Amiri",serif}
-@font-face{font-family:"Hafs";src:url("assets/fonts/hafs.woff2") format("woff2");font-display:swap}
-.target-word{background:#d1fae5;color:#065f46;padding:.1rem .35rem;border-radius:.5rem;font-weight:800;font-size:1.15em}
-.ref-badge{background:#e6f4ea;color:#065f46;border-radius:999px;padding:4px 10px;font-weight:800;margin-inline-start:8px}
-.q-options{display:flex;flex-direction:column;gap:8px;margin-top:10px}
-.opt{display:flex;align-items:center;gap:8px;cursor:pointer}
-.opt input{transform:scale(1.2)}
-.watermark{position:fixed;inset:auto 0 60px 0;margin:auto;width:min(74vw,860px);height:74vw;max-height:860px;background:url("assets/tajweedy-logo.png") center/contain no-repeat;opacity:.06;pointer-events:none;filter:grayscale(1)}
-.app-footer{border-top:1px solid var(--ring);text-align:center;padding:20px;color:var(--muted);background:var(--bg)}
+body{
+  font-family:'Cairo', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  background:var(--bg); color:var(--fg); margin:0; display:flex; flex-direction:column;
+}
+.site-header{
+  display:flex; gap:12px; align-items:center; justify-content:space-between;
+  padding:18px 20px; background:var(--card); box-shadow:0 2px 20px rgba(2,6,23,.06); position:sticky; top:0; z-index:10;
+}
+.brand{display:flex; align-items:center; gap:12px}
+.brand .logo{width:38px; height:38px}
+.brand h1{margin:0; font-size:28px; font-weight:800; color:var(--brand)}
+.controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+
+.select, .btn, .icon-btn{font-family:inherit; border:1px solid transparent; border-radius:10px; padding:10px 14px; font-size:15px}
+.btn{background:var(--card); color:var(--fg); border-color:#e2e8f0}
+.btn.primary{background:#0f5132; color:#fff}
+.btn.light{background:#eef2ff}
+.btn.danger{background:var(--danger); color:#fff}
+.icon-btn{background:#eef2ff}
+.count-wrap{display:flex; gap:8px; align-items:center}
+.count-wrap label{font-size:12px; color:var(--muted)}
+.count-row{display:flex; align-items:center; gap:8px}
+#qCount{width:260px}
+#qCountValue{background:#e2f7f5; color:#065f46; padding:6px 10px; border-radius:20px; font-weight:700; min-width:42px; text-align:center}
+
+main{padding:20px; flex:1}
+.notice{padding:16px 18px; border-radius:12px; background:#fef9c3; color:#713f12; border:1px solid #fde68a; max-width:520px}
+.questions{list-style:arabic-indic inside; padding:0; margin:18px 0; display:flex; flex-direction:column; gap:18px}
+
+.card{
+  background:var(--card); border-radius:16px; padding:18px; box-shadow:0 10px 30px rgba(2,6,23,.06);
+  position:relative; overflow:hidden;
+}
+.card .ayah{font-family:'HafsUthmani', 'Amiri', serif; font-size:32px; line-height:1.9}
+.card .meta{display:flex; gap:8px; align-items:center; margin-top:10px}
+.badge{background:var(--badge); color:var(--badge-fg); padding:6px 10px; border-radius:999px; font-weight:700; font-size:13px}
+.options{margin-top:12px; display:grid; gap:8px}
+.option{display:flex; gap:10px; align-items:center; font-size:18px}
+.option input{accent-color:#0ea5a3; width:18px; height:18px}
+.ayah-target{color:#15803d; font-weight:800; font-size:1.25em; background:#e6f4ea; border-radius:6px; padding:0 4px}
+
+.site-footer{padding:26px; text-align:center; color:var(--muted)}

@@ -1,189 +1,155 @@
-// ver3.2 — absolute BANK_URL
-const BANK_URL = window.__TAJ_BANK_URL__ || 'questions_bank.json';
 
-const quizArea = document.querySelector('#quizArea');
-const sectionSelect = document.querySelector('#sectionSelect');
-const countRange = document.querySelector('#countRange');
-const countBadge = document.querySelector('#countBadge');
-const btnStart = document.querySelector('#btnStart');
-const btnFinish = document.querySelector('#btnFinish');
-const btnToggleRef = document.querySelector('#btnToggleRef');
-const themeToggle = document.querySelector('#themeToggle');
+(async function(){
+  const el = sel => document.querySelector(sel);
+  const els = sel => Array.from(document.querySelectorAll(sel));
+  const state = {
+    bank: null,
+    pool: [],
+    answers:{},
+    showRefs:false,
+  };
 
-let BANK = null;
-let QUESTIONS = [];
-let KEY = [];
-let showRefs = true;
+  const BANK_URL = window.BANK_URL;
 
-const OPTIONS_SETS = {
-  'النون الساكنة والتنوين': ['إظهار','إدغام','إخفاء','إقلاب'],
-  'الميم الساكنة': ['إظهار شفوي','إدغام شفوي','إخفاء شفوي','قلب'],
-  'أحكام المدود': ['مد طبيعي','مد متصل','مد منفصل','مد لازم'],
-  'noon_tanween': ['إظهار','إدغام','إخفاء','إقلاب'],
-  'meem_sakinah': ['إظهار شفوي','إدغام شفوي','إخفاء شفوي','قلب'],
-  'ahkam_madud': ['مد طبيعي','مد متصل','مد منفصل','مد لازم'],
-};
+  const sectionSelect = el('#sectionSelect');
+  const qCount = el('#qCount');
+  const qCountValue = el('#qCountValue');
+  const startBtn = el('#startBtn');
+  const endBtn = el('#endBtn');
+  const toggleRefBtn = el('#toggleRefBtn');
+  const questionsOl = el('#questions');
+  const notice = el('#notice');
 
-function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]} return a; }
-function pickN(arr, n){ return shuffle([...arr]).slice(0, n); }
-function setTheme(dark){ document.body.classList.toggle('theme-dark', dark); }
-function toggleStartFinishButtons(started){ btnStart.hidden = !!started; btnFinish.hidden = !started; }
+  // Theme
+  const themeBtn = el('#toggleTheme');
+  const setTheme = (t)=>{ document.documentElement.setAttribute('data-theme', t); localStorage.setItem('theme',t); }
+  setTheme(localStorage.getItem('theme')||'light');
+  themeBtn.onclick = ()=> setTheme((localStorage.getItem('theme')||'light')==='light'?'dark':'light');
 
-function extractAyahText(qText){
-  const m = (qText||'').match(/﴿([^﴿﴾]+)﴾/);
-  return m ? m[1].trim() : '';
-}
-function highlightTargetBrackets(text){
-  return (text||'').replace(/\[\[([\s\S]+?)\]\]/g, '<span class="target-word">$1</span>');
-}
+  qCount.oninput = ()=> (qCountValue.textContent = qCount.value);
 
-function getOptionsForItem(item){
-  if (Array.isArray(item['الاختيارات']) && item['الاختيارات'].length) return item['الاختيارات'];
-  const sec = item['القسم'] || item['sectionKey'] || item['section'];
-  return OPTIONS_SETS[sec] || [];
-}
-
-async function loadBank(){
-  const res = await fetch(`${BANK_URL}?v=${Date.now()}`, { cache:'no-store' });
-  if(!res.ok) throw new Error('تعذّر تحميل بنك الأسئلة');
-  return await res.json();
-}
-
-function normalizeBank(bank){
-  if (Array.isArray(bank)) return bank;
-  if (bank.sections){
-    const out = [];
-    for(const [secKey, secObj] of Object.entries(bank.sections)){
-      const label = secObj.titleAr || secObj.nameAr || secObj.title || secKey;
-      const parts = secObj.parts || {};
-      for(const [pKey, arr] of Object.entries(parts)){
-        for(const q of arr){
-          out.push({ 'القسم': label, ...q });
-        }
-      }
-    }
-    return out;
-  }
-  return [];
-}
-
-function fillSectionsSelect(items){
-  const uniq = Array.from(new Set(items.map(x=>x['القسم']).filter(Boolean)));
-  sectionSelect.innerHTML = ['(جميع الأقسام)', ...uniq].map((name, i)=>{
-    return `<option value="${i===0?'__ALL__':name}">${name}</option>`;
-  }).join('');
-}
-
-function buildCard(item, idx){
-  const ayahFull = item['الآية'] || item['ayah'] || item['question'] || '';
-  const ayahInside = extractAyahText(ayahFull) || ayahFull;
-  const ayahHtml = highlightTargetBrackets(ayahInside);
-  const refHtml = (showRefs && (item['السورة'] || item['رقم_الآية'])) 
-    ? `<span class="ref-badge">${(item['السورة']||'')}${item['رقم_الآية']?' • '+item['رقم_الآية']:''}</span>`
-    : '';
-
-  const options = getOptionsForItem(item);
-  const correctText = (item['الإجابة'] || item['answer'] || '').trim();
-  const correctIndex = Math.max(0, options.findIndex(o => (o+'').trim() === correctText));
-  const finalCorrect = correctIndex >= 0 ? correctIndex : 0;
-
-  const html = `
-    <div class="question-card">
-      <div class="q-header">
-        <span class="q-number">${idx+1}.</span>
-        ${refHtml}
-        <span class="ayah ayah-uthmani">${ayahHtml || '—'}</span>
-      </div>
-      <div class="q-options">
-        ${options.map((o,i)=>`
-          <label class="opt">
-            <input type="radio" name="q${idx}" value="${i}">
-            <span>${o}</span>
-          </label>
-        `).join('')}
-      </div>
-    </div>
-  `;
-  return { html, correctIndex: finalCorrect };
-}
-
-function draw(items){
-  quizArea.innerHTML = '';
-  QUESTIONS = [];
-  KEY = [];
-  items.forEach((it, i)=>{
-    const view = buildCard(it, i);
-    quizArea.insertAdjacentHTML('beforeend', view.html);
-    QUESTIONS.push(it);
-    KEY.push(view.correctIndex);
-  });
-}
-
-async function startQuiz(){
-  if(!BANK) BANK = normalizeBank(await loadBank());
-  const n = parseInt(countRange.value, 10) || 20;
-  const secVal = sectionSelect.value;
-  const pool = (secVal && secVal !== '__ALL__') ? BANK.filter(x=>x['القسم']===secVal) : BANK;
-  const chosen = pickN(pool, n);
-  draw(chosen);
-  toggleStartFinishButtons(true);
-}
-
-function finishQuiz(){
-  let score = 0;
-  QUESTIONS.forEach((q, i)=>{
-    const chosen = document.querySelector(`input[name="q${i}"]:checked`);
-    const chosenIdx = chosen ? +chosen.value : -1;
-    const correct = KEY[i];
-    if(chosenIdx === correct) score++;
-
-    const labels = [...document.querySelectorAll(`input[name="q${i}"]`)].map(inp=>inp.parentElement);
-    labels.forEach((lab, j)=>{
-      lab.style.opacity = '.9';
-      lab.style.borderRadius = '10px';
-      lab.style.padding = '4px 8px';
-      if(j === correct){ lab.style.background = 'rgba(5,150,105,.12)'; }
-      if(chosenIdx === j && j !== correct){ lab.style.background = 'rgba(220,38,38,.12)'; }
-    });
-  });
-  alert(`نتيجتك: ${score} / ${QUESTIONS.length}`);
-  toggleStartFinishButtons(false);
-  quizArea.scrollIntoView({behavior:'smooth'});
-}
-
-function initTheme(){
-  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  setTheme(prefersDark);
-}
-
-countRange.addEventListener('input', ()=>{
-  countBadge.textContent = `${countRange.value} ●`;
-});
-btnStart.addEventListener('click', startQuiz);
-btnFinish.addEventListener('click', finishQuiz);
-btnToggleRef.addEventListener('click', ()=>{
-  showRefs = !showRefs;
-  btnToggleRef.textContent = showRefs ? 'إخفاء اسم السورة والآية' : 'إظهار اسم السورة والآية';
-  if(QUESTIONS.length){
-    const current = QUESTIONS.map((q,i)=>q);
-    draw(current);
-  }
-});
-themeToggle.addEventListener('click', ()=>{
-  const dark = !document.body.classList.contains('theme-dark');
-  setTheme(dark);
-});
-
-(async function init(){
+  // Fetch bank
   try{
-    const raw = await loadBank();
-    BANK = normalizeBank(raw);
-    fillSectionsSelect(BANK);
-    countBadge.textContent = `${countRange.value} ●`;
-    toggleStartFinishButtons(false);
-    initTheme();
+    const resp = await fetch(BANK_URL, {cache:'no-cache'});
+    state.bank = await resp.json();
+    buildSections(state.bank);
+    notice.textContent = 'اختر القسم وابدأ الاختبار.';
   }catch(e){
-    alert(e.message || 'تعذّر التهيئة');
     console.error(e);
+    notice.textContent = 'تعذّر تحميل بنك الأسئلة. رجاءً تحقق من الرابط.';
+  }
+
+  function buildSections(bank){
+    // Expect structure: { sections: { key: { title, parts: { name: [q...] } } } }
+    sectionSelect.innerHTML = '';
+    const optAll = new Option('جميع الأقسام', '__ALL__', true, true);
+    sectionSelect.add(optAll);
+    const sections = bank.sections || bank;
+    Object.entries(sections).forEach(([key, val])=>{
+      const label = (val && val.title) || translateKey(key);
+      sectionSelect.add(new Option(label, key));
+    });
+  }
+
+  function translateKey(key){
+    const m = {
+      'noon_tanween':'النون الساكنة والتنوين',
+      'meem_sakinah':'الميم الساكنة',
+      'mad':'أحكام المدود'
+    };
+    return m[key] || key;
+  }
+
+  function collectPool(){
+    const val = sectionSelect.value;
+    const bank = state.bank.sections || state.bank;
+    let arr = [];
+    const addFromNode = (node)=>{
+      if(!node) return;
+      if(Array.isArray(node)) arr.push(...node);
+      else if(node.questions) arr.push(...node.questions);
+      else if(node.parts) Object.values(node.parts).forEach(addFromNode);
+    };
+    if(val==='__ALL__') Object.values(bank).forEach(addFromNode);
+    else addFromNode(bank[val]);
+    return arr;
+  }
+
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+  startBtn.onclick = ()=>{
+    state.pool = shuffle(collectPool()).slice(0, parseInt(qCount.value,10));
+    renderQuestions();
+    // toggle buttons
+    startBtn.style.display='none';
+    endBtn.style.display='inline-block';
+    toggleRefBtn.style.display='inline-block';
+  };
+
+  endBtn.onclick = ()=>{
+    // show confirm if unanswered
+    const unanswered = els('.option input[type="radio"]:not(:checked)').length === els('.option input[type="radio"]').length;
+    const total = state.pool.length;
+    const answered = Object.keys(state.answers).length;
+    if(answered<total){
+      if(!confirm(`لم تُجب على ${total-answered} سؤال/أسئلة. هل تود إنهاء الاختبار على أي حال؟`)) return;
+    }
+    alert('انتهى الاختبار. (مكان نتائج وتقارير لاحقًا)');
+    // reset buttons
+    startBtn.style.display='inline-block';
+    endBtn.style.display='none';
+    toggleRefBtn.style.display='none';
+  };
+
+  toggleRefBtn.onclick = ()=>{
+    state.showRefs = !state.showRefs;
+    toggleRefBtn.textContent = state.showRefs?'إخفاء اسم السورة والآية':'إظهار اسم السورة والآية';
+    els('.js-ref').forEach(chip=> chip.style.display = state.showRefs ? 'inline-flex':'none');
+  };
+
+  function highlightTargets(text){
+    // simple: wrap [[...]] with span
+    return text.replace(/\[\[(.+?)\]\]/g, '<span class="ayah-target">$1</span>');
+  }
+
+  function renderQuestions(){
+    questionsOl.innerHTML='';
+    notice.remove();
+    state.answers = {};
+
+    state.pool.forEach((q,idx)=>{
+      const li = document.createElement('li');
+      li.className='card';
+
+      // Build ayah & meta
+      const ayahHtml = `<div class="ayah">${highlightTargets(q.question.split(' - ')[0].replace('قال تعالى:','').trim())}</div>`;
+      const ref = (q.surah && q.ayah) ? `${q.surah} • ${q.ayah}` : (q.ref || '');
+      const refHtml = ref ? `<span class="badge js-ref" style="display:${state.showRefs?'inline-flex':'none'}">${ref}</span>` : '';
+
+      // Options from bank exactly
+      const opts = q.options || q.choices || [];
+      const optsHtml = opts.map((o,i)=>{
+        const id = `q${idx}_o${i}`;
+        return `<label class="option" for="${id}">
+          <input id="${id}" type="radio" name="q${idx}" value="${o}">
+          <span>${o}</span>
+        </label>`;
+      }).join('');
+
+      li.innerHTML = `
+        ${ayahHtml}
+        <div class="meta">${refHtml}</div>
+        <div class="options">${optsHtml}</div>
+      `;
+      // handle answer
+      li.querySelectorAll('input[type="radio"]').forEach(inp=>{
+        inp.addEventListener('change',()=>{
+          state.answers[idx] = inp.value;
+        });
+      });
+
+      questionsOl.appendChild(li);
+    });
+    window.scrollTo({top:0, behavior:'smooth'});
   }
 })();
