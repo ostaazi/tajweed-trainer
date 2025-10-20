@@ -1,31 +1,55 @@
-
-<!doctype html><html lang="ar" dir="rtl">
+<!doctype html>
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Tajweedy — الاختبار</title>
-<link rel="stylesheet" href="css/brand.css"/>
-<meta property="og:title" content="Tajweedy — الاختبار"/><meta property="og:image" content="assets/og/og-tajweedy.png"/>
-<meta name="theme-color" content="#0f5132"/><script src="js/theme.js"></script></head>
-<body><div class="watermark"></div>
-<div class="container">
-  <div class="header"><img src="assets/logo/tajweedy-logo.png" alt="logo"/><h1 class="h1">الاختبار — بنك الأسئلة الرئيسي</h1>
-    <button class="toggle-theme" onclick="toggleTheme()">🌙/☀️</button></div>
-  <div class="card"><div class="row" style="gap:.75rem;align-items:center">
-    <select id="selSection" class="select">
-      <option value="noon_tanween">النون الساكنة والتنوين</option>
-      <option value="mim_sakinah">الميم الساكنة</option>
-      <option value="madd">أحكام المدود</option>
-    </select>
-    <div class="row"><span>حدّد عدد أسئلة الاختبار</span>
-      <input id="rngTotal" class="range" type="range" min="1" max="20" value="20" style="width:220px">
-      <span class="badge"><span class="dot"></span><span id="lblTotal">20</span></span>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tajweedy — بنك الأسئلة (ver3.2)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=3.2" />
+  <link rel="icon" type="image/png" href="assets/tajweedy-logo.png" />
+</head>
+<body class="theme-auto">
+  <header class="app-header">
+    <div class="brand">
+      <img src="assets/tajweedy-logo.png" alt="Tajweedy" class="brand-logo" />
+      <h1 class="brand-title">الاختبار — بنك الأسئلة</h1>
     </div>
-    <button id="btnMeta" class="btn btn-ghost">إظهار اسم السورة والآية</button>
-    <button id="btnStart" class="btn btn-primary">بدء اختبار شامل</button>
-    <button id="btnEnd" class="btn btn-danger hide">إنهاء الاختبار</button>
-  </div></div>
-  <div id="questions" class="container"></div>
-  <div class="footer">Tajweedy ©</div>
-</div>
-<script src="js/quran-api.js"></script><script src="js/quiz.js"></script>
-</body></html>
+
+    <div class="header-controls">
+      <button id="themeToggle" class="btn icon" aria-label="الوضع الداكن/الفاتح">🌙/☀️</button>
+
+      <div class="select-row">
+        <select id="sectionSelect" class="select"></select>
+      </div>
+
+      <div class="range-row">
+        <label class="range-label">حدّد عدد أسئلة الاختبار</label>
+        <div class="range-wrap">
+          <span id="countBadge" class="badge">20 ●</span>
+          <input id="countRange" type="range" min="5" max="100" step="1" value="20" />
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button id="btnStart" class="btn btn-primary">بدء اختبار شامل</button>
+        <button id="btnFinish" class="btn btn-danger" hidden>إنهاء الاختبار</button>
+        <button id="btnToggleRef" class="btn btn-lite">إظهار اسم السورة والآية</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="watermark"></div>
+    <section id="quizArea" class="quiz-area"></section>
+  </main>
+
+  <footer class="app-footer">
+    <span>© Tajweedy</span>
+  </footer>
+
+  <script>
+    window.__TAJ_BANK_URL__ = 'https://ostaazi.github.io/tajweed-trainer/tajweed-trainer-ver4-uthmani-api-reports/ver3.2/questions_bank.json';
+  </script>
+  <script src="quiz.js?v=3.2"></script>
+</body>
+</html>
